@@ -1,0 +1,740 @@
+export type Domain = 'All' | 'Mind' | 'Body' | 'Vitality' | 'The Frontier';
+
+export interface CategoryStructure {
+  domain: Domain;
+  categories: {
+    name: string;
+    subcategories?: string[];
+  }[];
+}
+
+export const DOMAIN_STRUCTURE: CategoryStructure[] = [
+  {
+    domain: 'All',
+    categories: [
+      { name: 'All' },
+      { name: 'Novel' },
+      { name: 'Popular' },
+      { name: 'Beginner-Friendly' }
+    ]
+  },
+  {
+    domain: 'Mind',
+    categories: [
+      { name: 'All' },
+      { name: 'Focus' },
+      { name: 'Memory' },
+      { name: 'Mood' },
+      { name: 'Sleep' },
+      { name: 'Stress' }
+    ]
+  },
+  {
+    domain: 'Body',
+    categories: [
+      { name: 'All' },
+      { name: 'Fat Loss' },
+      { name: 'Strength & Muscle' },
+      { name: 'Endurance' },
+      { name: 'Recovery' }
+    ]
+  },
+  {
+    domain: 'Vitality',
+    categories: [
+      { name: 'All' },
+      { name: 'Longevity' },
+      { name: 'Hormones' },
+      { name: 'Gut Health' },
+      { name: 'Metabolic Health' },
+      { name: 'Sexual Health' }
+    ]
+  }
+];
+
+export type AccessTag = 'Standard' | 'Pharma' | 'Unregulated' | 'Frontier' | 'Restricted' | 'Illicit';
+export type TypeTag = '💊 Supplement' | '🌿 Botanical' | '🍽️ Food / Drink' | '🏥 Pharmaceutical' | '🧬 Peptide' | '🧪 Research Compound';
+
+export const TYPE_TAGS: { label: string; emoji: string; full: TypeTag }[] = [
+  { label: 'Supplement', emoji: '💊', full: '💊 Supplement' },
+  { label: 'Botanical', emoji: '🌿', full: '🌿 Botanical' },
+  { label: 'Food / Drink', emoji: '🍽️', full: '🍽️ Food / Drink' },
+  { label: 'Pharmaceutical', emoji: '🏥', full: '🏥 Pharmaceutical' },
+  { label: 'Peptide', emoji: '🧬', full: '🧬 Peptide' },
+  { label: 'Research Compound', emoji: '🧪', full: '🧪 Research Compound' }
+];
+export type StatusClassification = '🟢 Baseline' | '🔵 Clinical' | '🟣 Frontier' | '🟡 Unregulated' | '🟠 Restricted' | '🔴 Illicit';
+export type AdministrationMethod = '👄 Oral' | '💉 Injectable' | '🧴 Topical' | '👅 Sublingual';
+
+export const BEARINGS = [
+  'Sleep', 'Focus', 'Memory', 'Mood', 'Stress', 'Anxiety', 'Energy', 'Recovery',
+  'Endurance', 'Strength', 'Fat Loss', 'Muscle Gain', 'Hormones', 'Testosterone',
+  'Longevity', 'Gut Health', 'Nootropics', 'Supplements', 'Fasting', 'Biohacking'
+];
+
+export const MARKERS = [
+  'East Asian Traditional Medicine', 'Western Herbalism', 'Clinical Use',
+  'Longevity Protocol', 'Athletic Performance', 'Underground / Experimental',
+  'Cognitive Stack Culture', 'Historical Use'
+];
+
+export const GLOSSARY: Record<string, string> = {
+  'peptide': 'A short chain of amino acids, often acting as a signaling molecule.',
+  'stimulant': 'A substance that raises levels of physiological or nervous activity in the body.',
+  'amino acid': 'Organic compounds that combine to form proteins.',
+  'nootropic': 'A substance that may improve cognitive function, particularly executive functions, memory, creativity, or motivation.',
+  'adaptogen': 'A natural substance considered to help the body adapt to stress and to exert a normalizing effect upon bodily processes.',
+  'hormone': 'A regulatory substance produced in an organism and transported in tissue fluids to stimulate specific cells or tissues into action.',
+  'botanical': 'A substance obtained from a plant and used typically in medicinal or cosmetic products.',
+  'injectable': 'A substance that is administered by injection.',
+  'oral': 'A substance that is taken by mouth.',
+  'sublingual': 'A substance that is administered under the tongue.',
+  'research compound': 'A chemical substance primarily used for scientific research, often lacking full clinical trials.',
+  'pharmaceutical': 'A compound manufactured for use as a medicinal drug.'
+};
+
+export interface User {
+  id: string;
+  username: string;
+  displayName?: string;
+  bio?: string;
+  joinDate: string;
+  followersCount: number;
+  followingCount: number;
+  goldCount: number;
+  platinumCount: number;
+  isVerified?: boolean;
+  verificationType?: 'clinical' | 'research' | 'industry';
+  website?: string;
+}
+
+export interface Supplement {
+  accessTag: AccessTag;
+  id: string;
+  name: string;
+  paths: { domain: Domain; category: string }[];
+  typeTags: TypeTag[];
+  status: StatusClassification[];
+  administration: AdministrationMethod[];
+  description: string;
+  averageDosage: string;
+  lengthOfCycle: string;
+  mostPopularBrandId: string;
+  legalityByRegion: Record<string, string>;
+  healthRisks: string[];
+  subjectiveEffects: string[];
+  toleranceBuildup: string;
+  possiblePairings: string[];
+  riskLevel: 'Low' | 'Moderate' | 'High';
+  markers?: string[];
+  clinicalBaseline?: { dosage: string; links: string[] };
+  globalAverage?: string;
+  peerMatch?: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  description?: string;
+  products?: string[];
+  markers?: string[];
+  shippingReliability: number; // 1-5
+  contaminationReports: number;
+  thirdPartyTestingLinks: string[];
+  userRating: number; // 1-5
+}
+
+export interface Post {
+  id: string;
+  type: 'Dispatch' | 'Signal';
+  title: string;
+  content: string;
+  isGold?: boolean;
+  structuredContent?: {
+    dosages: string;
+    frequency?: string;
+    effects: string;
+    sideEffects: string;
+    personalExperience: string;
+    goal?: string;
+    startDate?: string;
+  };
+  author: {
+    id: string;
+    username: string;
+    displayName?: string;
+    isVerified: boolean;
+    verificationType?: string;
+    age?: number;
+    weight?: string;
+    height?: string;
+    sex?: string;
+  };
+  domain: Domain;
+  category: string;
+  subcategory?: string;
+  supplementId?: string;
+  brandId?: string;
+  stackId?: string;
+  helpfulCount: number;
+  comments: number;
+  createdAt: string;
+  logDetails?: {
+    duration?: string;
+    dosage?: string;
+    brandMentioned?: string;
+    stackIncluded?: boolean;
+    bloodworkIncluded?: boolean;
+  };
+  qualityScore: number;
+  bearings?: string[];
+}
+
+export interface Stack {
+  id: string;
+  name: string;
+  description: string;
+  substances: { id: string; name: string }[];
+  creatorId: string;
+  createdAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+  markers?: string[];
+}
+
+export const USERS: User[] = [
+  {
+    id: 'u1',
+    username: 'admin',
+    displayName: 'Admin User',
+    bio: 'Lead researcher and biohacker. Exploring the limits of human performance and longevity. Founder of StackAtlas.',
+    joinDate: 'Joined January 2023',
+    followersCount: 1205,
+    followingCount: 45,
+    goldCount: 15,
+    platinumCount: 2,
+  },
+  {
+    id: 'u2',
+    username: 'biohacker99',
+    displayName: 'Alex',
+    bio: 'Optimizing for peak performance.',
+    joinDate: 'Joined March 2024',
+    followersCount: 342,
+    followingCount: 120,
+    goldCount: 3,
+    platinumCount: 0,
+  },
+  {
+    id: 'u3',
+    username: 'longevity_seeker',
+    bio: 'On a quest for a longer, healthier life.',
+    joinDate: 'Joined June 2024',
+    followersCount: 89,
+    followingCount: 250,
+    goldCount: 0,
+    platinumCount: 0,
+  }
+];
+
+export const STACKS: Stack[] = [
+  {
+    id: 'st1',
+    name: 'Beginner Focus Stack',
+    description: 'A simple stack for improving focus and reducing jitters.',
+    substances: [
+      { id: 'caffeine', name: 'Caffeine' },
+      { id: 'l-theanine', name: 'L-Theanine' }
+    ],
+    creatorId: 'u1',
+    createdAt: new Date().toISOString(),
+    status: 'approved',
+    markers: ['Cognitive Stack Culture']
+  },
+  {
+    id: 'st2',
+    name: 'Deep Sleep Protocol',
+    description: 'A combination aimed at reducing sleep latency and improving deep sleep phases.',
+    substances: [
+      { id: 'magnesium-glycinate', name: 'Magnesium Glycinate' },
+      { id: 'l-theanine', name: 'L-Theanine' },
+      { id: 'melatonin', name: 'Melatonin' }
+    ],
+    creatorId: 'u2',
+    createdAt: new Date().toISOString(),
+    status: 'approved',
+    markers: ['Clinical Use']
+  },
+  {
+    id: 'st3',
+    name: 'Endurance & Pump',
+    description: 'Pre-workout stack for sustained energy and blood flow.',
+    substances: [
+      { id: 'l-citrulline', name: 'L-Citrulline' },
+      { id: 'caffeine', name: 'Caffeine' }
+    ],
+    creatorId: 'u3',
+    createdAt: new Date().toISOString(),
+    status: 'approved',
+    markers: ['Athletic Performance']
+  }
+];
+
+export const BRANDS: Brand[] = [
+  {
+    id: 'b1',
+    name: 'Nootropics Depot',
+    description: 'A highly trusted vendor specializing in novel nootropics and standardized extracts.',
+    products: ['caffeine', 'l-theanine', 'ashwagandha', 'lions-mane'],
+    markers: ['Cognitive Stack Culture'],
+    shippingReliability: 4.8,
+    contaminationReports: 0,
+    thirdPartyTestingLinks: ['https://example.com/test1', 'https://example.com/test2'],
+    userRating: 4.9,
+  },
+  {
+    id: 'b2',
+    name: 'Thorne',
+    description: 'Premium supplement brand focused on clinical efficacy and clean ingredients.',
+    products: ['magnesium-glycinate', 'creatine-monohydrate', 'melatonin'],
+    markers: ['Clinical Use'],
+    shippingReliability: 4.9,
+    contaminationReports: 0,
+    thirdPartyTestingLinks: ['https://example.com/thorne-test'],
+    userRating: 4.8,
+  },
+  {
+    id: 'b3',
+    name: 'Peptide Sciences',
+    description: 'Research chemical supplier providing high-purity peptides for experimental use.',
+    products: ['bpc-157', 'semaglutide', 'cerebrolysin'],
+    markers: ['Underground / Experimental'],
+    shippingReliability: 4.5,
+    contaminationReports: 1,
+    thirdPartyTestingLinks: ['https://example.com/ps-test'],
+    userRating: 4.2,
+  }
+];
+
+export const SUPPLEMENTS: Supplement[] = [
+  {
+    id: 'magnesium-glycinate',
+    name: 'Magnesium Glycinate',
+    description: 'A highly bioavailable form of magnesium bound to glycine, known for its calming properties and support for sleep and muscle recovery.',
+    paths: [
+      { domain: 'Mind', category: 'Sleep' },
+      { domain: 'Mind', category: 'Stress' },
+      { domain: 'Body', category: 'Recovery' },
+      { domain: 'All', category: 'Beginner-Friendly' },
+      { domain: 'All', category: 'Popular' }
+    ],
+    typeTags: ['💊 Supplement'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '200-400mg',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b2',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Mild gastrointestinal discomfort at high doses'],
+    subjectiveEffects: ['Relaxation', 'Improved sleep quality', 'Reduced muscle tension'],
+    toleranceBuildup: 'None',
+    possiblePairings: ['L-Theanine', 'Zinc', 'Vitamin D3'],
+    riskLevel: 'Low',
+    accessTag: 'Standard',
+    markers: ['Clinical Use', 'Longevity Protocol']
+  },
+  {
+    id: 'caffeine',
+    name: 'Caffeine',
+    description: 'A central nervous system stimulant that reduces fatigue and improves focus and endurance.',
+    paths: [
+      { domain: 'Mind', category: 'Focus' },
+      { domain: 'Body', category: 'Endurance' },
+      { domain: 'All', category: 'Popular' },
+      { domain: 'All', category: 'Beginner-Friendly' }
+    ],
+    typeTags: ['🍽️ Food / Drink', '🌿 Botanical'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '100-200mg',
+    lengthOfCycle: 'Continuous with occasional breaks',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Anxiety', 'Insomnia', 'Increased heart rate'],
+    subjectiveEffects: ['Alertness', 'Energy', 'Focus'],
+    toleranceBuildup: 'Fast',
+    possiblePairings: ['L-Theanine', 'Taurine'],
+    riskLevel: 'Low',
+    accessTag: 'Standard',
+    markers: ['Athletic Performance', 'Cognitive Stack Culture']
+  },
+  {
+    id: 'creatine-monohydrate',
+    name: 'Creatine Monohydrate',
+    description: 'A naturally occurring compound that helps supply energy to cells, primarily muscle, improving strength and cognitive function.',
+    paths: [
+      { domain: 'Body', category: 'Strength & Muscle' },
+      { domain: 'Mind', category: 'Memory' },
+      { domain: 'All', category: 'Popular' },
+      { domain: 'All', category: 'High Impact' }
+    ],
+    typeTags: ['💊 Supplement'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '5g daily',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b2',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Water retention', 'Mild GI distress if not dissolved'],
+    subjectiveEffects: ['Increased strength', 'Slight weight gain (water)', 'Mental clarity'],
+    toleranceBuildup: 'None',
+    possiblePairings: ['Beta-Alanine', 'Whey Protein'],
+    riskLevel: 'Low',
+    accessTag: 'Standard',
+    markers: ['Athletic Performance', 'Clinical Use']
+  },
+  {
+    id: 'ashwagandha',
+    name: 'Ashwagandha',
+    description: 'An adaptogenic herb traditionally used to reduce stress and anxiety, and support hormonal balance.',
+    paths: [
+      { domain: 'Mind', category: 'Stress' },
+      { domain: 'Mind', category: 'Mood' },
+      { domain: 'Vitality', category: 'Hormones' },
+      { domain: 'All', category: 'Popular' }
+    ],
+    typeTags: ['🌿 Botanical'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '300-600mg (KSM-66)',
+    lengthOfCycle: '8-12 weeks',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Lethargy', 'Anhedonia with prolonged use'],
+    subjectiveEffects: ['Calmness', 'Reduced anxiety', 'Blunted emotions (rare)'],
+    toleranceBuildup: 'Slow',
+    possiblePairings: ['Rhodiola Rosea', 'L-Theanine'],
+    riskLevel: 'Low',
+    accessTag: 'Standard',
+    markers: ['East Asian Traditional Medicine', 'Western Herbalism']
+  },
+  {
+    id: 'melatonin',
+    name: 'Melatonin',
+    description: 'A hormone that regulates the sleep-wake cycle, useful for jet lag and sleep onset.',
+    paths: [
+      { domain: 'Mind', category: 'Sleep' },
+      { domain: 'All', category: 'Beginner-Friendly' }
+    ],
+    typeTags: ['💊 Supplement'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral', '👅 Sublingual'],
+    averageDosage: '0.3-3mg',
+    lengthOfCycle: 'As needed',
+    mostPopularBrandId: 'b2',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Prescription', 'UK': 'Prescription' },
+    healthRisks: ['Grogginess', 'Vivid dreams'],
+    subjectiveEffects: ['Drowsiness', 'Faster sleep onset'],
+    toleranceBuildup: 'Minimal',
+    possiblePairings: ['Magnesium Glycinate'],
+    riskLevel: 'Low',
+    accessTag: 'Standard',
+    markers: ['Clinical Use']
+  },
+  {
+    id: 'modafinil',
+    name: 'Modafinil',
+    description: 'A wakefulness-promoting agent used to treat narcolepsy and shift work sleep disorder, often used off-label for cognitive enhancement.',
+    paths: [
+      { domain: 'Mind', category: 'Focus' }
+    ],
+    typeTags: ['🏥 Pharmaceutical'],
+    status: ['🔵 Clinical', '🟠 Restricted'],
+    administration: ['👄 Oral'],
+    averageDosage: '100-200mg',
+    lengthOfCycle: '1-3 days per week',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Prescription (Schedule IV)', 'EU': 'Prescription', 'UK': 'Prescription' },
+    healthRisks: ['Headache', 'Insomnia', 'Anxiety', 'Rare skin reactions'],
+    subjectiveEffects: ['Intense focus', 'Wakefulness', 'Reduced fatigue'],
+    toleranceBuildup: 'Moderate',
+    possiblePairings: ['Caffeine', 'L-Theanine'],
+    riskLevel: 'Moderate',
+    accessTag: 'Pharma'
+  },
+  {
+    id: 'testosterone-cypionate',
+    name: 'Testosterone Cypionate',
+    description: 'An injectable ester of the primary male sex hormone, used in hormone replacement therapy and muscle building.',
+    paths: [
+      { domain: 'Body', category: 'Strength & Muscle' },
+      { domain: 'Vitality', category: 'Hormones' },
+      { domain: 'Vitality', category: 'Sexual Health' }
+    ],
+    typeTags: ['🏥 Pharmaceutical'],
+    status: ['🔵 Clinical', '🟠 Restricted'],
+    administration: ['💉 Injectable'],
+    averageDosage: '100-200mg/week (TRT)',
+    lengthOfCycle: 'Continuous (TRT) or 12-16 weeks',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Prescription (Schedule III)', 'EU': 'Prescription', 'UK': 'Prescription (Class C)' },
+    healthRisks: ['Cardiovascular issues', 'Prostate enlargement', 'HPTA suppression'],
+    subjectiveEffects: ['Increased libido', 'Muscle growth', 'Improved mood/energy'],
+    toleranceBuildup: 'None',
+    possiblePairings: ['HCG', 'Aromatase Inhibitors'],
+    riskLevel: 'High',
+    accessTag: 'Pharma'
+  },
+  {
+    id: 'bpc-157',
+    name: 'BPC-157',
+    description: 'A synthetic peptide sequence derived from a protective protein found in the stomach, known for rapid tissue healing and gut repair.',
+    paths: [
+      { domain: 'Body', category: 'Recovery' },
+      { domain: 'Vitality', category: 'Gut Health' },
+      { domain: 'All', category: 'Novel' }
+    ],
+    typeTags: ['🧬 Peptide', '🧪 Research Compound'],
+    status: ['🟡 Unregulated'],
+    administration: ['💉 Injectable', '👄 Oral'],
+    averageDosage: '250-500mcg daily',
+    lengthOfCycle: '4-6 weeks',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Unregulated', 'EU': 'Unregulated', 'UK': 'Unregulated' },
+    healthRisks: ['Unknown long-term effects', 'Potential angiogenesis'],
+    subjectiveEffects: ['Rapid joint/tendon pain relief', 'Improved digestion'],
+    toleranceBuildup: 'Unknown',
+    possiblePairings: ['TB-500'],
+    riskLevel: 'Moderate',
+    accessTag: 'Unregulated'
+  },
+  {
+    id: 'semaglutide',
+    name: 'Semaglutide',
+    description: 'A GLP-1 receptor agonist that increases insulin secretion and decreases glucagon secretion, highly effective for weight loss and metabolic health.',
+    paths: [
+      { domain: 'Body', category: 'Fat Loss' },
+      { domain: 'Vitality', category: 'Metabolic Health' },
+      { domain: 'All', category: 'Popular' }
+    ],
+    typeTags: ['🧬 Peptide', '🏥 Pharmaceutical'],
+    status: ['🔵 Clinical'],
+    administration: ['💉 Injectable', '👅 Sublingual'],
+    averageDosage: '0.25-2.4mg weekly',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Prescription', 'EU': 'Prescription', 'UK': 'Prescription' },
+    healthRisks: ['Nausea', 'Vomiting', 'Pancreatitis risk', 'Muscle loss if not training'],
+    subjectiveEffects: ['Appetite suppression', 'Early satiety', 'Weight loss'],
+    toleranceBuildup: 'Moderate',
+    possiblePairings: ['High Protein Diet', 'Resistance Training'],
+    riskLevel: 'Moderate',
+    accessTag: 'Pharma'
+  },
+  {
+    id: 'rapamycin',
+    name: 'Rapamycin',
+    description: 'An mTOR inhibitor originally used as an immunosuppressant, now heavily researched for its potential life-extension and anti-aging properties.',
+    paths: [
+      { domain: 'Vitality', category: 'Longevity' },
+      { domain: 'All', category: 'Novel' }
+    ],
+    typeTags: ['🏥 Pharmaceutical', '🧪 Research Compound'],
+    status: ['🟣 Frontier', '🔵 Clinical'],
+    administration: ['👄 Oral'],
+    averageDosage: '2-6mg weekly',
+    lengthOfCycle: 'Continuous (pulsed)',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Prescription', 'EU': 'Prescription', 'UK': 'Prescription' },
+    healthRisks: ['Immunosuppression', 'Mouth ulcers', 'Lipid dysregulation'],
+    subjectiveEffects: ['Often imperceptible', 'Reduced inflammation'],
+    toleranceBuildup: 'Unknown',
+    possiblePairings: ['Metformin', 'Acarbose'],
+    riskLevel: 'High',
+    accessTag: 'Frontier'
+  },
+  {
+    id: 'l-citrulline',
+    name: 'L-Citrulline',
+    description: 'An amino acid that increases nitric oxide production, improving blood flow, exercise endurance, and erectile function.',
+    paths: [
+      { domain: 'Body', category: 'Endurance' },
+      { domain: 'Vitality', category: 'Sexual Health' }
+    ],
+    typeTags: ['💊 Supplement'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '3-6g',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b2',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Mild GI distress'],
+    subjectiveEffects: ['Muscle pumps', 'Improved stamina', 'Better blood flow'],
+    toleranceBuildup: 'Minimal',
+    possiblePairings: ['Malic Acid', 'Arginine'],
+    riskLevel: 'Low',
+    accessTag: 'Standard'
+  },
+  {
+    id: 'l-theanine',
+    name: 'L-Theanine',
+    description: 'An amino acid found in tea leaves that promotes relaxation without drowsiness, often paired with caffeine to smooth out jitters.',
+    paths: [
+      { domain: 'Mind', category: 'Focus' },
+      { domain: 'Mind', category: 'Stress' }
+    ],
+    typeTags: ['💊 Supplement', '🌿 Botanical'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '100-200mg',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['None significant'],
+    subjectiveEffects: ['Calm focus', 'Reduced anxiety', 'Relaxation'],
+    toleranceBuildup: 'Minimal',
+    possiblePairings: ['Caffeine'],
+    riskLevel: 'Low',
+    accessTag: 'Standard'
+  },
+  {
+    id: 'lions-mane',
+    name: 'Lions Mane',
+    description: 'A medicinal mushroom that stimulates Nerve Growth Factor (NGF), potentially improving memory and cognitive function.',
+    paths: [
+      { domain: 'Mind', category: 'Memory' },
+      { domain: 'All', category: 'Novel' }
+    ],
+    typeTags: ['🌿 Botanical', '🍽️ Food / Drink'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '500-1000mg (extract)',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Rare allergic reactions', 'Potential libido reduction (anecdotal)'],
+    subjectiveEffects: ['Improved memory recall', 'Vivid dreams', 'Mental clarity'],
+    toleranceBuildup: 'Slow',
+    possiblePairings: ['Psilocybin (Stamets Stack)', 'Niacin'],
+    riskLevel: 'Low',
+    accessTag: 'Standard'
+  },
+  {
+    id: 'probiotics',
+    name: 'Probiotics (Lactobacillus)',
+    description: 'Beneficial bacteria that support gut microbiome health, digestion, and immune function.',
+    paths: [
+      { domain: 'Vitality', category: 'Gut Health' },
+      { domain: 'All', category: 'Beginner-Friendly' }
+    ],
+    typeTags: ['💊 Supplement'],
+    status: ['🟢 Baseline'],
+    administration: ['👄 Oral'],
+    averageDosage: '10-50 Billion CFU',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b2',
+    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
+    healthRisks: ['Initial bloating or gas'],
+    subjectiveEffects: ['Improved digestion', 'Regularity'],
+    toleranceBuildup: 'None',
+    possiblePairings: ['Prebiotics'],
+    riskLevel: 'Low',
+    accessTag: 'Standard'
+  },
+  {
+    id: 'metformin',
+    name: 'Metformin',
+    description: 'A first-line medication for type 2 diabetes that improves insulin sensitivity, also studied for anti-aging benefits.',
+    paths: [
+      { domain: 'Vitality', category: 'Metabolic Health' },
+      { domain: 'Vitality', category: 'Longevity' }
+    ],
+    typeTags: ['🏥 Pharmaceutical'],
+    status: ['🔵 Clinical'],
+    administration: ['👄 Oral'],
+    averageDosage: '500-1500mg',
+    lengthOfCycle: 'Continuous',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Prescription', 'EU': 'Prescription', 'UK': 'Prescription' },
+    healthRisks: ['GI distress', 'Vitamin B12 deficiency', 'Lactic acidosis (rare)'],
+    subjectiveEffects: ['Lower blood sugar', 'Potential slight weight loss'],
+    toleranceBuildup: 'Minimal',
+    possiblePairings: ['Vitamin B12'],
+    riskLevel: 'Moderate',
+    accessTag: 'Pharma'
+  },
+  {
+    id: 'clenbuterol',
+    name: 'Clenbuterol',
+    description: 'A sympathomimetic amine used by sufferers of breathing disorders as a decongestant and bronchodilator, often abused for fat loss.',
+    paths: [
+      { domain: 'Body', category: 'Fat Loss' }
+    ],
+    typeTags: ['🏥 Pharmaceutical', '🧪 Research Compound'],
+    status: ['🟠 Restricted', '🔴 Illicit'],
+    administration: ['👄 Oral'],
+    averageDosage: '20-40mcg',
+    lengthOfCycle: '2 weeks on, 2 weeks off',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Prescription (Vet only)', 'EU': 'Prescription', 'UK': 'Class C' },
+    healthRisks: ['Cardiac hypertrophy', 'Tachycardia', 'Muscle tremors', 'Anxiety'],
+    subjectiveEffects: ['Rapid heart rate', 'Increased body temperature', 'Fat loss'],
+    toleranceBuildup: 'Fast',
+    possiblePairings: ['Ketotifen', 'Taurine'],
+    riskLevel: 'High',
+    accessTag: 'Restricted'
+  },
+  {
+    id: 'cerebrolysin',
+    name: 'Cerebrolysin',
+    description: 'A mixture of peptides purified from pig brains, used to treat stroke and traumatic brain injury, with potent neurotrophic effects.',
+    paths: [
+      { domain: 'Mind', category: 'Memory' },
+      { domain: 'All', category: 'Novel' }
+    ],
+    typeTags: ['🧬 Peptide', '🏥 Pharmaceutical'],
+    status: ['🟣 Frontier'],
+    administration: ['💉 Injectable'],
+    averageDosage: '5-10ml daily',
+    lengthOfCycle: '4 weeks',
+    mostPopularBrandId: 'b1',
+    legalityByRegion: { 'US': 'Unapproved', 'EU': 'Prescription (some countries)', 'UK': 'Unapproved' },
+    healthRisks: ['Injection site reactions', 'Brain fog during use'],
+    subjectiveEffects: ['Long-term memory improvement', 'Neuro-recovery'],
+    toleranceBuildup: 'None',
+    possiblePairings: ['Cortexin'],
+    riskLevel: 'Moderate',
+    accessTag: 'Frontier'
+  }
+];
+
+import { SEED_POSTS } from './seedPosts';
+
+export const getPosts = (): Post[] => {
+  const stored = localStorage.getItem('stackatlas_posts');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return [...parsed, ...SEED_POSTS];
+      }
+    } catch (e) {
+      console.error('Failed to parse stored posts', e);
+    }
+  }
+  return SEED_POSTS;
+};
+
+export let POSTS: Post[] = getPosts();
+
+export const addPost = (post: Post) => {
+  const stored = localStorage.getItem('stackatlas_posts');
+  let current: Post[] = [];
+  if (stored) {
+    try {
+      current = JSON.parse(stored);
+    } catch (e) {}
+  }
+  current.unshift(post);
+  localStorage.setItem('stackatlas_posts', JSON.stringify(current));
+  POSTS = getPosts();
+};
