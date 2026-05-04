@@ -16,6 +16,8 @@ export default function Layout() {
     return <Navigate to="/onboarding" replace />;
   }
 
+  const roleOptions = ['User', 'Admin', 'Developer'];
+
   const navItems = [
     { name: 'Map', path: '/map', icon: Compass },
     { name: 'Square', path: '/square', icon: Users },
@@ -120,7 +122,7 @@ export default function Layout() {
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         {/* Mobile Global Header */}
         <header className="md:hidden sticky top-0 z-40 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
-          <div className="flex h-14 items-center justify-between px-4">
+          <div className="flex h-14 items-center justify-between gap-2 px-4">
             <Link to="/profile" className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors">
               <User size={16} className="text-slate-600 dark:text-zinc-300" />
             </Link>
@@ -129,17 +131,49 @@ export default function Layout() {
               {getPageTitle()}
             </h1>
 
-            <button onClick={toggleTheme} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors">
-              {theme === 'dark' ? <Sun size={16} className="text-zinc-300" /> : <Moon size={16} className="text-slate-600" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="hidden min-[420px]:inline-flex items-center rounded-lg border border-slate-200 dark:border-zinc-700 bg-slate-100/80 dark:bg-zinc-900/80 p-1">
+                {roleOptions.map((role, index) => (
+                  <button
+                    key={role}
+                    type="button"
+                    className={cn(
+                      "px-2 py-1 text-[11px] font-medium rounded-md text-slate-500 dark:text-zinc-400",
+                      index === 0 && "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-sm"
+                    )}
+                    aria-label={`${role} role (placeholder)`}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+              <button onClick={toggleTheme} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors">
+                {theme === 'dark' ? <Sun size={16} className="text-zinc-300" /> : <Moon size={16} className="text-slate-600" />}
+              </button>
+            </div>
           </div>
         </header>
 
         {/* Desktop Header */}
         <header className="hidden md:flex sticky top-0 z-40 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md px-8 py-4 items-center justify-between">
-           <h1 className="text-2xl font-bold tracking-tight">
-              {getPageTitle()}
-            </h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {getPageTitle()}
+          </h1>
+          <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-100/80 dark:bg-zinc-900/80 p-1">
+            {roleOptions.map((role, index) => (
+              <button
+                key={role}
+                type="button"
+                className={cn(
+                  "px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-500 dark:text-zinc-400",
+                  index === 0 && "bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-sm"
+                )}
+                aria-label={`${role} role (placeholder)`}
+              >
+                {role}
+              </button>
+            ))}
+          </div>
         </header>
 
         {/* Main Content */}
