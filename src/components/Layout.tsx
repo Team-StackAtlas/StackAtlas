@@ -6,11 +6,28 @@ import { useUserScope } from '../context/UserScopeContext';
 import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';
 
+type MockRole = 'user' | 'admin' | 'developer';
+
+const MOCK_ROLE_KEY = 'stackatlas.mockRole';
+
+const isValidMockRole = (value: string | null): value is MockRole => {
+  return value === 'user' || value === 'admin' || value === 'developer';
+};
+
 export default function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { scope, isInitialized } = useUserScope();
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [mockRole, setMockRole] = useState<MockRole>(() => {
+    const savedRole = localStorage.getItem(MOCK_ROLE_KEY);
+    return isValidMockRole(savedRole) ? savedRole : 'user';
+  });
+
+  const handleMockRoleChange = (role: MockRole) => {
+    setMockRole(role);
+    localStorage.setItem(MOCK_ROLE_KEY, role);
+  };
 
   if (isInitialized && !scope.accessLevel) {
     return <Navigate to="/onboarding" replace />;
@@ -140,6 +157,31 @@ export default function Layout() {
            <h1 className="text-2xl font-bold tracking-tight">
               {getPageTitle()}
             </h1>
+            <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100/80 dark:bg-zinc-900/80 p-1">
+              {[
+                { label: 'User', value: 'user' as const },
+                { label: 'Admin', value: 'admin' as const },
+                { label: 'Developer', value: 'developer' as const },
+              ].map((roleOption) => {
+                const isActive = mockRole === roleOption.value;
+                return (
+                  <button
+                    key={roleOption.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => handleMockRoleChange(roleOption.value)}
+                    className={cn(
+                      'px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors',
+                      isActive
+                        ? 'bg-slate-900 text-white dark:bg-emerald-500 dark:text-zinc-950'
+                        : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-800'
+                    )}
+                  >
+                    {roleOption.label}
+                  </button>
+                );
+              })}
+            </div>
         </header>
 
         {/* Main Content */}
