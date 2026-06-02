@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, Settings, LogOut, Bookmark, Activity, Award, ChevronRight, Users, Calendar, Link as LinkIcon, Upload, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Settings, LogOut, Bookmark, Activity, Award, ChevronRight, Users, Calendar, Link as LinkIcon, Upload, CheckCircle, EyeOff } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link, useParams } from 'react-router-dom';
 import { getPosts, SUPPLEMENTS, STACKS, BRANDS, USERS, User } from '../data/mockData';
@@ -7,6 +7,7 @@ import PostCard from '../components/PostCard';
 import { useUserScope } from '../context/UserScopeContext';
 import { useSaved } from '../hooks/useSaved';
 import { SaveButton } from '../components/SaveButton';
+import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
 
 function VerificationModal({ isOpen, onClose, onVerify }: { isOpen: boolean, onClose: () => void, onVerify: () => void }) {
   const [step, setStep] = useState(1);
@@ -129,9 +130,10 @@ export default function Profile() {
   const { scope } = useUserScope();
   const [isEditing, setIsEditing] = useState(false);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'dispatches' | 'signals' | 'pending_stacks' | 'saved'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'dispatches' | 'signals' | 'pending_stacks' | 'saved' | 'hidden'>('all');
   const [savedFilter, setSavedFilter] = useState<'all' | 'substance' | 'stack' | 'brand' | 'Dispatch' | 'Signal'>('all');
   const { savedItems } = useSaved();
+  const { hiddenItems, unhideItem } = useHiddenItems();
   
   // Default user (admin)
   const defaultUser: User = USERS.find(u => u.username === 'admin') || USERS[0];
@@ -174,6 +176,15 @@ export default function Profile() {
   });
 
   const pendingStacks = STACKS.filter(s => s.creatorId === user.id && s.status === 'pending');
+
+  const hiddenGroups: { key: HiddenGroup; label: string }[] = [
+    { key: 'substances', label: 'Substances' },
+    { key: 'stacks', label: 'Stacks' },
+    { key: 'brands', label: 'Brands' },
+    { key: 'tags', label: 'Tags' },
+  ];
+  const hiddenItemsCount = hiddenGroups.reduce((total, group) => total + hiddenItems[group.key].length, 0);
+
 
   const handleVerifySuccess = () => {
     // Mock verify success
@@ -377,6 +388,22 @@ export default function Profile() {
             Saved
           </button>
         )}
+        {isOwnProfile && (
+          <button 
+            onClick={() => setActiveTab('hidden')}
+            className={cn(
+              "px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+              activeTab === 'hidden' 
+                ? "border-emerald-500 text-slate-900 dark:text-zinc-100" 
+                : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
+            )}
+          >
+            Hidden Items
+            {hiddenItemsCount > 0 && (
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">{hiddenItemsCount}</span>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -445,6 +472,56 @@ export default function Profile() {
             ) : (
               <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
                 <p>No saved items found.</p>
+              </div>
+            )}
+          </div>
+        ) : activeTab === 'hidden' ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div className="mb-5 flex items-center gap-2">
+              <EyeOff size={18} className="text-slate-500 dark:text-zinc-400" />
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Hidden Items</h2>
+                <p className="text-sm text-slate-500 dark:text-zinc-400">Unhide items to make them visible in normal StackAtlas results again.</p>
+              </div>
+            </div>
+
+            {hiddenItemsCount === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
+                No hidden items yet.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {hiddenGroups.map((group) => {
+                  const groupItems: HiddenItem[] = hiddenItems[group.key];
+                  return (
+                    <section key={group.key}>
+                      <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-500">{group.label}</h3>
+                      {groupItems.length === 0 ? (
+                        <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:bg-zinc-950/50 dark:text-zinc-500">None hidden.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {groupItems.map((item) => (
+                            <div key={`${item.type}-${item.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-zinc-800 dark:bg-zinc-950/50">
+                              <div className="min-w-0">
+                                <div className="truncate font-semibold text-slate-900 dark:text-zinc-100">{item.name}</div>
+                                <div className="text-xs text-slate-500 dark:text-zinc-500">
+                                  {item.tagType || item.type} • Hidden {new Date(item.hiddenAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => unhideItem(item.type, item.id)}
+                                className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
+                              >
+                                Unhide
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -20,11 +20,13 @@ import Create from './pages/Create';
 import Compare from './pages/Compare';
 import { UserScopeProvider } from './context/UserScopeContext';
 import { FilterProvider } from './context/FilterContext';
+import { MockRoleProvider } from './context/MockRoleContext';
 
 export default function App() {
   return (
     <UserScopeProvider>
       <FilterProvider>
+        <MockRoleProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -51,6 +53,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </MockRoleProvider>
       </FilterProvider>
     </UserScopeProvider>
   );

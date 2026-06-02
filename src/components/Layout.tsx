@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useUserScope } from '../context/UserScopeContext';
 import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';
+import { MockRolePanels } from './MockRolePanels';
 
 export default function Layout() {
   const location = useLocation();
@@ -86,6 +87,9 @@ export default function Layout() {
             );
           })}
         </nav>
+        <div className="px-4 pb-4">
+          <MockRolePanels />
+        </div>
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 space-y-2">
           <button 
             onClick={toggleTheme}
@@ -141,6 +145,10 @@ export default function Layout() {
               {getPageTitle()}
             </h1>
         </header>
+
+        <div className="md:hidden p-4 pb-0">
+          <MockRolePanels />
+        </div>
 
         {/* Main Content */}
         <main className="mx-auto w-full max-w-md md:max-w-5xl p-0 md:p-6">

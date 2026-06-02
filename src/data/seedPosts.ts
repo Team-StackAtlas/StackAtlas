@@ -681,5 +681,50 @@ export const SEED_POSTS: Post[] = [
     createdAt: new Date().toISOString(),
     qualityScore: 50,
     bearings: ['Nootropics']
+  },
+  {
+    id: 'p_signal_creatine_loading_notes',
+    type: 'Signal',
+    title: 'Creatine timing notes for training days',
+    content: 'Open discussion note: several lifters in my gym compare creatine timing by convenience more than acute effect. The useful pattern seems to be consistency with meals and hydration rather than chasing a narrow pre-workout window.',
+    author: { id: 'u_marlow_notes', username: 'marlow_notes', displayName: 'Marlow', isVerified: false },
+    domain: 'Body',
+    category: 'Strength & Muscle',
+    supplementId: 'creatine-monohydrate',
+    helpfulCount: 42,
+    comments: 9,
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    qualityScore: 62,
+    bearings: ['Strength', 'Recovery', 'Supplements']
+  },
+  {
+    id: 'p_signal_deep_sleep_protocol_discussion',
+    type: 'Signal',
+    title: 'Deep Sleep Protocol feels sensitive to timing',
+    content: 'Freeform observation for discussion: the Deep Sleep Protocol reads like timing matters more than adding more ingredients. Curious whether people separate magnesium and melatonin or keep the stack together.',
+    author: { id: 'u_sable_lane', username: 'sable_lane', displayName: 'Sable', isVerified: false },
+    domain: 'Mind',
+    category: 'Sleep',
+    stackId: 'st2',
+    helpfulCount: 36,
+    comments: 14,
+    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    qualityScore: 58,
+    bearings: ['Sleep', 'Recovery']
+  },
+  {
+    id: 'p_signal_nootropics_depot_testing',
+    type: 'Signal',
+    title: 'Brand testing pages are becoming decision points',
+    content: 'Discussion prompt: brand testing pages are starting to influence which products people compare first. Nootropics Depot comes up often because the testing trail is easy to find and discuss.',
+    author: { id: 'u_arden_index', username: 'arden_index', displayName: 'Arden', isVerified: false },
+    domain: 'Mind',
+    category: 'Focus',
+    brandId: 'b1',
+    helpfulCount: 31,
+    comments: 7,
+    createdAt: new Date(Date.now() - 1000 * 60 * 135).toISOString(),
+    qualityScore: 55,
+    bearings: ['Nootropics', 'Supplements']
   }
 ];

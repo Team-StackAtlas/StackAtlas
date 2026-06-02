@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Flame, TrendingUp, Clock, MessageSquare, ArrowBigUp, Layers, Plus, Settings2 } from 'lucide-react';
-import { DOMAIN_STRUCTURE, SUPPLEMENTS, Domain, getPosts } from '../data/mockData';
+import { BRANDS, DOMAIN_STRUCTURE, STACKS, SUPPLEMENTS, Domain, Post, getPosts } from '../data/mockData';
 import { cn } from '../lib/utils';
 import PostCard from '../components/PostCard';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -8,11 +8,15 @@ import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
 import { useSaved } from '../hooks/useSaved';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
+import { useHiddenItems } from '../hooks/useHiddenItems';
+import { useMockRole } from '../context/MockRoleContext';
 
 export default function Square() {
   const { scope } = useUserScope();
   const { activeTypes, activeAdmins, activeStatuses } = useFilters();
   const { savedItems } = useSaved();
+  const { isAdminLike } = useMockRole();
+  const { isHidden, hasHiddenTag } = useHiddenItems();
   const [searchParams] = useSearchParams();
   const substanceId = searchParams.get('substance');
   const filterParam = searchParams.get('filter');
@@ -22,7 +26,7 @@ export default function Square() {
   const [activeDomain, setActiveDomain] = useState<Domain | 'All'>('All');
   const [activeCategory, setActiveCategory] = useState<string | 'All'>('All');
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
-  const [sortOption, setSortOption] = useState<'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending'>('Highest Quality');
+  const [sortOption, setSortOption] = useState<'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending'>('Recent');
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
 
   const domains = ['All', ...DOMAIN_STRUCTURE.map(d => d.domain).filter(d => d !== 'All')];
@@ -30,7 +34,33 @@ export default function Square() {
   const currentDomainData = DOMAIN_STRUCTURE.find(d => d.domain === activeDomain);
   const categories = currentDomainData ? currentDomainData.categories.map(c => c.name) : [];
 
-  const filteredPosts = getPosts().filter(p => {
+  const isPostHiddenByPreferences = (post: Post) => {
+    if (isAdminLike) return false;
+
+    const supplement = post.supplementId ? SUPPLEMENTS.find(s => s.id === post.supplementId) : undefined;
+    const stack = post.stackId ? STACKS.find(s => s.id === post.stackId) : undefined;
+    const brand = post.brandId ? BRANDS.find(b => b.id === post.brandId) : undefined;
+
+    if (post.supplementId && isHidden('substance', post.supplementId)) return true;
+    if (post.stackId && isHidden('stack', post.stackId)) return true;
+    if (post.brandId && isHidden('brand', post.brandId)) return true;
+
+    const structuredTags = [
+      post.domain,
+      post.category,
+      ...(post.bearings || []),
+      ...(supplement?.paths.flatMap(path => [path.domain, path.category]) || []),
+      ...(supplement?.typeTags || []),
+      ...(supplement?.markers || []),
+      ...(stack?.markers || []),
+      ...(brand?.markers || []),
+    ];
+
+    return hasHiddenTag(structuredTags);
+  };
+
+  const passesFeedFilters = (p: Post) => {
+
     // Feed Type Filtering
     if (feedType === 'Following') {
       // Mock "Following" logic: show posts linked to saved substances/stacks/brands
@@ -67,14 +97,16 @@ export default function Square() {
       if (activeCategory !== 'All' && p.category !== activeCategory) return false;
     }
     return true;
-  });
+  };
+
+
+
+  const allPosts = getPosts();
+  const postsMatchingFilters = allPosts.filter(passesFeedFilters);
+  const hiddenPostsCount = postsMatchingFilters.filter(isPostHiddenByPreferences).length;
+  const filteredPosts = postsMatchingFilters.filter(post => !isPostHiddenByPreferences(post));
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (feedType === 'For You') {
-      // Mock "For You" logic: prioritize Gold Dispatches and high engagement
-      if (a.isGold && !b.isGold) return -1;
-      if (!a.isGold && b.isGold) return 1;
-    }
     if (sortOption === 'Highest Quality') return b.qualityScore - a.qualityScore;
     if (sortOption === 'Most Detailed') return b.content.length - a.content.length;
     if (sortOption === 'Recent') {
@@ -248,6 +280,11 @@ export default function Square() {
 
       {/* Content Area */}
       <div className="flex-1 px-4 space-y-4 max-w-2xl mx-auto w-full">
+        {hiddenPostsCount > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-500 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+            Some posts were hidden by your preferences.
+          </div>
+        )}
         {sortedPosts.map(post => (
           <PostCard key={post.id} post={post} />
         ))}
