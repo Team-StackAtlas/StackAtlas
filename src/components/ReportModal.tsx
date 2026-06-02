@@ -1,31 +1,53 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { CheckCircle, X } from 'lucide-react';
+import { MockReportTargetType, useMockRole } from '../context/MockRoleContext';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   entityName: string;
+  targetType: MockReportTargetType;
+  targetId?: string;
 }
 
-export default function ReportModal({ isOpen, onClose, entityName }: ReportModalProps) {
-  const [reason, setReason] = useState('');
+const REPORT_CATEGORIES = [
+  'Incorrect Information',
+  'Outdated Information',
+  'Safety Concern',
+  'Duplicate Entry',
+  'Spam / Abuse',
+  'Other',
+];
+
+export default function ReportModal({ isOpen, onClose, entityName, targetType, targetId }: ReportModalProps) {
+  const { addReport } = useMockRole();
+  const [category, setCategory] = useState('');
   const [details, setDetails] = useState('');
+  const [confirmation, setConfirmation] = useState('');
 
   if (!isOpen) return null;
 
-  const reasons = [
-    'Inaccurate information',
-    'Duplicate entry',
-    'Spam',
-    'Misleading claim',
-    'Unsafe content',
-    'Other'
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert('Your report has been submitted for moderator review.');
+  const handleClose = () => {
+    setCategory('');
+    setDetails('');
+    setConfirmation('');
     onClose();
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    addReport({
+      targetType,
+      targetId,
+      targetName: entityName,
+      category,
+      details: details.trim(),
+    });
+
+    setCategory('');
+    setDetails('');
+    setConfirmation('Report submitted for review.');
   };
 
   return (
@@ -33,62 +55,76 @@ export default function ReportModal({ isOpen, onClose, entityName }: ReportModal
       <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-md overflow-hidden shadow-xl border border-slate-200 dark:border-zinc-800">
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-zinc-800">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-zinc-50">Report {entityName}</h2>
-          <button onClick={onClose} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+          <button onClick={handleClose} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">
-              Reason for reporting
-            </label>
-            <div className="space-y-2">
-              {reasons.map((r) => (
-                <label key={r} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-zinc-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors">
-                  <input
-                    type="radio"
-                    name="reportReason"
-                    value={r}
-                    checked={reason === r}
-                    onChange={(e) => setReason(e.target.value)}
-                    className="w-4 h-4 text-emerald-500 focus:ring-emerald-500 border-slate-300"
-                    required
-                  />
-                  <span className="text-sm text-slate-700 dark:text-zinc-300">{r}</span>
-                </label>
-              ))}
+
+        {confirmation ? (
+          <div className="p-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+              <CheckCircle size={24} />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">
-              Additional Details (Optional)
-            </label>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="Please provide any extra context..."
-              className="w-full h-24 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
+            <p className="font-semibold text-slate-900 dark:text-zinc-100">{confirmation}</p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-zinc-400">This mock report is stored locally for Admin and Developer review.</p>
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+              onClick={handleClose}
+              className="mt-5 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors"
-            >
-              Submit Report
+              Done
             </button>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <div>
+              <label htmlFor="reportCategory" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2">
+                Category
+              </label>
+              <select
+                id="reportCategory"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 transition-all focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                required
+              >
+                <option value="">Select a category...</option>
+                {REPORT_CATEGORIES.map((reportCategory) => (
+                  <option key={reportCategory} value={reportCategory}>{reportCategory}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="reportDetails" className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">
+                Details (Optional)
+              </label>
+              <textarea
+                id="reportDetails"
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                placeholder="Add context for the StackAtlas review queue..."
+                className="w-full h-24 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors"
+              >
+                Submit Report
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
