@@ -60,15 +60,17 @@ export default function SupplementPage() {
               </button>
             </div>
           </div>
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            {supplement.paths.map((path, i) => (
-              <span key={i} className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-500 border border-emerald-200 dark:border-emerald-500/20">
-                {path.domain} &gt; {path.category}
-              </span>
-            ))}
+          <div className="mb-2 text-xs font-medium text-slate-400 dark:text-zinc-600" title={supplement.paths.map(path => `${path.domain} > ${path.category}`).join(' • ')}>
+            {supplement.paths.slice(0, 2).map(path => `${path.domain} / ${path.category}`).join(' • ')}
+            {supplement.paths.length > 2 ? ` +${supplement.paths.length - 2} routes` : ''}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">{supplement.name}</h1>
+            {supplement.formula && (
+              <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-mono text-xs text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400" title="Molecular formula">
+                {supplement.formula}
+              </span>
+            )}
             <div className="flex gap-2">
               {supplement.typeTags.map((tag, i) => {
                 const typeInfo = TYPE_TAGS.find(t => t.full === tag);

@@ -205,15 +205,17 @@ export default function Map() {
 
     return true;
   }).sort((a, b) => {
+    const aPrioritized = a.typeTags.some(t => prioritizedTypes.includes(t));
+    const bPrioritized = b.typeTags.some(t => prioritizedTypes.includes(t));
+    if (aPrioritized && !bPrioritized) return -1;
+    if (!aPrioritized && bPrioritized) return 1;
+
     if (feedType === 'For You') {
       const aScore = a.typeTags.length + (a.markers?.length || 0);
       const bScore = b.typeTags.length + (b.markers?.length || 0);
       if (aScore !== bScore) return bScore - aScore;
     }
-    const aPrioritized = a.typeTags.some(t => prioritizedTypes.includes(t));
-    const bPrioritized = b.typeTags.some(t => prioritizedTypes.includes(t));
-    if (aPrioritized && !bPrioritized) return -1;
-    if (!aPrioritized && bPrioritized) return 1;
+
     return 0;
   });
 
@@ -460,7 +462,7 @@ export default function Map() {
                     key={type.full}
                     onClick={() => toggleType(type.full)}
                     onContextMenu={(e) => togglePriority(e, type.full)}
-                    title="Right-click to prioritize"
+                    title="Click to filter. Right-click to prioritize and sort matching results first."
                     className={cn(
                       "whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all border flex items-center gap-1.5",
                       isActive 
@@ -536,11 +538,16 @@ export default function Map() {
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap gap-1.5">
-                      {supplement.typeTags.map(tag => {
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {supplement.formula && (
+                        <span className="font-mono text-[11px] text-slate-500 dark:text-zinc-500" title="Molecular formula">
+                          {supplement.formula}
+                        </span>
+                      )}
+                      {supplement.typeTags.slice(0, 2).map(tag => {
                         const typeInfo = TYPE_TAGS.find(t => t.full === tag);
                         return typeInfo ? (
-                          <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-[11px] font-medium text-slate-600 dark:text-zinc-400 border border-slate-200/50 dark:border-zinc-700/50" title={tag}>
+                          <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-zinc-800 dark:text-zinc-400" title={tag}>
                             {typeInfo.emoji} {typeInfo.label}
                           </span>
                         ) : null;
@@ -548,14 +555,23 @@ export default function Map() {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-slate-600 dark:text-zinc-400 line-clamp-3 mb-4 flex-1 leading-relaxed">
+                  <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-zinc-400">
                     {supplement.description}
                   </p>
+                  {supplement.markers && supplement.markers.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-1.5">
+                      {supplement.markers.slice(0, 2).map(marker => (
+                        <span key={marker} className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-800/60 dark:text-zinc-500">
+                          {marker}
+                        </span>
+                      ))}
+                    </div>
+                  )
                   {isAdminLike && isHidden('substance', supplement.id) && (
                     <span className="mb-3 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                   )}
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
-                    <div className="text-xs font-medium text-slate-500 dark:text-zinc-500">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-zinc-600">
                       {supplement.accessTag}
                     </div>
                     <div className="flex gap-1.5">
