@@ -566,7 +566,7 @@ export default function Map() {
                         </span>
                       ))}
                     </div>
-                  )}
+                  )
                   {isAdminLike && isHidden('substance', supplement.id) && (
                     <span className="mb-3 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                   )}
