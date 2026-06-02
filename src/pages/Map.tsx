@@ -8,6 +8,7 @@ import { useFilters } from '../context/FilterContext';
 import { useSaved } from '../hooks/useSaved';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
+import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
 import { HideItemButton } from '../components/HideItemButton';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useMockRole } from '../context/MockRoleContext';
@@ -64,6 +65,7 @@ export default function Map() {
   const [activeDomain, setActiveDomain] = useState<Domain | 'All'>('All');
   const [activeCategory, setActiveCategory] = useState<string | 'All'>('All');
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
+  const [openMarkerMenu, setOpenMarkerMenu] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => readRecentSearches());
@@ -413,9 +415,9 @@ export default function Map() {
       <div className="px-4 pb-2">
         <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
           {visibleMarkerFilters.map(marker => (
-            <div key={marker} className="flex items-center gap-1">
+            <div key={marker} className="relative">
               <button
-                onClick={() => setActiveMarker(activeMarker === marker ? null : marker)}
+                onClick={() => setOpenMarkerMenu(openMarkerMenu === marker ? null : marker)}
                 className={cn(
                   "whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
                   activeMarker === marker 
@@ -425,7 +427,21 @@ export default function Map() {
               >
                 {marker}
               </button>
-              <HideItemButton id={`marker:${marker}`} name={marker} type="tag" tagType="Marker" className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500" />
+              {openMarkerMenu === marker && (
+                <div className="absolute left-0 top-8 z-30 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveMarker(activeMarker === marker ? null : marker);
+                      setOpenMarkerMenu(null);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {activeMarker === marker ? 'Clear filter' : 'Filter by marker'}
+                  </button>
+                  <HideItemButton id={`marker:${marker}`} name={marker} type="tag" tagType="Marker" onHidden={() => setOpenMarkerMenu(null)} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800" />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -507,7 +523,7 @@ export default function Map() {
                       <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
                         {supplement.name}
                       </h3>
-                      <div className="flex gap-1 shrink-0 ml-3">
+                      <div className="flex gap-1 shrink-0 ml-3 items-start">
                         {!scope.primaryRegion ? (
                           <span className="text-lg" title="Unknown Region">❓</span>
                         ) : (
@@ -516,6 +532,7 @@ export default function Map() {
                             return <span key={st} className="text-lg drop-shadow-sm" title={st}>{emoji}</span>;
                           })
                         )}
+                        <SecondaryHideMenu id={supplement.id} name={supplement.name} type="substance" />
                       </div>
                     </div>
                     
@@ -537,10 +554,6 @@ export default function Map() {
                   {isAdminLike && isHidden('substance', supplement.id) && (
                     <span className="mb-3 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                   )}
-                  <div className="mb-3">
-                    <HideItemButton id={supplement.id} name={supplement.name} type="substance" />
-                  </div>
-                  
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                     <div className="text-xs font-medium text-slate-500 dark:text-zinc-500">
                       {supplement.accessTag}
@@ -569,17 +582,17 @@ export default function Map() {
               >
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{brand.name}</h3>
-                  <div className="flex items-center gap-1 text-xs font-medium text-amber-500 dark:text-amber-400">
-                    <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
-                    {brand.userRating}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-xs font-medium text-amber-500 dark:text-amber-400">
+                      <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
+                      {brand.userRating}
+                    </div>
+                    <SecondaryHideMenu id={brand.id} name={brand.name} type="brand" />
                   </div>
                 </div>
                 {isAdminLike && isHidden('brand', brand.id) && (
                   <span className="mb-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                 )}
-                <div className="mb-3">
-                  <HideItemButton id={brand.id} name={brand.name} type="brand" />
-                </div>
                 <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-zinc-400">
                   <div className="flex items-center gap-1">
                     <Activity size={14} />
@@ -610,11 +623,14 @@ export default function Map() {
                     <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                       {stack.name}
                     </h3>
-                    {stack.status === 'pending' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                        Pending Review
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {stack.status === 'pending' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                          Pending Review
+                        </span>
+                      )}
+                      <SecondaryHideMenu id={stack.id} name={stack.name} type="stack" />
+                    </div>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mb-3 flex-1">
                     {stack.description}
@@ -622,9 +638,6 @@ export default function Map() {
                   {isAdminLike && isHidden('stack', stack.id) && (
                     <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                   )}
-                  <div className="mb-3">
-                    <HideItemButton id={stack.id} name={stack.name} type="stack" />
-                  </div>
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                     <div className="text-xs text-slate-500 dark:text-zinc-500">
                       {stack.substances.length} substances

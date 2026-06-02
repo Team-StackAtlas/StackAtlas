@@ -72,7 +72,10 @@ export default function PostCard({ post }: PostCardProps) {
           {/* Quality Badge & Menu */}
           <div className="flex items-center gap-2 relative" ref={menuRef}>
             {post.isGold && (
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20">
+              <div
+                title="Gold: structured Dispatch with enough required fields for higher-quality review."
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20"
+              >
                 <Award size={12} className="text-amber-500" />
                 Gold
               </div>
