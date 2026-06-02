@@ -5,12 +5,15 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useUserScope } from '../context/UserScopeContext';
 import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';
+import { MockRolePanels } from './MockRolePanels';
+import { useMockComms } from '../hooks/useMockComms';
 
 export default function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { scope, isInitialized } = useUserScope();
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const { unreadBadgeCount } = useMockComms();
 
   if (isInitialized && !scope.accessLevel) {
     return <Navigate to="/onboarding" replace />;
@@ -82,10 +85,18 @@ export default function Layout() {
               >
                 <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
                 <span className="font-medium">{item.name}</span>
+                {item.name === 'Comms' && unreadBadgeCount > 0 && (
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                    {unreadBadgeCount}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
+        <div className="px-4 pb-4">
+          <MockRolePanels />
+        </div>
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 space-y-2">
           <button 
             onClick={toggleTheme}
@@ -142,6 +153,10 @@ export default function Layout() {
             </h1>
         </header>
 
+        <div className="md:hidden p-4 pb-0">
+          <MockRolePanels />
+        </div>
+
         {/* Main Content */}
         <main className="mx-auto w-full max-w-md md:max-w-5xl p-0 md:p-6">
           <Outlet />
@@ -162,7 +177,14 @@ export default function Layout() {
                   isActive ? "text-emerald-600 dark:text-emerald-500" : "text-slate-500 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-300"
                 )}
               >
-                <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
+                <span className="relative">
+                  <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
+                  {item.name === 'Comms' && unreadBadgeCount > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white">
+                      {unreadBadgeCount}
+                    </span>
+                  )}
+                </span>
                 <span className="text-[10px] font-medium">{item.name}</span>
               </Link>
             );

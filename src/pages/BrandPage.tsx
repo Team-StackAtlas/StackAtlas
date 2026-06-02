@@ -8,6 +8,8 @@ import ReportModal from '../components/ReportModal';
 import WikiText from '../components/WikiText';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
+import { AdminObjectActions } from '../components/AdminObjectActions';
+import { HideItemButton } from '../components/HideItemButton';
 
 export default function BrandPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +45,7 @@ export default function BrandPage() {
                 <Edit3 size={14} />
                 Suggest Edit
               </button>
+              <HideItemButton id={brand.id} name={brand.name} type="brand" />
               <button 
                 onClick={() => setIsReportOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
@@ -139,6 +142,8 @@ export default function BrandPage() {
         </div>
       </div>
 
+      <AdminObjectActions targetType="brand" targetId={brand.id} targetName={brand.name} />
+
       <div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-6">Dispatches & Signals</h2>
         <div className="space-y-4">
@@ -163,7 +168,9 @@ export default function BrandPage() {
       <ReportModal 
         isOpen={isReportOpen} 
         onClose={() => setIsReportOpen(false)} 
-        entityName={brand.name} 
+        entityName={brand.name}
+        targetType="brand"
+        targetId={brand.id}
       />
       <CompareModal
         isOpen={isCompareOpen}

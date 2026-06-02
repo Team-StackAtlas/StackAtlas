@@ -130,6 +130,7 @@ export interface Supplement {
   clinicalBaseline?: { dosage: string; links: string[] };
   globalAverage?: string;
   peerMatch?: string;
+  formula?: string;
 }
 
 export interface Brand {
@@ -319,6 +320,7 @@ export const SUPPLEMENTS: Supplement[] = [
   {
     id: 'magnesium-glycinate',
     name: 'Magnesium Glycinate',
+    formula: 'C4H8MgN2O4',
     description: 'A highly bioavailable form of magnesium bound to glycine, known for its calming properties and support for sleep and muscle recovery.',
     paths: [
       { domain: 'Mind', category: 'Sleep' },
@@ -345,6 +347,7 @@ export const SUPPLEMENTS: Supplement[] = [
   {
     id: 'caffeine',
     name: 'Caffeine',
+    formula: 'C8H10N4O2',
     description: 'A central nervous system stimulant that reduces fatigue and improves focus and endurance.',
     paths: [
       { domain: 'Mind', category: 'Focus' },
@@ -370,6 +373,7 @@ export const SUPPLEMENTS: Supplement[] = [
   {
     id: 'creatine-monohydrate',
     name: 'Creatine Monohydrate',
+    formula: 'C4H9N3O2',
     description: 'A naturally occurring compound that helps supply energy to cells, primarily muscle, improving strength and cognitive function.',
     paths: [
       { domain: 'Body', category: 'Strength & Muscle' },
@@ -420,6 +424,7 @@ export const SUPPLEMENTS: Supplement[] = [
   {
     id: 'melatonin',
     name: 'Melatonin',
+    formula: 'C13H16N2O2',
     description: 'A hormone that regulates the sleep-wake cycle, useful for jet lag and sleep onset.',
     paths: [
       { domain: 'Mind', category: 'Sleep' },
@@ -443,6 +448,7 @@ export const SUPPLEMENTS: Supplement[] = [
   {
     id: 'modafinil',
     name: 'Modafinil',
+    formula: 'C15H15NO2S',
     description: 'A wakefulness-promoting agent used to treat narcolepsy and shift work sleep disorder, often used off-label for cognitive enhancement.',
     paths: [
       { domain: 'Mind', category: 'Focus' }
@@ -577,6 +583,7 @@ export const SUPPLEMENTS: Supplement[] = [
   {
     id: 'l-theanine',
     name: 'L-Theanine',
+    formula: 'C7H14N2O3',
     description: 'An amino acid found in tea leaves that promotes relaxation without drowsiness, often paired with caffeine to smooth out jitters.',
     paths: [
       { domain: 'Mind', category: 'Focus' },
