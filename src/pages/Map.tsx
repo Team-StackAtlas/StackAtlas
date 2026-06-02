@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Filter, Activity, ShieldAlert, Star, Settings2, X, Plus } from 'lucide-react';
 import { DOMAIN_STRUCTURE, SUPPLEMENTS, BRANDS, STACKS, USERS, Domain, TypeTag, StatusClassification, AdministrationMethod, TYPE_TAGS } from '../data/mockData';
 import { Link } from 'react-router-dom';
@@ -8,9 +8,40 @@ import { useFilters } from '../context/FilterContext';
 import { useSaved } from '../hooks/useSaved';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
+import { HideItemButton } from '../components/HideItemButton';
+import { useHiddenItems } from '../hooks/useHiddenItems';
+import { useMockRole } from '../context/MockRoleContext';
 
 const ADMIN_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injectable', '🧴 Topical', '👅 Sublingual'];
 const STATUSES: StatusClassification[] = ['🟢 Baseline', '🔵 Clinical', '🟣 Frontier', '🟡 Unregulated', '🟠 Restricted', '🔴 Illicit'];
+
+type SearchableType = 'substance' | 'brand' | 'stack';
+type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
+type SearchResult = RecentSearch & { description: string; path: string; matchedOn: string; tags: string[] };
+
+const RECENT_SEARCHES_STORAGE_KEY = 'stackatlas.recentSearches';
+
+function normalizeSearchText(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function searchMatches(query: string, fields: string[]) {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return false;
+  const haystack = normalizeSearchText(fields.filter(Boolean).join(' '));
+  return normalizedQuery.split(' ').every((term) => haystack.includes(term));
+}
+
+function readRecentSearches(): RecentSearch[] {
+  try {
+    const stored = localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function Map() {
   const { scope } = useUserScope();
@@ -25,6 +56,8 @@ export default function Map() {
     toggleStatus
   } = useFilters();
   const { savedItems } = useSaved();
+  const { isAdminLike } = useMockRole();
+  const { isHidden, hasHiddenTag } = useHiddenItems();
   
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
   const [activeTab, setActiveTab] = useState<'Substances' | 'Brands' | 'Stacks'>('Substances');
@@ -33,26 +66,102 @@ export default function Map() {
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<{id: string, name: string, type: 'substance' | 'brand' | 'stack'}[]>(() => {
-    const saved = localStorage.getItem('recentSearches');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => readRecentSearches());
   
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [isCreateStackOpen, setIsCreateStackOpen] = useState(false);
 
   const domains = ['All', ...DOMAIN_STRUCTURE.map(d => d.domain).filter(d => d !== 'All')];
+  const visibleDomains = isAdminLike ? domains : domains.filter(domain => domain === 'All' || !isHidden('tag', `domain:${domain}`));
   
   const currentDomainData = DOMAIN_STRUCTURE.find(d => d.domain === activeDomain);
   const categories = currentDomainData ? currentDomainData.categories.map(c => c.name) : [];
+  const visibleCategories = isAdminLike ? categories : categories.filter(category => category === 'All' || !isHidden('tag', `category:${activeDomain}:${category}`));
+  const markerFilters = ['Clinical Use', 'Longevity Protocol', 'Athletic Performance', 'Cognitive Stack Culture', 'East Asian Traditional Medicine', 'Western Herbalism'];
+  const visibleMarkerFilters = isAdminLike ? markerFilters : markerFilters.filter(marker => !isHidden('tag', `marker:${marker}`));
 
-  const handleSearchClick = (item: {id: string, name: string, type: 'substance' | 'brand' | 'stack'}) => {
-    const newRecent = [item, ...recentSearches.filter(r => r.id !== item.id)].slice(0, 5);
+  const handleSearchClick = (item: { id: string; name: string; type: SearchableType }) => {
+    const recentItem: RecentSearch = { ...item, timestamp: new Date().toISOString() };
+    const newRecent = [recentItem, ...recentSearches.filter(r => !(r.id === item.id && r.type === item.type))].slice(0, 8);
     setRecentSearches(newRecent);
-    localStorage.setItem('recentSearches', JSON.stringify(newRecent));
+    localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(newRecent));
   };
 
+  const searchResults = useMemo<SearchResult[]>(() => {
+    if (!searchQuery.trim()) return [];
+
+    const substanceResults: SearchResult[] = SUPPLEMENTS
+      .filter((supplement) => searchMatches(searchQuery, [
+        supplement.name,
+        supplement.description,
+        supplement.accessTag,
+        ...supplement.paths.flatMap((path) => [path.domain, path.category]),
+        ...supplement.typeTags,
+        ...supplement.status,
+        ...supplement.administration,
+        ...(supplement.markers || []),
+        ...supplement.healthRisks,
+        ...supplement.subjectiveEffects,
+        ...supplement.possiblePairings,
+        supplement.riskLevel,
+      ]))
+      .map((supplement) => ({
+        id: supplement.id,
+        name: supplement.name,
+        type: 'substance' as const,
+        timestamp: new Date().toISOString(),
+        description: supplement.description,
+        path: `/supplement/${supplement.id}`,
+        matchedOn: 'Substance',
+        tags: [supplement.accessTag, ...supplement.paths.flatMap((path) => [path.domain, path.category]), ...supplement.typeTags, ...(supplement.markers || [])],
+      }));
+
+    const brandResults: SearchResult[] = BRANDS
+      .filter((brand) => searchMatches(searchQuery, [
+        brand.name,
+        brand.description || '',
+        ...(brand.products || []),
+        ...(brand.markers || []),
+        ...brand.thirdPartyTestingLinks,
+      ]))
+      .map((brand) => ({
+        id: brand.id,
+        name: brand.name,
+        type: 'brand' as const,
+        timestamp: new Date().toISOString(),
+        description: brand.description || `${brand.userRating}/5 user rating`,
+        path: `/brand/${brand.id}`,
+        matchedOn: 'Brand',
+        tags: [...(brand.markers || [])],
+      }));
+
+    const stackResults: SearchResult[] = STACKS
+      .filter((stack) => searchMatches(searchQuery, [
+        stack.name,
+        stack.description,
+        stack.status,
+        ...(stack.markers || []),
+        ...stack.substances.map((substance) => substance.name),
+      ]))
+      .map((stack) => ({
+        id: stack.id,
+        name: stack.name,
+        type: 'stack' as const,
+        timestamp: new Date().toISOString(),
+        description: stack.description,
+        path: `/stack/${stack.id}`,
+        matchedOn: 'Stack',
+        tags: [...(stack.markers || []), ...stack.substances.map((substance) => substance.name)],
+      }));
+
+    return [...substanceResults, ...brandResults, ...stackResults].slice(0, 12);
+  }, [searchQuery]);
+
+  const visibleSearchResults = isAdminLike ? searchResults : searchResults.filter((result) => !isHidden(result.type, result.id) && !hasHiddenTag(result.tags));
+  const hiddenSearchResultsCount = searchResults.length - visibleSearchResults.length;
+
   const filteredSupplements = SUPPLEMENTS.filter(s => {
+    if (!isAdminLike && (isHidden('substance', s.id) || hasHiddenTag([s.accessTag, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || [])]))) return false;
     // Feed Type Filtering
     if (feedType === 'Following') {
       const isSaved = savedItems.some(item => item.id === s.id && item.type === 'substance');
@@ -90,7 +199,7 @@ export default function Map() {
     if (!s.administration.some(a => activeAdmins.includes(a))) return false;
 
     // Search Query Filtering
-    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, s.accessTag, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
 
     return true;
   }).sort((a, b) => {
@@ -107,20 +216,22 @@ export default function Map() {
   });
 
   const filteredBrands = BRANDS.filter(b => {
+    if (!isAdminLike && (isHidden('brand', b.id) || hasHiddenTag([...(b.markers || [])]))) return false;
     if (feedType === 'Following') {
       const isSaved = savedItems.some(item => item.id === b.id && item.type === 'brand');
       if (!isSaved) return false;
     }
-    if (searchQuery && !b.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery && !searchMatches(searchQuery, [b.name, b.description || '', ...(b.products || []), ...(b.markers || [])])) return false;
     return true;
   });
 
   const filteredStacks = STACKS.filter(s => {
+    if (!isAdminLike && (isHidden('stack', s.id) || hasHiddenTag([...(s.markers || []), ...s.substances.map(substance => substance.name)]))) return false;
     if (feedType === 'Following') {
       const isSaved = savedItems.some(item => item.id === s.id && item.type === 'stack');
       if (!isSaved) return false;
     }
-    if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, ...(s.markers || []), ...s.substances.map(substance => substance.name)])) return false;
     return true;
   });
 
@@ -213,52 +324,35 @@ export default function Map() {
               )}
               {searchQuery && (
                 <>
-                  {/* Search Results */}
-                  {SUPPLEMENTS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3).map(s => (
+                  <div className="px-4 py-2 text-xs font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider bg-slate-50 dark:bg-zinc-950/50">
+                    Search Results
+                  </div>
+                  {visibleSearchResults.map((result) => (
                     <Link
-                      key={s.id}
-                      to={`/supplement/${s.id}`}
+                      key={`${result.type}-${result.id}`}
+                      to={result.path}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors border-t border-slate-100 dark:border-zinc-800/50 first:border-0"
-                      onClick={() => handleSearchClick({ id: s.id, name: s.name, type: 'substance' })}
+                      onClick={() => handleSearchClick({ id: result.id, name: result.name, type: result.type })}
                     >
                       <Search className="h-4 w-4 text-slate-400" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-slate-900 dark:text-zinc-100">{s.name}</div>
-                        <div className="text-xs text-slate-500 dark:text-zinc-400">Substance</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="truncate text-sm font-medium text-slate-900 dark:text-zinc-100">{result.name}</div>
+                          {isAdminLike && isHidden(result.type, result.id) && (
+                            <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-zinc-400 capitalize">{result.matchedOn}</div>
+                        <p className="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-zinc-500">{result.description}</p>
                       </div>
                     </Link>
                   ))}
-                  {BRANDS.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3).map(b => (
-                    <Link
-                      key={b.id}
-                      to={`/brand/${b.id}`}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors border-t border-slate-100 dark:border-zinc-800/50 first:border-0"
-                      onClick={() => handleSearchClick({ id: b.id, name: b.name, type: 'brand' })}
-                    >
-                      <Search className="h-4 w-4 text-slate-400" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-slate-900 dark:text-zinc-100">{b.name}</div>
-                        <div className="text-xs text-slate-500 dark:text-zinc-400">Brand</div>
-                      </div>
-                    </Link>
-                  ))}
-                  {STACKS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3).map(s => (
-                    <Link
-                      key={s.id}
-                      to={`/stack/${s.id}`}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors border-t border-slate-100 dark:border-zinc-800/50 first:border-0"
-                      onClick={() => handleSearchClick({ id: s.id, name: s.name, type: 'stack' })}
-                    >
-                      <Search className="h-4 w-4 text-slate-400" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-slate-900 dark:text-zinc-100">{s.name}</div>
-                        <div className="text-xs text-slate-500 dark:text-zinc-400">Stack</div>
-                      </div>
-                    </Link>
-                  ))}
-                  {SUPPLEMENTS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 &&
-                   BRANDS.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 &&
-                   STACKS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                  {hiddenSearchResultsCount > 0 && !isAdminLike && (
+                    <div className="border-t border-slate-100 px-4 py-3 text-xs text-slate-500 dark:border-zinc-800/50 dark:text-zinc-400">
+                      Some hidden results were excluded. Manage Hidden Items in Profile.
+                    </div>
+                  )}
+                  {visibleSearchResults.length === 0 && (
                     <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-zinc-400">
                       No results found for "{searchQuery}"
                     </div>
@@ -273,7 +367,7 @@ export default function Map() {
       {/* Browse Domains */}
       <div className="px-4 pb-2">
         <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-          {domains.map(domain => (
+          {visibleDomains.map(domain => (
             <button
               key={domain}
               onClick={() => {
@@ -294,10 +388,10 @@ export default function Map() {
       </div>
 
       {/* Categories (if domain selected) */}
-      {categories.length > 0 && (
+      {visibleCategories.length > 0 && (
         <div className="px-4 pb-2">
           <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-            {categories.map(category => (
+            {visibleCategories.map(category => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
@@ -318,19 +412,21 @@ export default function Map() {
       {/* Markers Filter */}
       <div className="px-4 pb-2">
         <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-          {['Clinical Use', 'Longevity Protocol', 'Athletic Performance', 'Cognitive Stack Culture', 'East Asian Traditional Medicine', 'Western Herbalism'].map(marker => (
-            <button
-              key={marker}
-              onClick={() => setActiveMarker(activeMarker === marker ? null : marker)}
-              className={cn(
-                "whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
-                activeMarker === marker 
-                  ? "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 shadow-sm" 
-                  : "bg-white/50 dark:bg-zinc-900/50 text-slate-500 dark:text-zinc-500 border-slate-200 dark:border-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-300"
-              )}
-            >
-              {marker}
-            </button>
+          {visibleMarkerFilters.map(marker => (
+            <div key={marker} className="flex items-center gap-1">
+              <button
+                onClick={() => setActiveMarker(activeMarker === marker ? null : marker)}
+                className={cn(
+                  "whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
+                  activeMarker === marker 
+                    ? "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 shadow-sm" 
+                    : "bg-white/50 dark:bg-zinc-900/50 text-slate-500 dark:text-zinc-500 border-slate-200 dark:border-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-300"
+                )}
+              >
+                {marker}
+              </button>
+              <HideItemButton id={`marker:${marker}`} name={marker} type="tag" tagType="Marker" className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500" />
+            </div>
           ))}
         </div>
       </div>
@@ -438,6 +534,12 @@ export default function Map() {
                   <p className="text-sm text-slate-600 dark:text-zinc-400 line-clamp-3 mb-4 flex-1 leading-relaxed">
                     {supplement.description}
                   </p>
+                  {isAdminLike && isHidden('substance', supplement.id) && (
+                    <span className="mb-3 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
+                  )}
+                  <div className="mb-3">
+                    <HideItemButton id={supplement.id} name={supplement.name} type="substance" />
+                  </div>
                   
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                     <div className="text-xs font-medium text-slate-500 dark:text-zinc-500">
@@ -471,6 +573,12 @@ export default function Map() {
                     <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
                     {brand.userRating}
                   </div>
+                </div>
+                {isAdminLike && isHidden('brand', brand.id) && (
+                  <span className="mb-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
+                )}
+                <div className="mb-3">
+                  <HideItemButton id={brand.id} name={brand.name} type="brand" />
                 </div>
                 <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-zinc-400">
                   <div className="flex items-center gap-1">
@@ -511,6 +619,12 @@ export default function Map() {
                   <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mb-3 flex-1">
                     {stack.description}
                   </p>
+                  {isAdminLike && isHidden('stack', stack.id) && (
+                    <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
+                  )}
+                  <div className="mb-3">
+                    <HideItemButton id={stack.id} name={stack.name} type="stack" />
+                  </div>
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                     <div className="text-xs text-slate-500 dark:text-zinc-500">
                       {stack.substances.length} substances
