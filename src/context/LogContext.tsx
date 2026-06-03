@@ -60,16 +60,22 @@ interface LogContextType {
 
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
-export function LogProvider({ children }: { children: React.ReactNode }) {
-  const [logs, setLogs] = useState<IntakeLog[]>(() => {
-    const saved = localStorage.getItem('user_logs');
-    return saved ? JSON.parse(saved) : [];
-  });
+// Safely read a JSON array from localStorage. A corrupted entry returns []
+// instead of throwing during render (which would white-screen the app).
+function readStoredArray<T>(key: string): T[] {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
-  const [notes, setNotes] = useState<PrivateNote[]>(() => {
-    const saved = localStorage.getItem('user_notes');
-    return saved ? JSON.parse(saved) : [];
-  });
+export function LogProvider({ children }: { children: React.ReactNode }) {
+  const [logs, setLogs] = useState<IntakeLog[]>(() => readStoredArray<IntakeLog>('user_logs'));
+  const [notes, setNotes] = useState<PrivateNote[]>(() => readStoredArray<PrivateNote>('user_notes'));
 
   useEffect(() => {
     localStorage.setItem('user_logs', JSON.stringify(logs));

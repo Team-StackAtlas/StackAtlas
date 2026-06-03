@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Edit2, Plus } from 'lucide-react';
-import { useLogs } from '../contexts/LogContext';
+import { useLogs } from '../context/LogContext';
 import { cn } from '../lib/utils';
 import { SUPPLEMENTS, STACKS } from '../data/mockData';
 

@@ -3,7 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>StackAtlas</title>
+    <!--
+      Runtime configuration. The host/deployment can replace the values below
+      (e.g. by templating this file at serve time) without rebuilding the app,
+      so secrets are not baked into the JS bundle.
+      WARNING: Any value placed here is still visible to the browser. Do not
+      ship a real GEMINI_API_KEY this way in production — proxy it server-side.
+    -->
+    <script>
+      window.__APP_CONFIG__ = {
+        GEMINI_API_KEY: '',
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
