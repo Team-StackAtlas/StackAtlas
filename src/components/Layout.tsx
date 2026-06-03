@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { Compass, Users, PlusSquare, Wrench, Inbox, User, Moon, Sun, Layers, Shield, PenSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import { useUserScope } from '../context/UserScopeContext';
 import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';

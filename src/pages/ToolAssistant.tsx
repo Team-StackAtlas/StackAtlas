@@ -102,7 +102,10 @@ export default function ToolAssistant() {
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
+      // Read the key from runtime config (window.__APP_CONFIG__ in index.html)
+      // rather than a build-time-injected env var, so it is not baked into the
+      // shipped JS bundle. See vite.config.ts for the full security note.
+      const apiKey = window.__APP_CONFIG__?.GEMINI_API_KEY;
       if (!apiKey) {
         throw new Error('Gemini API key is missing. Please set it in your environment variables.');
       }

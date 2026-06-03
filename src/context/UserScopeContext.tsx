@@ -18,15 +18,19 @@ const UserScopeContext = createContext<UserScopeContextType | undefined>(undefin
 
 export const UserScopeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [scope, setScope] = useState<UserScope>(() => {
-    const saved = localStorage.getItem('stackatlas_user_scope');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
+    const fallback: UserScope = {
       accessLevel: null,
       primaryRegion: null,
       secondaryRegions: [],
     };
+    try {
+      const saved = localStorage.getItem('stackatlas_user_scope');
+      return saved ? { ...fallback, ...JSON.parse(saved) } : fallback;
+    } catch {
+      // Corrupted localStorage entry — fall back to defaults instead of
+      // throwing during render (which would white-screen the app).
+      return fallback;
+    }
   });
   const [isInitialized, setIsInitialized] = useState(false);
 
