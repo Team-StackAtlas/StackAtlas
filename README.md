@@ -75,13 +75,19 @@ The rest of the app works without a key; only the Lab assistants require one.
 
 ## Scripts
 
-| Script            | Description                                  |
-| ----------------- | -------------------------------------------- |
-| `npm run dev`     | Start the Vite dev server on port 3000.      |
-| `npm run build`   | Production build to `dist/`.                 |
-| `npm run preview` | Preview the production build locally.        |
-| `npm run lint`    | Type-check with `tsc --noEmit`.              |
-| `npm run clean`   | Remove the `dist/` build output.             |
+| Script                 | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| `npm run dev`          | Start the Vite dev server on port 3000.      |
+| `npm run build`        | Production build to `dist/`.                 |
+| `npm run preview`      | Preview the production build locally.        |
+| `npm run typecheck`    | Type-check with `tsc --noEmit`.              |
+| `npm run lint`         | Lint with ESLint.                            |
+| `npm run format`       | Format the codebase with Prettier.           |
+| `npm run format:check` | Check formatting without writing changes.    |
+| `npm run clean`        | Remove the `dist/` build output.             |
+
+Continuous integration (`.github/workflows/ci.yml`) runs the type-check, lint,
+and build on every pull request.
 
 ## Project structure
 
@@ -105,10 +111,10 @@ This is a prototype, and several things are intentionally not done yet:
 
 - A real backend + database (data is currently mock + `localStorage`).
 - A server-side proxy for the Gemini API key.
-- Automated tests and CI (the current `tests/` contains a scraping utility, not
-  a test suite).
-- Linting/formatting config (ESLint/Prettier) and stricter TypeScript settings.
-- Accessibility passes on modals and tab controls.
+- An automated test suite (the current `tests/` contains a scraping utility, not
+  real tests).
+- Burning down the remaining ESLint warnings (e.g. `any` usage, unused vars) and
+  ratcheting them back up to errors.
 
 ## Origin
 
