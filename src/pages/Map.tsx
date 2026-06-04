@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
-import { useSaved } from '../hooks/useSaved';
+import { useFollowing } from '../hooks/useFollowing';
 import AccessBadge from '../components/AccessBadge';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
@@ -55,7 +55,7 @@ export default function Map() {
   const visibleClassifications = scope.accessLevel
     ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
     : CLASSIFICATIONS;
-  const { savedItems } = useSaved();
+  const { isFollowing } = useFollowing();
   const { isAdminLike } = useMockRole();
   const { isHidden, hasHiddenTag } = useHiddenItems();
   
@@ -163,10 +163,7 @@ export default function Map() {
   const filteredSupplements = SUPPLEMENTS.filter(s => {
     if (!isAdminLike && (isHidden('substance', s.id) || hasHiddenTag([...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || [])]))) return false;
     // Feed Type Filtering
-    if (feedType === 'Following') {
-      const isSaved = savedItems.some(item => item.id === s.id && item.type === 'substance');
-      if (!isSaved) return false;
-    }
+    if (feedType === 'Following' && !isFollowing('substance', s.id)) return false;
 
     // Scope ceiling: classification must be visible at the current research scope
     if (!visibleClassifications.includes(s.classification)) return false;
@@ -214,20 +211,14 @@ export default function Map() {
 
   const filteredBrands = BRANDS.filter(b => {
     if (!isAdminLike && (isHidden('brand', b.id) || hasHiddenTag([...(b.markers || [])]))) return false;
-    if (feedType === 'Following') {
-      const isSaved = savedItems.some(item => item.id === b.id && item.type === 'brand');
-      if (!isSaved) return false;
-    }
+    if (feedType === 'Following' && !isFollowing('brand', b.id)) return false;
     if (searchQuery && !searchMatches(searchQuery, [b.name, b.description || '', ...(b.products || []), ...(b.markers || [])])) return false;
     return true;
   });
 
   const filteredStacks = STACKS.filter(s => {
     if (!isAdminLike && (isHidden('stack', s.id) || hasHiddenTag([...(s.markers || []), ...s.substances.map(substance => substance.name)]))) return false;
-    if (feedType === 'Following') {
-      const isSaved = savedItems.some(item => item.id === s.id && item.type === 'stack');
-      if (!isSaved) return false;
-    }
+    if (feedType === 'Following' && !isFollowing('stack', s.id)) return false;
     if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, ...(s.markers || []), ...s.substances.map(substance => substance.name)])) return false;
     return true;
   });

@@ -10,6 +10,7 @@ import { SaveButton } from '../components/SaveButton';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
 import { Modal } from '../components/ui/Modal';
 import { useToast } from '../components/ui/ToastProvider';
+import AccountSettingsPanel from '../components/AccountSettingsPanel';
 
 function VerificationModal({ isOpen, onClose, onVerify }: { isOpen: boolean, onClose: () => void, onVerify: () => void }) {
   const [step, setStep] = useState(1);
@@ -320,6 +321,8 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {isOwnProfile && <AccountSettingsPanel />}
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 dark:border-zinc-800 mb-6">

@@ -62,12 +62,30 @@ export interface SourceDTO extends SourceInput {
   createdAt: ISODate;
 }
 
+export type UserRole = 'User' | 'Admin' | 'Developer';
+
+export interface ProfileSettings {
+  /** When true, the user's saved/watchlist is private (default true). */
+  savedPrivate?: boolean;
+  /** When true, public activity feed is shown on the profile. */
+  showActivity?: boolean;
+}
+
 export interface SessionUser {
   id: ID;
   email: string | null;
   username: string;
+  role: UserRole;
+  avatarUrl?: string;
   researchScope: 'Citizen' | 'Explorer';
   isVerified: boolean;
+}
+
+export interface ProfileStats {
+  followersCount: number;
+  followingCount: number;
+  dispatchCount: number;
+  signalCount: number;
 }
 
 export interface ProfileDTO {
@@ -76,10 +94,17 @@ export interface ProfileDTO {
   displayName?: string;
   bio?: string;
   website?: string;
+  avatarUrl?: string;
+  role: UserRole;
   researchScope: 'Citizen' | 'Explorer';
   isVerified: boolean;
+  joinDate: ISODate;
+  settings: ProfileSettings;
+  stats?: ProfileStats;
 }
-export type ProfileUpdate = Partial<Pick<ProfileDTO, 'displayName' | 'bio' | 'website' | 'researchScope'>>;
+export type ProfileUpdate = Partial<
+  Pick<ProfileDTO, 'displayName' | 'bio' | 'website' | 'researchScope' | 'avatarUrl' | 'settings'>
+>;
 
 export type SavedItemType = 'substance' | 'brand' | 'stack' | 'dispatch' | 'signal';
 export interface SavedItem {
