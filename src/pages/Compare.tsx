@@ -92,7 +92,7 @@ export default function Compare() {
               {renderComparisonRow('Average Dosage', item1.averageDosage, item2.averageDosage)}
               {renderComparisonRow('Length of Cycle', item1.lengthOfCycle, item2.lengthOfCycle)}
               {renderComparisonRow('Risk Level', item1.riskLevel, item2.riskLevel)}
-              {renderComparisonRow('Access Tag', item1.accessTag, item2.accessTag)}
+              {renderComparisonRow('Classification', item1.classification, item2.classification)}
               {renderComparisonRow('Tolerance Buildup', item1.toleranceBuildup, item2.toleranceBuildup)}
             </>
           )}

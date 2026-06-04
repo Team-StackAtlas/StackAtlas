@@ -1,11 +1,10 @@
 import { Settings2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useFilters } from '../context/FilterContext';
-import { StatusClassification, AdministrationMethod } from '../data/mockData';
+import { CLASSIFICATIONS, AdministrationMethod } from '../data/mockData';
 import { Modal } from './ui/Modal';
 
 const ADMIN_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injectable', '🧴 Topical', '👅 Sublingual'];
-const STATUSES: StatusClassification[] = ['🟢 Baseline', '🔵 Clinical', '🟣 Frontier', '🟡 Unregulated', '🟠 Restricted', '🔴 Illicit'];
 
 interface AdvancedSearchModalProps {
   isOpen: boolean;
@@ -15,9 +14,9 @@ interface AdvancedSearchModalProps {
 export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchModalProps) {
   const {
     activeAdmins,
-    activeStatuses,
+    activeClassifications,
     toggleAdmin,
-    toggleStatus
+    toggleClassification
   } = useFilters();
 
   return (
@@ -59,24 +58,24 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
             </div>
           </div>
 
-          {/* Right Panel: Status */}
+          {/* Right Panel: Classification */}
           <div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-4 uppercase tracking-wider">Status</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-4 uppercase tracking-wider">Classification</h3>
             <div className="space-y-2">
-              {STATUSES.map(status => {
-                const isActive = activeStatuses.includes(status);
+              {CLASSIFICATIONS.map(classification => {
+                const isActive = activeClassifications.includes(classification);
                 return (
                   <button
-                    key={status}
-                    onClick={() => toggleStatus(status)}
+                    key={classification}
+                    onClick={() => toggleClassification(classification)}
                     className={cn(
                       "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all border",
-                      isActive 
-                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 shadow-sm" 
+                      isActive
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 shadow-sm"
                         : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800"
                     )}
                   >
-                    <span>{status}</span>
+                    <span>{classification}</span>
                     <div className={cn(
                       "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
                       isActive ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-zinc-600"

@@ -1,33 +1,39 @@
 # StackAtlas
 
-A community platform for supplements, peptides, and nootropics — verified user
+A community platform for supplements, peptides, and nootropics — community
 reviews, dosage and protocol info, brand reliability ratings, personal intake
-logging, and AI-assisted research tools.
+logging, and side-by-side comparison tools.
 
 > **Status: early-stage prototype.** The app is currently a client-only
 > single-page application. All content (substances, stacks, brands, posts) is
 > served from local mock/seed data and user activity (logs, notes, saves,
 > roles) is persisted to the browser's `localStorage`. There is **no backend or
-> database yet**. The only live external integration is the Gemini-powered
-> research assistants.
+> database yet**.
+
+## Concepts
+
+- **Classification** — each substance has one of four classifications:
+  **Everyday**, **Clinical**, **Frontier**, or **Unknown**. These describe how
+  established or experimental a substance is and carry no legal meaning.
+- **Research scope** — chosen during onboarding, acts as an access ceiling over
+  classifications:
+  - **Citizen** sees Everyday and Clinical.
+  - **Explorer** sees Everyday, Clinical, Frontier, and Unknown.
 
 ## Features
 
-- **Map** — browse and search the substance/stack/brand catalog with advanced
-  filtering (administration method, status, access level, region).
+- **Map** — browse and search the substance/stack/brand catalog with filtering
+  by type, administration method, and classification (gated by research scope).
 - **Square** — a community feed of posts, dispatches, and signals.
-- **Ledger** — track verifications, reports, and moderation activity.
-- **Lab** — AI research assistants (powered by Google Gemini) for questions
-  about supplements and protocols.
+- **Lab** — side-by-side comparison tools for substances, brands, and stacks.
 - **Comms** — a mock inbox / notifications surface.
-- **Profile** — saved items, your stacks, role-specific panels, and account
-  scope (access level + region).
-- **Logging** — record intake logs and private notes, viewable on a calendar.
-- **Compare** — side-by-side comparison of substances/stacks with similarity
-  suggestions.
+- **Profile** — saved items, your stacks, role-specific panels, and research
+  scope.
+- **Logging** — record intake logs and private notes.
+- **Compare** — side-by-side comparison with similarity suggestions.
 
 Supporting UX: light/dark theme (respects system preference), role-based UI,
-region scoping, and an onboarding flow.
+and an onboarding flow.
 
 ## Tech stack
 
@@ -35,7 +41,6 @@ region scoping, and an onboarding flow.
 - **Vite 6** (dev server + build)
 - **React Router 7** for routing
 - **Tailwind CSS 4** for styling
-- **Google Gemini** (`@google/genai`) for the Lab assistants
 - `lucide-react`, `motion`, `date-fns`, `react-markdown`, `clsx`,
   `tailwind-merge`
 
@@ -50,28 +55,6 @@ npm install
 # 2. Run the dev server (http://localhost:3000)
 npm run dev
 ```
-
-### Enabling the AI assistants (optional)
-
-The Lab assistants call the Gemini API. The key is read at runtime from
-`window.__APP_CONFIG__` in [`index.html`](index.html) so it is not baked into
-the built JS bundle. To try the assistants locally, set the value there:
-
-```html
-<script>
-  window.__APP_CONFIG__ = {
-    GEMINI_API_KEY: 'your-key-here',
-  };
-</script>
-```
-
-> ⚠️ **Security note:** the Gemini call currently happens **client-side**, so
-> any key placed here is visible to the browser. This is acceptable for local
-> prototyping only. **Do not ship a real key this way in production** — the
-> call must be moved behind a server-side proxy first (tracked as a TODO in the
-> code).
-
-The rest of the app works without a key; only the Lab assistants require one.
 
 ## Scripts
 
@@ -99,7 +82,6 @@ src/
   hooks/         Custom hooks (saved items, hidden items, mock comms)
   data/          Mock catalog data and seed posts
   lib/           Shared utilities
-index.html       App shell + runtime config (window.__APP_CONFIG__)
 ```
 
 The `scrape.js`, `update_mock.cjs`, and `update_tags.cjs` files in the repo root
@@ -110,7 +92,7 @@ are one-off data/maintenance scripts used while building out the mock dataset.
 This is a prototype, and several things are intentionally not done yet:
 
 - A real backend + database (data is currently mock + `localStorage`).
-- A server-side proxy for the Gemini API key.
+- Region-aware information (deferred; not part of v1).
 - An automated test suite (the current `tests/` contains a scraping utility, not
   real tests).
 - Burning down the remaining ESLint warnings (e.g. `any` usage, unused vars) and

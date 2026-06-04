@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, Flame, TrendingUp, Clock, MessageSquare, ArrowBigUp, Layers, Plus, Settings2 } from 'lucide-react';
-import { BRANDS, DOMAIN_STRUCTURE, STACKS, SUPPLEMENTS, Domain, Post, getPosts } from '../data/mockData';
+import { BRANDS, DOMAIN_STRUCTURE, STACKS, SUPPLEMENTS, Domain, Post, getPosts, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS } from '../data/mockData';
 import { cn } from '../lib/utils';
 import PostCard from '../components/PostCard';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -13,7 +13,10 @@ import { useMockRole } from '../context/MockRoleContext';
 
 export default function Square() {
   const { scope } = useUserScope();
-  const { activeTypes, activeAdmins, activeStatuses } = useFilters();
+  const { activeTypes, activeAdmins, activeClassifications } = useFilters();
+  const visibleClassifications = scope.accessLevel
+    ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
+    : CLASSIFICATIONS;
   const { savedItems } = useSaved();
   const { isAdminLike } = useMockRole();
   const { isHidden, hasHiddenTag } = useHiddenItems();
@@ -76,12 +79,12 @@ export default function Square() {
     if (p.type === 'Dispatch' && p.supplementId) {
       const supplement = SUPPLEMENTS.find(s => s.id === p.supplementId);
       if (supplement) {
-        if (scope.accessLevel === 'Citizen' && supplement.accessTag !== 'Standard') return false;
-        if (scope.accessLevel === 'Patient' && supplement.accessTag !== 'Standard' && supplement.accessTag !== 'Pharma') return false;
-        
+        // Scope ceiling by classification
+        if (!visibleClassifications.includes(supplement.classification)) return false;
+
         // Advanced Search Filtering
         if (!supplement.typeTags.some(t => activeTypes.includes(t))) return false;
-        if (supplement.status.some(st => !activeStatuses.includes(st))) return false;
+        if (!activeClassifications.includes(supplement.classification)) return false;
         if (!supplement.administration.some(a => activeAdmins.includes(a))) return false;
         
         // Marker Filtering

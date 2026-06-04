@@ -221,13 +221,11 @@ export default function Profile() {
           {isOwnProfile ? (
             <div className="flex gap-2">
               <Link to="/onboarding" className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-300 dark:border-zinc-700 text-sm font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shadow-sm bg-white dark:bg-zinc-900">
-                <ShieldCheck 
-                  size={16} 
+                <ShieldCheck
+                  size={16}
                   className={cn(
-                    scope.accessLevel === 'Patient' ? 'text-blue-500' :
-                    scope.accessLevel === 'Explorer' ? 'text-purple-500' :
-                    'text-emerald-500'
-                  )} 
+                    scope.accessLevel === 'Explorer' ? 'text-purple-500' : 'text-emerald-500'
+                  )}
                 />
                 Edit Scope
               </Link>

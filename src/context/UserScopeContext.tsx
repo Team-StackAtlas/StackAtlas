@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { ScopeLevel } from '../data/mockData';
 
-export type AccessLevel = 'Citizen' | 'Patient' | 'Explorer';
+export type AccessLevel = ScopeLevel;
 
 export interface UserScope {
   accessLevel: AccessLevel | null;
-  primaryRegion: string | null;
-  secondaryRegions: string[];
 }
 
 interface UserScopeContextType {
@@ -20,8 +19,6 @@ export const UserScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [scope, setScope] = useState<UserScope>(() => {
     const fallback: UserScope = {
       accessLevel: null,
-      primaryRegion: null,
-      secondaryRegions: [],
     };
     try {
       const saved = localStorage.getItem('stackatlas_user_scope');

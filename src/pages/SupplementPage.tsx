@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { SUPPLEMENTS, BRANDS, getPosts, TYPE_TAGS } from '../data/mockData';
-import { ShieldCheck, AlertTriangle, Activity, MapPin, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Flag } from 'lucide-react';
+import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Flag } from 'lucide-react';
 import PostCard from '../components/PostCard';
-import { useUserScope } from '../context/UserScopeContext';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
-import WikiText from '../components/WikiText';
+import AccessBadge from '../components/AccessBadge';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
@@ -15,7 +14,6 @@ import { HideItemButton } from '../components/HideItemButton';
 export default function SupplementPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { scope } = useUserScope();
   const supplement = SUPPLEMENTS.find(s => s.id === id);
   
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
@@ -66,11 +64,10 @@ export default function SupplementPage() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">{supplement.name}</h1>
-            {supplement.formula && (
-              <span className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-mono text-xs text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400" title="Molecular formula">
-                {supplement.formula}
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400" title="Classification">
+              <AccessBadge classification={supplement.classification} />
+              {supplement.classification}
+            </span>
             <div className="flex gap-2">
               {supplement.typeTags.map((tag, i) => {
                 const typeInfo = TYPE_TAGS.find(t => t.full === tag);
@@ -95,7 +92,7 @@ export default function SupplementPage() {
           )}
 
           <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-zinc-400 leading-relaxed">
-            <WikiText text={supplement.description} />
+            {supplement.description}
           </p>
         </div>
         <div className="flex flex-col gap-2 shrink-0 mt-8 sm:mt-0 w-full sm:w-auto">
@@ -251,51 +248,6 @@ export default function SupplementPage() {
 
         {/* Right Column */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-              <MapPin size={20} className="text-purple-500" />
-              Legality by Region
-            </h3>
-            
-            {(!scope.primaryRegion && (!scope.secondaryRegions || scope.secondaryRegions.length === 0)) ? (
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/50 text-center">
-                <p className="text-sm text-slate-600 dark:text-zinc-400 mb-2">Regional Status: Hidden.</p>
-                <Link to="/onboarding" className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
-                  Add Region to reveal legality
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {[scope.primaryRegion, ...(scope.secondaryRegions || [])].filter(Boolean).map(region => {
-                  if (!region) return null;
-                  // Mock logic: if region is in legalityByRegion, use it, else default based on accessTag
-                  let status = supplement.legalityByRegion[region];
-                  if (!status) {
-                    if (supplement.accessTag === 'Standard') status = 'OTC (S)';
-                    else if (supplement.accessTag === 'Pharma') status = 'Prescription (P)';
-                    else if (supplement.accessTag === 'Restricted') status = 'Restricted (!)';
-                    else if (supplement.accessTag === 'Frontier') status = 'Grey Area (F)';
-                    else status = 'Unregulated (U)';
-                  } else {
-                    // Append badge letter based on accessTag for existing data
-                    if (supplement.accessTag === 'Standard') status += ' (S)';
-                    else if (supplement.accessTag === 'Pharma') status += ' (P)';
-                    else if (supplement.accessTag === 'Restricted') status += ' (!)';
-                    else if (supplement.accessTag === 'Frontier') status += ' (F)';
-                    else status += ' (U)';
-                  }
-
-                  return (
-                    <div key={region} className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800/50 pb-2 last:border-0 last:pb-0">
-                      <span className="font-medium text-slate-700 dark:text-zinc-300">{region}</span>
-                      <span className="text-sm text-slate-500 dark:text-zinc-400 text-right max-w-[60%]">{status}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
           {/* Brand Database Section */}
           <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">

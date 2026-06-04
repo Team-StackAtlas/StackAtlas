@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Map from './pages/Map';
 import Square from './pages/Square';
-import Ledger from './pages/Ledger';
 import Lab from './pages/Lab';
 import Comms from './pages/Comms';
 import Profile from './pages/Profile';
@@ -14,7 +13,6 @@ import Login from './pages/Login';
 import LogIntake from './pages/LogIntake';
 import LogEntry from './pages/LogEntry';
 import LogNotes from './pages/LogNotes';
-import ToolAssistant from './pages/ToolAssistant';
 import Onboarding from './pages/Onboarding';
 import Create from './pages/Create';
 import Compare from './pages/Compare';
@@ -34,13 +32,11 @@ export default function App() {
             <Route path="/log/intake" element={<LogIntake />} />
             <Route path="/log/entry" element={<LogEntry />} />
             <Route path="/log/notes" element={<LogNotes />} />
-            <Route path="/lab/:toolId" element={<ToolAssistant />} />
             <Route path="/create" element={<Create />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<Navigate to="/map" replace />} />
               <Route path="map" element={<Map />} />
               <Route path="square" element={<Square />} />
-              <Route path="ledger" element={<Ledger />} />
               <Route path="lab" element={<Lab />} />
               <Route path="comms" element={<Comms />} />
               <Route path="profile" element={<Profile />} />
