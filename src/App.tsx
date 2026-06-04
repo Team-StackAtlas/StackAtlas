@@ -16,6 +16,7 @@ import LogNotes from './pages/LogNotes';
 import Onboarding from './pages/Onboarding';
 import Create from './pages/Create';
 import Compare from './pages/Compare';
+import RequireAuth from './components/RequireAuth';
 import { UserScopeProvider } from './context/UserScopeContext';
 import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
@@ -32,7 +33,7 @@ export default function App() {
             <Route path="/log/intake" element={<LogIntake />} />
             <Route path="/log/entry" element={<LogEntry />} />
             <Route path="/log/notes" element={<LogNotes />} />
-            <Route path="/create" element={<Create />} />
+            <Route path="/create" element={<RequireAuth><Create /></RequireAuth>} />
             <Route path="/" element={<Layout />}>
               <Route index element={<Navigate to="/map" replace />} />
               <Route path="map" element={<Map />} />

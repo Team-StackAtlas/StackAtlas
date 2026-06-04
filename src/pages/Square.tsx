@@ -6,7 +6,7 @@ import PostCard from '../components/PostCard';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
-import { useSaved } from '../hooks/useSaved';
+import { useFollowing } from '../hooks/useFollowing';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useMockRole } from '../context/MockRoleContext';
@@ -17,7 +17,7 @@ export default function Square() {
   const visibleClassifications = scope.accessLevel
     ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
     : CLASSIFICATIONS;
-  const { savedItems } = useSaved();
+  const { isFollowing } = useFollowing();
   const { isAdminLike } = useMockRole();
   const { isHidden, hasHiddenTag } = useHiddenItems();
   const [searchParams] = useSearchParams();
@@ -64,15 +64,15 @@ export default function Square() {
 
   const passesFeedFilters = (p: Post) => {
 
-    // Feed Type Filtering
+    // Feed Type Filtering — Following is public/social: posts by a followed
+    // author or linked to a followed substance/stack/brand.
     if (feedType === 'Following') {
-      // Mock "Following" logic: show posts linked to saved substances/stacks/brands
-      const isLinkedToSaved = savedItems.some(item => 
-        (item.type === 'substance' && p.supplementId === item.id) ||
-        (item.type === 'stack' && p.stackId === item.id) ||
-        (item.type === 'brand' && p.brandId === item.id)
-      );
-      if (!isLinkedToSaved) return false;
+      const isLinkedToFollowed =
+        isFollowing('user', p.author.id) ||
+        (!!p.supplementId && isFollowing('substance', p.supplementId)) ||
+        (!!p.stackId && isFollowing('stack', p.stackId)) ||
+        (!!p.brandId && isFollowing('brand', p.brandId));
+      if (!isLinkedToFollowed) return false;
     }
 
     // Access Level Filtering and Advanced Search Filtering for Dispatch posts

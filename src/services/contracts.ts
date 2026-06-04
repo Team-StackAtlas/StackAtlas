@@ -34,6 +34,7 @@ import type { ImportDataset, ImportReport } from './seed/import';
 
 export interface AuthService {
   getCurrentUser(): Promise<SessionUser | null>;
+  signUpWithEmail(email: string, password: string, username?: string): Promise<SessionUser | null>;
   signInWithEmail(email: string, password: string): Promise<SessionUser>;
   signOut(): Promise<void>;
 }

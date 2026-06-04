@@ -133,6 +133,42 @@ admin-only page (or Supabase SQL/Studio dashboard to start) showing:
 
 The contract for this lives in `OperatorService` in `contracts.ts`.
 
+## 5a. Accounts implemented (env-gated Supabase)
+
+Auth/account/state are now wired to Supabase behind the service contracts and
+gated on `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`:
+
+- `src/services/supabase/client.ts` — creates the client only when both env vars
+  are present (`isBackendConfigured`). The app runs fully offline (mock catalog)
+  without them.
+- `src/services/supabase/index.ts` — `createSupabaseAccountServices()` implements
+  `AuthService`, `ProfileService`, `SavedService`, `HiddenService`,
+  `FollowService`, `NotificationService` against the schema.
+- `src/context/AuthContext.tsx` (`useAuth`) — sign up / in / out, session
+  persistence, current user (+ profile + role), and route protection via
+  `src/components/RequireAuth.tsx` (inert when unconfigured, applied to `/create`).
+- `migrations/0002_account.sql` — adds `role` (User/Admin/Developer), `avatar_url`,
+  `settings jsonb`, a `profile_stats` view (followers/following/dispatch/signal
+  counts), and an `on_auth_user_created` trigger that auto-creates `users` +
+  `profiles` rows on sign-up.
+- Profile gains an account/settings/**Privacy & Data** panel
+  (`AccountSettingsPanel`) with avatar URL, private-saved toggle, role, and sign
+  out.
+
+**Saved vs Following separation:** Following (`useFollowing`, public/social) now
+drives the Following feed in Map/Square and is separate from Saved (`useSaved`,
+private/research). A user can save privately without following publicly.
+
+**Still on localStorage (dev fallback only):** `useSaved`, `useHiddenItems`, and
+`useFollowing` persist locally when the backend is unconfigured. Their Supabase
+services (`SavedService`/`HiddenService`/`FollowService`) are implemented; wiring
+those hooks to call the services when authenticated is the remaining integration
+step (UI-shape-preserving). No production *account* data (auth/profile/settings)
+is stored only in localStorage.
+
+To activate: create a Supabase project, apply `0001_initial_schema.sql` then
+`0002_account.sql`, and set the two env vars.
+
 ## 6. Rollout plan (incremental, non-breaking)
 
 1. **This PR** — schema + contracts + validated import/seed + docs. App unchanged.

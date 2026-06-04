@@ -8,6 +8,7 @@ import ReportModal from '../components/ReportModal';
 import AccessBadge from '../components/AccessBadge';
 import Sources from '../components/Sources';
 import { SaveButton } from '../components/SaveButton';
+import { useFollowing } from '../hooks/useFollowing';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
@@ -20,6 +21,7 @@ export default function SupplementPage() {
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const { isFollowing, toggleFollow } = useFollowing();
 
   if (!supplement) {
     return <div className="text-center py-20 text-zinc-400">Substance not found.</div>;
@@ -108,8 +110,15 @@ export default function SupplementPage() {
         <div className="flex flex-col gap-2 shrink-0 mt-8 sm:mt-0 w-full sm:w-auto">
           <div className="flex gap-2 w-full">
             <SaveButton id={supplement.id} type="substance" className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800" />
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-white dark:text-zinc-950 hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-colors shadow-sm">
-              Follow Substance
+            <button
+              onClick={() => toggleFollow('substance', supplement.id)}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold transition-colors shadow-sm ${
+                isFollowing('substance', supplement.id)
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
+                  : 'bg-emerald-500 text-white dark:text-zinc-950 hover:bg-emerald-600 dark:hover:bg-emerald-400'
+              }`}
+            >
+              {isFollowing('substance', supplement.id) ? 'Following' : 'Follow Substance'}
             </button>
           </div>
           <button 

@@ -33,6 +33,9 @@ export function createStubServices(): Services {
       async getCurrentUser() {
         return null;
       },
+      async signUpWithEmail() {
+        return ni('auth.signUpWithEmail');
+      },
       async signInWithEmail() {
         return ni('auth.signInWithEmail');
       },
