@@ -120,8 +120,9 @@ export default function ToolAssistant() {
         }
       });
 
-      if (response.text) {
-        setMessages(prev => [...prev, { role: 'assistant', content: response.text }]);
+      const replyText = response.text;
+      if (replyText) {
+        setMessages(prev => [...prev, { role: 'assistant', content: replyText }]);
       }
     } catch (error) {
       console.error('Error generating response:', error);
