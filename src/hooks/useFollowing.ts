@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 export type FollowTarget = 'user' | 'substance' | 'stack' | 'brand';
 export interface FollowEntry {
@@ -10,13 +11,14 @@ const STORAGE_KEY = 'stackatlas_following';
 
 /**
  * Following is PUBLIC/social and drives the Following feed — distinct from Saved
- * (which is private/research). Users can save privately without following.
+ * (private/research). Users can save privately without following.
  *
- * NOTE: localStorage is the dev/offline fallback. When the backend is configured
- * this moves behind `FollowService` (see src/services/contracts.ts) with no UI
- * change, and following will also drive notifications server-side.
+ * Dual-mode: when the backend is configured AND the user is authenticated, this
+ * reads/writes through the Supabase `FollowService`. Otherwise it falls back to
+ * localStorage (offline/dev). The hook's API stays synchronous so callers don't
+ * change.
  */
-function read(): FollowEntry[] {
+function readLocal(): FollowEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -28,9 +30,24 @@ function read(): FollowEntry[] {
 }
 
 export function useFollowing() {
-  const [following, setFollowing] = useState<FollowEntry[]>(() => read());
+  const { services, user } = useAuth();
+  const backed = !!(services && user);
+  const [following, setFollowing] = useState<FollowEntry[]>(() => readLocal());
 
-  const persist = (next: FollowEntry[]) => {
+  useEffect(() => {
+    if (backed && services && user) {
+      services.follows
+        .list(user.id)
+        .then((rows) =>
+          setFollowing(rows.map((r) => ({ targetType: r.targetType as FollowTarget, targetId: r.targetId }))),
+        )
+        .catch(() => {});
+    } else {
+      setFollowing(readLocal());
+    }
+  }, [backed, services, user]);
+
+  const persistLocal = (next: FollowEntry[]) => {
     setFollowing(next);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -43,11 +60,32 @@ export function useFollowing() {
     following.some((f) => f.targetType === targetType && f.targetId === targetId);
 
   const toggleFollow = (targetType: FollowTarget, targetId: string) => {
-    if (isFollowing(targetType, targetId)) {
-      persist(following.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
-    } else {
-      persist([...following, { targetType, targetId }]);
+    const currentlyFollowing = isFollowing(targetType, targetId);
+    if (backed && services && user) {
+      const op = currentlyFollowing
+        ? services.follows.unfollow(user.id, { targetType, targetId })
+        : services.follows.follow(user.id, { targetType, targetId });
+      // optimistic update
+      setFollowing((prev) =>
+        currentlyFollowing
+          ? prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId))
+          : [...prev, { targetType, targetId }],
+      );
+      op.catch(() => {
+        // revert on failure
+        setFollowing((prev) =>
+          currentlyFollowing
+            ? [...prev, { targetType, targetId }]
+            : prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)),
+        );
+      });
+      return;
     }
+    persistLocal(
+      currentlyFollowing
+        ? following.filter((f) => !(f.targetType === targetType && f.targetId === targetId))
+        : [...following, { targetType, targetId }],
+    );
   };
 
   return { following, isFollowing, toggleFollow };

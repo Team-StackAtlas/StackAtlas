@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "seed:validate": "tsx scripts/validate-seed.ts"
+    "seed:validate": "tsx scripts/validate-seed.ts",
+    "seed:sql": "tsx scripts/generate-seed-sql.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
