@@ -6,6 +6,8 @@ import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
 import { useState, useRef, useEffect } from 'react';
 import { SaveButton } from './SaveButton';
+import { Modal } from './ui/Modal';
+import { useToast } from './ui/ToastProvider';
 
 interface PostCardProps {
   post: Post;
@@ -21,6 +23,7 @@ export default function PostCard({ post }: PostCardProps) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -35,15 +38,14 @@ export default function PostCard({ post }: PostCardProps) {
   const handleReport = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reportReason) return;
-    // Show success toast (mocked via alert for now, or just close)
-    alert('Report submitted successfully.');
+    toast('Report submitted successfully.');
     setShowReportModal(false);
     setShowMenu(false);
     setReportReason('');
   };
 
   const handleSubmitToStackAtlas = () => {
-    alert('Submitted for review.');
+    toast('Submitted for review.');
     setShowMenu(false);
   };
 
@@ -224,46 +226,56 @@ export default function PostCard({ post }: PostCardProps) {
         </div>
       </div>
       
-      {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200 dark:border-zinc-800">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100 mb-4">Report Content</h3>
-            <form onSubmit={handleReport}>
-              <div className="space-y-3 mb-6">
-                {['Spam', 'Misinformation', 'Harassment', 'Dangerous Content'].map(reason => (
-                  <label key={reason} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors">
-                    <input 
-                      type="radio" 
-                      name="reportReason" 
-                      value={reason} 
-                      checked={reportReason === reason}
-                      onChange={(e) => setReportReason(e.target.value)}
-                      className="text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="text-sm font-medium text-slate-700 dark:text-zinc-300">{reason}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex gap-3 justify-end">
-                <button 
-                  type="button" 
-                  onClick={() => { setShowReportModal(false); setReportReason(''); }}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={!reportReason}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Submit Report
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => {
+          setShowReportModal(false);
+          setReportReason('');
+        }}
+        title="Report Content"
+      >
+        <form onSubmit={handleReport} className="p-6 pt-4">
+          <div className="mb-6 space-y-3">
+            {['Spam', 'Misinformation', 'Harassment', 'Dangerous Content'].map((reason) => (
+              <label
+                key={reason}
+                className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+              >
+                <input
+                  type="radio"
+                  name="reportReason"
+                  value={reason}
+                  checked={reportReason === reason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-sm font-medium text-slate-700 dark:text-zinc-300">
+                  {reason}
+                </span>
+              </label>
+            ))}
           </div>
-        </div>
-      )}
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setShowReportModal(false);
+                setReportReason('');
+              }}
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!reportReason}
+              className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Submit Report
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
     </>
   );
