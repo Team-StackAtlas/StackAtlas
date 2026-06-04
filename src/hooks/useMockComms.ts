@@ -34,16 +34,6 @@ export const MOCK_NOTIFICATIONS: MockCommsItem[] = [
     unreadByDefault: true,
   },
   {
-    id: 'notif-magnesium-legality',
-    kind: 'notification',
-    label: 'Legality/status update',
-    title: 'Magnesium Glycinate regional status reviewed',
-    preview: 'A followed substance received a mock legality/status review note for your region.',
-    timestamp: new Date(now - 1000 * 60 * 55).toISOString(),
-    iconType: 'status',
-    unreadByDefault: true,
-  },
-  {
     id: 'notif-reply-sleep',
     kind: 'notification',
     label: 'Discussion activity',

@@ -52,7 +52,6 @@ export const DOMAIN_STRUCTURE: CategoryStructure[] = [
   }
 ];
 
-export type AccessTag = 'Standard' | 'Pharma' | 'Unregulated' | 'Frontier' | 'Restricted' | 'Illicit';
 export type TypeTag = '💊 Supplement' | '🌿 Botanical' | '🍽️ Food / Drink' | '🏥 Pharmaceutical' | '🧬 Peptide' | '🧪 Research Compound';
 
 export const TYPE_TAGS: { label: string; emoji: string; full: TypeTag }[] = [
@@ -63,7 +62,19 @@ export const TYPE_TAGS: { label: string; emoji: string; full: TypeTag }[] = [
   { label: 'Peptide', emoji: '🧬', full: '🧬 Peptide' },
   { label: 'Research Compound', emoji: '🧪', full: '🧪 Research Compound' }
 ];
-export type StatusClassification = '🟢 Baseline' | '🔵 Clinical' | '🟣 Frontier' | '🟡 Unregulated' | '🟠 Restricted' | '🔴 Illicit';
+
+// v1 classification model. Describes how established/experimental a substance is.
+// No legal/regulatory meaning is implied.
+export type Classification = 'Everyday' | 'Clinical' | 'Frontier' | 'Unknown';
+export const CLASSIFICATIONS: Classification[] = ['Everyday', 'Clinical', 'Frontier', 'Unknown'];
+
+// Research scope acts as an access ceiling over classifications.
+export type ScopeLevel = 'Citizen' | 'Explorer';
+export const SCOPE_CLASSIFICATIONS: Record<ScopeLevel, Classification[]> = {
+  Citizen: ['Everyday', 'Clinical'],
+  Explorer: ['Everyday', 'Clinical', 'Frontier', 'Unknown'],
+};
+
 export type AdministrationMethod = '👄 Oral' | '💉 Injectable' | '🧴 Topical' | '👅 Sublingual';
 
 export const BEARINGS = [
@@ -77,21 +88,6 @@ export const MARKERS = [
   'Longevity Protocol', 'Athletic Performance', 'Underground / Experimental',
   'Cognitive Stack Culture', 'Historical Use'
 ];
-
-export const GLOSSARY: Record<string, string> = {
-  'peptide': 'A short chain of amino acids, often acting as a signaling molecule.',
-  'stimulant': 'A substance that raises levels of physiological or nervous activity in the body.',
-  'amino acid': 'Organic compounds that combine to form proteins.',
-  'nootropic': 'A substance that may improve cognitive function, particularly executive functions, memory, creativity, or motivation.',
-  'adaptogen': 'A natural substance considered to help the body adapt to stress and to exert a normalizing effect upon bodily processes.',
-  'hormone': 'A regulatory substance produced in an organism and transported in tissue fluids to stimulate specific cells or tissues into action.',
-  'botanical': 'A substance obtained from a plant and used typically in medicinal or cosmetic products.',
-  'injectable': 'A substance that is administered by injection.',
-  'oral': 'A substance that is taken by mouth.',
-  'sublingual': 'A substance that is administered under the tongue.',
-  'research compound': 'A chemical substance primarily used for scientific research, often lacking full clinical trials.',
-  'pharmaceutical': 'A compound manufactured for use as a medicinal drug.'
-};
 
 export interface User {
   id: string;
@@ -109,18 +105,16 @@ export interface User {
 }
 
 export interface Supplement {
-  accessTag: AccessTag;
+  classification: Classification;
   id: string;
   name: string;
   paths: { domain: Domain; category: string }[];
   typeTags: TypeTag[];
-  status: StatusClassification[];
   administration: AdministrationMethod[];
   description: string;
   averageDosage: string;
   lengthOfCycle: string;
   mostPopularBrandId: string;
-  legalityByRegion: Record<string, string>;
   healthRisks: string[];
   subjectiveEffects: string[];
   toleranceBuildup: string;
@@ -330,18 +324,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Popular' }
     ],
     typeTags: ['💊 Supplement'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '200-400mg',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b2',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Mild gastrointestinal discomfort at high doses'],
     subjectiveEffects: ['Relaxation', 'Improved sleep quality', 'Reduced muscle tension'],
     toleranceBuildup: 'None',
     possiblePairings: ['L-Theanine', 'Zinc', 'Vitamin D3'],
     riskLevel: 'Low',
-    accessTag: 'Standard',
     markers: ['Clinical Use', 'Longevity Protocol']
   },
   {
@@ -356,18 +348,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Beginner-Friendly' }
     ],
     typeTags: ['🍽️ Food / Drink', '🌿 Botanical'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '100-200mg',
     lengthOfCycle: 'Continuous with occasional breaks',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Anxiety', 'Insomnia', 'Increased heart rate'],
     subjectiveEffects: ['Alertness', 'Energy', 'Focus'],
     toleranceBuildup: 'Fast',
     possiblePairings: ['L-Theanine', 'Taurine'],
     riskLevel: 'Low',
-    accessTag: 'Standard',
     markers: ['Athletic Performance', 'Cognitive Stack Culture']
   },
   {
@@ -382,18 +372,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'High Impact' }
     ],
     typeTags: ['💊 Supplement'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '5g daily',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b2',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Water retention', 'Mild GI distress if not dissolved'],
     subjectiveEffects: ['Increased strength', 'Slight weight gain (water)', 'Mental clarity'],
     toleranceBuildup: 'None',
     possiblePairings: ['Beta-Alanine', 'Whey Protein'],
     riskLevel: 'Low',
-    accessTag: 'Standard',
     markers: ['Athletic Performance', 'Clinical Use']
   },
   {
@@ -407,18 +395,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Popular' }
     ],
     typeTags: ['🌿 Botanical'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '300-600mg (KSM-66)',
     lengthOfCycle: '8-12 weeks',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Lethargy', 'Anhedonia with prolonged use'],
     subjectiveEffects: ['Calmness', 'Reduced anxiety', 'Blunted emotions (rare)'],
     toleranceBuildup: 'Slow',
     possiblePairings: ['Rhodiola Rosea', 'L-Theanine'],
     riskLevel: 'Low',
-    accessTag: 'Standard',
     markers: ['East Asian Traditional Medicine', 'Western Herbalism']
   },
   {
@@ -431,18 +417,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Beginner-Friendly' }
     ],
     typeTags: ['💊 Supplement'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral', '👅 Sublingual'],
     averageDosage: '0.3-3mg',
     lengthOfCycle: 'As needed',
     mostPopularBrandId: 'b2',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Prescription', 'UK': 'Prescription' },
     healthRisks: ['Grogginess', 'Vivid dreams'],
     subjectiveEffects: ['Drowsiness', 'Faster sleep onset'],
     toleranceBuildup: 'Minimal',
     possiblePairings: ['Magnesium Glycinate'],
     riskLevel: 'Low',
-    accessTag: 'Standard',
     markers: ['Clinical Use']
   },
   {
@@ -454,18 +438,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'Mind', category: 'Focus' }
     ],
     typeTags: ['🏥 Pharmaceutical'],
-    status: ['🔵 Clinical', '🟠 Restricted'],
+    classification: 'Clinical',
     administration: ['👄 Oral'],
     averageDosage: '100-200mg',
     lengthOfCycle: '1-3 days per week',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Prescription (Schedule IV)', 'EU': 'Prescription', 'UK': 'Prescription' },
     healthRisks: ['Headache', 'Insomnia', 'Anxiety', 'Rare skin reactions'],
     subjectiveEffects: ['Intense focus', 'Wakefulness', 'Reduced fatigue'],
     toleranceBuildup: 'Moderate',
     possiblePairings: ['Caffeine', 'L-Theanine'],
     riskLevel: 'Moderate',
-    accessTag: 'Pharma'
   },
   {
     id: 'testosterone-cypionate',
@@ -477,18 +459,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'Vitality', category: 'Sexual Health' }
     ],
     typeTags: ['🏥 Pharmaceutical'],
-    status: ['🔵 Clinical', '🟠 Restricted'],
+    classification: 'Clinical',
     administration: ['💉 Injectable'],
     averageDosage: '100-200mg/week (TRT)',
     lengthOfCycle: 'Continuous (TRT) or 12-16 weeks',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Prescription (Schedule III)', 'EU': 'Prescription', 'UK': 'Prescription (Class C)' },
     healthRisks: ['Cardiovascular issues', 'Prostate enlargement', 'HPTA suppression'],
     subjectiveEffects: ['Increased libido', 'Muscle growth', 'Improved mood/energy'],
     toleranceBuildup: 'None',
     possiblePairings: ['HCG', 'Aromatase Inhibitors'],
     riskLevel: 'High',
-    accessTag: 'Pharma'
   },
   {
     id: 'bpc-157',
@@ -500,18 +480,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Novel' }
     ],
     typeTags: ['🧬 Peptide', '🧪 Research Compound'],
-    status: ['🟡 Unregulated'],
+    classification: 'Frontier',
     administration: ['💉 Injectable', '👄 Oral'],
     averageDosage: '250-500mcg daily',
     lengthOfCycle: '4-6 weeks',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Unregulated', 'EU': 'Unregulated', 'UK': 'Unregulated' },
     healthRisks: ['Unknown long-term effects', 'Potential angiogenesis'],
     subjectiveEffects: ['Rapid joint/tendon pain relief', 'Improved digestion'],
     toleranceBuildup: 'Unknown',
     possiblePairings: ['TB-500'],
     riskLevel: 'Moderate',
-    accessTag: 'Unregulated'
   },
   {
     id: 'semaglutide',
@@ -523,18 +501,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Popular' }
     ],
     typeTags: ['🧬 Peptide', '🏥 Pharmaceutical'],
-    status: ['🔵 Clinical'],
+    classification: 'Clinical',
     administration: ['💉 Injectable', '👅 Sublingual'],
     averageDosage: '0.25-2.4mg weekly',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Prescription', 'EU': 'Prescription', 'UK': 'Prescription' },
     healthRisks: ['Nausea', 'Vomiting', 'Pancreatitis risk', 'Muscle loss if not training'],
     subjectiveEffects: ['Appetite suppression', 'Early satiety', 'Weight loss'],
     toleranceBuildup: 'Moderate',
     possiblePairings: ['High Protein Diet', 'Resistance Training'],
     riskLevel: 'Moderate',
-    accessTag: 'Pharma'
   },
   {
     id: 'rapamycin',
@@ -545,18 +521,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Novel' }
     ],
     typeTags: ['🏥 Pharmaceutical', '🧪 Research Compound'],
-    status: ['🟣 Frontier', '🔵 Clinical'],
+    classification: 'Frontier',
     administration: ['👄 Oral'],
     averageDosage: '2-6mg weekly',
     lengthOfCycle: 'Continuous (pulsed)',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Prescription', 'EU': 'Prescription', 'UK': 'Prescription' },
     healthRisks: ['Immunosuppression', 'Mouth ulcers', 'Lipid dysregulation'],
     subjectiveEffects: ['Often imperceptible', 'Reduced inflammation'],
     toleranceBuildup: 'Unknown',
     possiblePairings: ['Metformin', 'Acarbose'],
     riskLevel: 'High',
-    accessTag: 'Frontier'
   },
   {
     id: 'l-citrulline',
@@ -567,18 +541,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'Vitality', category: 'Sexual Health' }
     ],
     typeTags: ['💊 Supplement'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '3-6g',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b2',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Mild GI distress'],
     subjectiveEffects: ['Muscle pumps', 'Improved stamina', 'Better blood flow'],
     toleranceBuildup: 'Minimal',
     possiblePairings: ['Malic Acid', 'Arginine'],
     riskLevel: 'Low',
-    accessTag: 'Standard'
   },
   {
     id: 'l-theanine',
@@ -590,18 +562,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'Mind', category: 'Stress' }
     ],
     typeTags: ['💊 Supplement', '🌿 Botanical'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '100-200mg',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['None significant'],
     subjectiveEffects: ['Calm focus', 'Reduced anxiety', 'Relaxation'],
     toleranceBuildup: 'Minimal',
     possiblePairings: ['Caffeine'],
     riskLevel: 'Low',
-    accessTag: 'Standard'
   },
   {
     id: 'lions-mane',
@@ -612,18 +582,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Novel' }
     ],
     typeTags: ['🌿 Botanical', '🍽️ Food / Drink'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '500-1000mg (extract)',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Rare allergic reactions', 'Potential libido reduction (anecdotal)'],
     subjectiveEffects: ['Improved memory recall', 'Vivid dreams', 'Mental clarity'],
     toleranceBuildup: 'Slow',
     possiblePairings: ['Psilocybin (Stamets Stack)', 'Niacin'],
     riskLevel: 'Low',
-    accessTag: 'Standard'
   },
   {
     id: 'probiotics',
@@ -634,18 +602,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Beginner-Friendly' }
     ],
     typeTags: ['💊 Supplement'],
-    status: ['🟢 Baseline'],
+    classification: 'Everyday',
     administration: ['👄 Oral'],
     averageDosage: '10-50 Billion CFU',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b2',
-    legalityByRegion: { 'US': 'Legal', 'EU': 'Legal', 'UK': 'Legal' },
     healthRisks: ['Initial bloating or gas'],
     subjectiveEffects: ['Improved digestion', 'Regularity'],
     toleranceBuildup: 'None',
     possiblePairings: ['Prebiotics'],
     riskLevel: 'Low',
-    accessTag: 'Standard'
   },
   {
     id: 'metformin',
@@ -656,18 +622,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'Vitality', category: 'Longevity' }
     ],
     typeTags: ['🏥 Pharmaceutical'],
-    status: ['🔵 Clinical'],
+    classification: 'Clinical',
     administration: ['👄 Oral'],
     averageDosage: '500-1500mg',
     lengthOfCycle: 'Continuous',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Prescription', 'EU': 'Prescription', 'UK': 'Prescription' },
     healthRisks: ['GI distress', 'Vitamin B12 deficiency', 'Lactic acidosis (rare)'],
     subjectiveEffects: ['Lower blood sugar', 'Potential slight weight loss'],
     toleranceBuildup: 'Minimal',
     possiblePairings: ['Vitamin B12'],
     riskLevel: 'Moderate',
-    accessTag: 'Pharma'
   },
   {
     id: 'clenbuterol',
@@ -677,18 +641,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'Body', category: 'Fat Loss' }
     ],
     typeTags: ['🏥 Pharmaceutical', '🧪 Research Compound'],
-    status: ['🟠 Restricted', '🔴 Illicit'],
+    classification: 'Frontier',
     administration: ['👄 Oral'],
     averageDosage: '20-40mcg',
     lengthOfCycle: '2 weeks on, 2 weeks off',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Prescription (Vet only)', 'EU': 'Prescription', 'UK': 'Class C' },
     healthRisks: ['Cardiac hypertrophy', 'Tachycardia', 'Muscle tremors', 'Anxiety'],
     subjectiveEffects: ['Rapid heart rate', 'Increased body temperature', 'Fat loss'],
     toleranceBuildup: 'Fast',
     possiblePairings: ['Ketotifen', 'Taurine'],
     riskLevel: 'High',
-    accessTag: 'Restricted'
   },
   {
     id: 'cerebrolysin',
@@ -699,18 +661,16 @@ export const SUPPLEMENTS: Supplement[] = [
       { domain: 'All', category: 'Novel' }
     ],
     typeTags: ['🧬 Peptide', '🏥 Pharmaceutical'],
-    status: ['🟣 Frontier'],
+    classification: 'Frontier',
     administration: ['💉 Injectable'],
     averageDosage: '5-10ml daily',
     lengthOfCycle: '4 weeks',
     mostPopularBrandId: 'b1',
-    legalityByRegion: { 'US': 'Unapproved', 'EU': 'Prescription (some countries)', 'UK': 'Unapproved' },
     healthRisks: ['Injection site reactions', 'Brain fog during use'],
     subjectiveEffects: ['Long-term memory improvement', 'Neuro-recovery'],
     toleranceBuildup: 'None',
     possiblePairings: ['Cortexin'],
     riskLevel: 'Moderate',
-    accessTag: 'Frontier'
   }
 ];
 

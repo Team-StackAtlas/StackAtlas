@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { TypeTag, StatusClassification, AdministrationMethod, TYPE_TAGS } from '../data/mockData';
+import { TypeTag, Classification, CLASSIFICATIONS, AdministrationMethod, TYPE_TAGS } from '../data/mockData';
 
 const ADMIN_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injectable', '🧴 Topical', '👅 Sublingual'];
-const STATUSES: StatusClassification[] = ['🟢 Baseline', '🔵 Clinical', '🟣 Frontier', '🟡 Unregulated', '🟠 Restricted', '🔴 Illicit'];
 
 interface FilterContextType {
   activeTypes: TypeTag[];
@@ -11,12 +10,12 @@ interface FilterContextType {
   setPrioritizedTypes: React.Dispatch<React.SetStateAction<TypeTag[]>>;
   activeAdmins: AdministrationMethod[];
   setActiveAdmins: React.Dispatch<React.SetStateAction<AdministrationMethod[]>>;
-  activeStatuses: StatusClassification[];
-  setActiveStatuses: React.Dispatch<React.SetStateAction<StatusClassification[]>>;
+  activeClassifications: Classification[];
+  setActiveClassifications: React.Dispatch<React.SetStateAction<Classification[]>>;
   toggleType: (type: TypeTag) => void;
   togglePriority: (e: React.MouseEvent, type: TypeTag) => void;
   toggleAdmin: (admin: AdministrationMethod) => void;
-  toggleStatus: (status: StatusClassification) => void;
+  toggleClassification: (classification: Classification) => void;
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -25,30 +24,30 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const [activeTypes, setActiveTypes] = useState<TypeTag[]>(TYPE_TAGS.map(t => t.full));
   const [prioritizedTypes, setPrioritizedTypes] = useState<TypeTag[]>([]);
   const [activeAdmins, setActiveAdmins] = useState<AdministrationMethod[]>(ADMIN_METHODS);
-  const [activeStatuses, setActiveStatuses] = useState<StatusClassification[]>(STATUSES);
+  const [activeClassifications, setActiveClassifications] = useState<Classification[]>(CLASSIFICATIONS);
 
   const toggleType = (type: TypeTag) => {
-    setActiveTypes(prev => 
+    setActiveTypes(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
     );
   };
 
   const togglePriority = (e: React.MouseEvent, type: TypeTag) => {
     e.preventDefault();
-    setPrioritizedTypes(prev => 
+    setPrioritizedTypes(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
     );
   };
 
   const toggleAdmin = (admin: AdministrationMethod) => {
-    setActiveAdmins(prev => 
+    setActiveAdmins(prev =>
       prev.includes(admin) ? prev.filter(a => a !== admin) : [...prev, admin]
     );
   };
 
-  const toggleStatus = (status: StatusClassification) => {
-    setActiveStatuses(prev => 
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+  const toggleClassification = (classification: Classification) => {
+    setActiveClassifications(prev =>
+      prev.includes(classification) ? prev.filter(c => c !== classification) : [...prev, classification]
     );
   };
 
@@ -57,8 +56,8 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       activeTypes, setActiveTypes,
       prioritizedTypes, setPrioritizedTypes,
       activeAdmins, setActiveAdmins,
-      activeStatuses, setActiveStatuses,
-      toggleType, togglePriority, toggleAdmin, toggleStatus
+      activeClassifications, setActiveClassifications,
+      toggleType, togglePriority, toggleAdmin, toggleClassification
     }}>
       {children}
     </FilterContext.Provider>

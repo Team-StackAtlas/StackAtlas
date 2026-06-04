@@ -1,20 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Search, Filter, Activity, ShieldAlert, Star, Settings2, X, Plus } from 'lucide-react';
-import { DOMAIN_STRUCTURE, SUPPLEMENTS, BRANDS, STACKS, USERS, Domain, TypeTag, StatusClassification, AdministrationMethod, TYPE_TAGS } from '../data/mockData';
+import { Search, Activity, ShieldAlert, Star, Settings2, Plus } from 'lucide-react';
+import { DOMAIN_STRUCTURE, SUPPLEMENTS, BRANDS, STACKS, USERS, Domain, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
 import { useSaved } from '../hooks/useSaved';
+import AccessBadge from '../components/AccessBadge';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
 import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
 import { HideItemButton } from '../components/HideItemButton';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useMockRole } from '../context/MockRoleContext';
-
-const ADMIN_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injectable', '🧴 Topical', '👅 Sublingual'];
-const STATUSES: StatusClassification[] = ['🟢 Baseline', '🔵 Clinical', '🟣 Frontier', '🟡 Unregulated', '🟠 Restricted', '🔴 Illicit'];
 
 type SearchableType = 'substance' | 'brand' | 'stack';
 type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
@@ -50,12 +48,13 @@ export default function Map() {
     activeTypes,
     prioritizedTypes,
     activeAdmins,
-    activeStatuses,
+    activeClassifications,
     toggleType,
-    togglePriority,
-    toggleAdmin,
-    toggleStatus
+    togglePriority
   } = useFilters();
+  const visibleClassifications = scope.accessLevel
+    ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
+    : CLASSIFICATIONS;
   const { savedItems } = useSaved();
   const { isAdminLike } = useMockRole();
   const { isHidden, hasHiddenTag } = useHiddenItems();
@@ -96,10 +95,9 @@ export default function Map() {
       .filter((supplement) => searchMatches(searchQuery, [
         supplement.name,
         supplement.description,
-        supplement.accessTag,
+        supplement.classification,
         ...supplement.paths.flatMap((path) => [path.domain, path.category]),
         ...supplement.typeTags,
-        ...supplement.status,
         ...supplement.administration,
         ...(supplement.markers || []),
         ...supplement.healthRisks,
@@ -115,7 +113,7 @@ export default function Map() {
         description: supplement.description,
         path: `/supplement/${supplement.id}`,
         matchedOn: 'Substance',
-        tags: [supplement.accessTag, ...supplement.paths.flatMap((path) => [path.domain, path.category]), ...supplement.typeTags, ...(supplement.markers || [])],
+        tags: [...supplement.paths.flatMap((path) => [path.domain, path.category]), ...supplement.typeTags, ...(supplement.markers || [])],
       }));
 
     const brandResults: SearchResult[] = BRANDS
@@ -163,20 +161,15 @@ export default function Map() {
   const hiddenSearchResultsCount = searchResults.length - visibleSearchResults.length;
 
   const filteredSupplements = SUPPLEMENTS.filter(s => {
-    if (!isAdminLike && (isHidden('substance', s.id) || hasHiddenTag([s.accessTag, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || [])]))) return false;
+    if (!isAdminLike && (isHidden('substance', s.id) || hasHiddenTag([...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || [])]))) return false;
     // Feed Type Filtering
     if (feedType === 'Following') {
       const isSaved = savedItems.some(item => item.id === s.id && item.type === 'substance');
       if (!isSaved) return false;
     }
 
-    // Access Level Filtering
-    if (scope.accessLevel === 'Citizen') {
-      if (s.accessTag !== 'Standard') return false;
-    } else if (scope.accessLevel === 'Patient') {
-      if (s.accessTag !== 'Standard' && s.accessTag !== 'Pharma') return false;
-    }
-    // Explorer sees everything
+    // Scope ceiling: classification must be visible at the current research scope
+    if (!visibleClassifications.includes(s.classification)) return false;
 
     // Domain/Category Filtering
     if (activeDomain !== 'All' || activeCategory !== 'All') {
@@ -194,14 +187,14 @@ export default function Map() {
     // Type Filtering
     if (!s.typeTags.some(t => activeTypes.includes(t))) return false;
 
-    // Status Filtering
-    if (s.status.some(st => !activeStatuses.includes(st))) return false;
+    // Classification Filtering
+    if (!activeClassifications.includes(s.classification)) return false;
 
     // Administration Filtering
     if (!s.administration.some(a => activeAdmins.includes(a))) return false;
 
     // Search Query Filtering
-    if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, s.accessTag, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
+    if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
 
     return true;
   }).sort((a, b) => {
@@ -526,24 +519,12 @@ export default function Map() {
                         {supplement.name}
                       </h3>
                       <div className="flex gap-1 shrink-0 ml-3 items-start">
-                        {!scope.primaryRegion ? (
-                          <span className="text-lg" title="Unknown Region">❓</span>
-                        ) : (
-                          supplement.status.map(st => {
-                            const emoji = st.split(' ')[0];
-                            return <span key={st} className="text-lg drop-shadow-sm" title={st}>{emoji}</span>;
-                          })
-                        )}
+                        <AccessBadge classification={supplement.classification} />
                         <SecondaryHideMenu id={supplement.id} name={supplement.name} type="substance" />
                       </div>
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {supplement.formula && (
-                        <span className="font-mono text-[11px] text-slate-500 dark:text-zinc-500" title="Molecular formula">
-                          {supplement.formula}
-                        </span>
-                      )}
                       {supplement.typeTags.slice(0, 2).map(tag => {
                         const typeInfo = TYPE_TAGS.find(t => t.full === tag);
                         return typeInfo ? (
@@ -572,7 +553,7 @@ export default function Map() {
                   )}
                   <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-zinc-600">
-                      {supplement.accessTag}
+                      {supplement.classification}
                     </div>
                     <div className="flex gap-1.5">
                       {supplement.administration.map(admin => {

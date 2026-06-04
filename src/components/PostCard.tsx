@@ -3,9 +3,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
 import { cn } from '../lib/utils';
-import { useUserScope } from '../context/UserScopeContext';
 import { useState, useRef, useEffect } from 'react';
 import { SaveButton } from './SaveButton';
+import AccessBadge from './AccessBadge';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/ToastProvider';
 
@@ -14,7 +14,6 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
-  const { scope } = useUserScope();
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
   const brand = BRANDS.find(b => b.id === post.brandId);
   const stack = STACKS.find(s => s.id === post.stackId);
@@ -122,18 +121,7 @@ export default function PostCard({ post }: PostCardProps) {
 
       {/* Context Tags */}
       <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium">
-        {supplement && (
-          <div className="flex gap-0.5">
-            {!scope.primaryRegion ? (
-              <span className="text-sm" title="Unknown Region">❓</span>
-            ) : (
-              supplement.status.map(st => {
-                const emoji = st.split(' ')[0];
-                return <span key={st} className="text-sm" title={st}>{emoji}</span>;
-              })
-            )}
-          </div>
-        )}
+        {supplement && <AccessBadge classification={supplement.classification} />}
         <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">Domain: {post.domain}</span>
         {supplement && (
           <Link to={`/supplement/${supplement.id}`} className="px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors border border-emerald-200 dark:border-emerald-500/20">

@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
-import { Compass, Users, PlusSquare, Wrench, Inbox, User, Moon, Sun, Layers, Shield, PenSquare } from 'lucide-react';
+import { Compass, Users, Wrench, Inbox, User, Moon, Sun, Layers, Shield, PenSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
 import { useUserScope } from '../context/UserScopeContext';
@@ -23,7 +23,6 @@ export default function Layout() {
     { name: 'Map', path: '/map', icon: Compass },
     { name: 'Square', path: '/square', icon: Users },
     { name: 'Create', path: '/create', icon: PenSquare },
-    { name: 'Ledger', path: '/ledger', icon: PlusSquare },
     { name: 'Lab', path: '/lab', icon: Wrench },
     { name: 'Comms', path: '/comms', icon: Inbox },
   ];
@@ -33,7 +32,6 @@ export default function Layout() {
     if (path.startsWith('/map')) return 'Map';
     if (path.startsWith('/square')) return 'Square';
     if (path.startsWith('/create')) return 'Create';
-    if (path.startsWith('/ledger')) return 'Ledger';
     if (path.startsWith('/lab')) return 'Lab';
     if (path.startsWith('/comms')) return 'Comms';
     if (path.startsWith('/profile')) return 'Profile';
@@ -57,14 +55,12 @@ export default function Layout() {
           <div className="mt-6 px-2">
             <Link to="/onboarding" className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors text-xs font-medium text-slate-600 dark:text-zinc-400">
               <span className="flex items-center gap-2">
-                <Shield 
-                  size={14} 
+                <Shield
+                  size={14}
                   className={cn(
-                    scope.accessLevel === 'Patient' ? 'text-blue-500' :
-                    scope.accessLevel === 'Explorer' ? 'text-purple-500' :
-                    'text-emerald-500'
-                  )} 
-                /> 
+                    scope.accessLevel === 'Explorer' ? 'text-purple-500' : 'text-emerald-500'
+                  )}
+                />
                 Current Scope
               </span>
               <span className="text-slate-900 dark:text-zinc-200">{scope.accessLevel || 'None'}</span>

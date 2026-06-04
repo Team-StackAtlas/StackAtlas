@@ -5,7 +5,6 @@ import { BRANDS, getPosts, SUPPLEMENTS } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
-import WikiText from '../components/WikiText';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
@@ -80,7 +79,7 @@ export default function BrandPage() {
           )}
 
           <div className="text-lg text-slate-600 dark:text-zinc-400 max-w-2xl mb-4">
-            <WikiText text={brand.description || ''} />
+            {brand.description || ''}
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">

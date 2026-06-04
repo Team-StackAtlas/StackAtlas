@@ -5,7 +5,6 @@ import { STACKS, getPosts } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
-import WikiText from '../components/WikiText';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
@@ -80,7 +79,7 @@ export default function StackPage() {
           )}
 
           <div className="text-lg text-slate-600 dark:text-zinc-400 max-w-2xl mb-6">
-            <WikiText text={stack.description} />
+            {stack.description}
           </div>
 
           {stack.substances && stack.substances.length > 0 && (

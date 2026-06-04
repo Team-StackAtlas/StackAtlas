@@ -40,7 +40,7 @@ function substanceSimilarity(base: Supplement, candidate: Supplement) {
 
   score += overlapScore(base.typeTags, candidate.typeTags, 3);
   score += overlapScore(base.administration, candidate.administration, 2);
-  score += overlapScore(base.status, candidate.status, 1);
+  score += overlapScore([base.classification], [candidate.classification], 1);
 
   if (base.possiblePairings.some(pairing => normalize(pairing) === normalize(candidate.name))) score += 10;
   if (candidate.possiblePairings.some(pairing => normalize(pairing) === normalize(base.name))) score += 10;
@@ -130,9 +130,6 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
                 <div className="font-medium text-slate-900 dark:text-zinc-100">{item.name}</div>
                 {type === 'substance' && (
                   <div className="mt-0.5 flex flex-wrap gap-1 text-xs text-slate-500 dark:text-zinc-400">
-                    {(item as Supplement).formula && (
-                      <span className="font-mono">{(item as Supplement).formula}</span>
-                    )}
                     <span>{(item as Supplement).paths?.[0]?.category}</span>
                     <span>{(item as Supplement).typeTags?.[0]}</span>
                   </div>
