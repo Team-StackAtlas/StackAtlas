@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit3, Flag, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Edit3, Flag, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { BRANDS, getPosts, SUPPLEMENTS } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
+import Sources from '../components/Sources';
+import StarRating from '../components/StarRating';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
+import { useBrandRatings } from '../hooks/useBrandRatings';
 
 export default function BrandPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,10 +20,13 @@ export default function BrandPage() {
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const { setRating, getSummary } = useBrandRatings();
 
   if (!brand) {
     return <div className="text-center py-20 text-zinc-400">Brand not found.</div>;
   }
+
+  const ratingSummary = getSummary(brand.id);
 
   const relatedPosts = getPosts().filter(p => p.brandId === brand.id);
 
@@ -84,8 +90,16 @@ export default function BrandPage() {
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
              <div className="bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-slate-200 dark:border-zinc-800">
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">User Rating</p>
-                <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{brand.userRating} / 5</p>
+                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Average Rating</p>
+                {ratingSummary.hasEnough && ratingSummary.average !== null ? (
+                  <div className="flex items-center gap-2">
+                    <StarRating value={ratingSummary.average} />
+                    <span className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{ratingSummary.average.toFixed(2)}</span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-zinc-400">Not enough ratings yet</p>
+                )}
+                <p className="mt-0.5 text-[11px] text-slate-400 dark:text-zinc-500">{ratingSummary.count} ratings</p>
              </div>
              <div className="bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-slate-200 dark:border-zinc-800">
                 <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Shipping Reliability</p>
@@ -99,6 +113,31 @@ export default function BrandPage() {
              </div>
           </div>
 
+          {/* Your rating (0–5, quarter-star increments) */}
+          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Your rating</p>
+                <div className="flex items-center gap-2">
+                  <StarRating value={ratingSummary.userRating ?? 0} size={20} />
+                  <span className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
+                    {(ratingSummary.userRating ?? 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={5}
+                step={0.25}
+                value={ratingSummary.userRating ?? 0}
+                onChange={(e) => setRating(brand.id, Number(e.target.value))}
+                aria-label="Set your rating"
+                className="w-full sm:w-56 accent-amber-500"
+              />
+            </div>
+          </div>
+
           {brand.products && brand.products.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-2">Associated Products</h3>
@@ -108,7 +147,7 @@ export default function BrandPage() {
                   return (
                     <Link 
                       key={i} 
-                      to={`/supplement/${productId}`}
+                      to={`/substance/${productId}`}
                       className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-sm font-medium text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
                     >
                       {supplement ? supplement.name : productId}
@@ -119,13 +158,46 @@ export default function BrandPage() {
             </div>
           )}
 
+          {brand.productCatalog && brand.productCatalog.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-2">Products</h3>
+              <div className="space-y-3">
+                {brand.productCatalog.map((product, i) => (
+                  <div key={i} className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <div className="mb-2 font-medium text-slate-900 dark:text-zinc-100">{product.name}</div>
+                    {product.ingredients && product.ingredients.length > 0 && (
+                      <ul className="mb-2 space-y-0.5 text-sm text-slate-600 dark:text-zinc-400">
+                        {product.ingredients.map((ing, j) => (
+                          <li key={j} className="flex justify-between gap-2">
+                            <span>{ing.name}{ing.notes ? ` (${ing.notes})` : ''}</span>
+                            {ing.amount && <span className="text-slate-500 dark:text-zinc-500">{ing.amount}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {product.healthLabels && product.healthLabels.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.healthLabels.map((labelText) => (
+                          <span key={labelText} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                            <CheckCircle2 size={11} />
+                            {labelText}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {brand.thirdPartyTestingLinks && brand.thirdPartyTestingLinks.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-2">3rd Party Testing</h3>
               <div className="flex flex-wrap gap-3">
                 {brand.thirdPartyTestingLinks.map((link, i) => (
-                  <a 
-                    key={i} 
+                  <a
+                    key={i}
                     href={link}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -136,6 +208,7 @@ export default function BrandPage() {
                   </a>
                 ))}
               </div>
+              <Sources targetType="brand" targetId={brand.id} section="testing" label="Testing & reliability sources" />
             </div>
           )}
         </div>

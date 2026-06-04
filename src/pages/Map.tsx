@@ -111,7 +111,7 @@ export default function Map() {
         type: 'substance' as const,
         timestamp: new Date().toISOString(),
         description: supplement.description,
-        path: `/supplement/${supplement.id}`,
+        path: `/substance/${supplement.id}`,
         matchedOn: 'Substance',
         tags: [...supplement.paths.flatMap((path) => [path.domain, path.category]), ...supplement.typeTags, ...(supplement.markers || [])],
       }));
@@ -306,7 +306,7 @@ export default function Map() {
                   {recentSearches.map((recent, idx) => (
                     <Link
                       key={`${recent.id}-${idx}`}
-                      to={`/${recent.type === 'substance' ? 'supplement' : recent.type}/${recent.id}`}
+                      to={`/${recent.type === 'substance' ? 'substance' : recent.type}/${recent.id}`}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors border-t border-slate-100 dark:border-zinc-800/50 first:border-0"
                       onClick={() => handleSearchClick(recent)}
                     >
@@ -504,7 +504,7 @@ export default function Map() {
               return (
                 <Link 
                   key={supplement.id}
-                  to={`/supplement/${supplement.id}`}
+                  to={`/substance/${supplement.id}`}
                   onClick={() => handleSearchClick({ id: supplement.id, name: supplement.name, type: 'substance' })}
                   className={cn(
                     "block p-5 rounded-2xl border transition-all group flex flex-col h-full",
