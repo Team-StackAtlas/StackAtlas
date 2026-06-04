@@ -432,8 +432,7 @@ export const SUBSTANCES: Substance[] = [
     paths: [
       { domain: 'Body', category: 'Strength & Muscle' },
       { domain: 'Mind', category: 'Memory' },
-      { domain: 'All', category: 'Popular' },
-      { domain: 'All', category: 'High Impact' }
+      { domain: 'All', category: 'Popular' }
     ],
     typeTags: ['💊 Supplement'],
     classification: 'Everyday',
