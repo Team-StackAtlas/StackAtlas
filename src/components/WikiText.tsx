@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GLOSSARY } from '../data/mockData';
-import { X } from 'lucide-react';
+import { Modal } from './ui/Modal';
 
 interface WikiModalProps {
   term: string | null;
@@ -8,29 +8,22 @@ interface WikiModalProps {
 }
 
 export function WikiModal({ term, onClose }: WikiModalProps) {
-  if (!term) return null;
-
-  const definition = GLOSSARY[term.toLowerCase()];
+  const definition = term ? GLOSSARY[term.toLowerCase()] : undefined;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={onClose}>
-      <div 
-        className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-200 dark:border-zinc-800"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-zinc-800">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-zinc-50 capitalize">{term}</h2>
-          <button onClick={onClose} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-        <div className="p-4">
-          <p className="text-slate-700 dark:text-zinc-300 text-sm leading-relaxed">
-            {definition || 'Definition not found.'}
-          </p>
-        </div>
+    <Modal
+      isOpen={term !== null}
+      onClose={onClose}
+      title={<span className="capitalize">{term}</span>}
+      panelClassName="max-w-sm"
+      overlayClassName="z-[60]"
+    >
+      <div className="p-4">
+        <p className="text-sm leading-relaxed text-slate-700 dark:text-zinc-300">
+          {definition || 'Definition not found.'}
+        </p>
       </div>
-    </div>
+    </Modal>
   );
 }
 

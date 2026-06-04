@@ -4,6 +4,7 @@ import { HelpCircle, ArrowLeft, Search, CheckCircle, AlertCircle, Star } from 'l
 import { SUPPLEMENTS, BRANDS, Post, Domain, addPost } from '../data/mockData';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
+import { useToast } from '../components/ui/ToastProvider';
 
 type CreateType = 'Dispatch' | 'Signal';
 
@@ -14,6 +15,7 @@ const BEARINGS = [
 export default function Create() {
   const navigate = useNavigate();
   const { scope } = useUserScope();
+  const { toast } = useToast();
   const [activeType, setActiveType] = useState<CreateType | null>(null);
 
   // Dispatch State
@@ -61,7 +63,7 @@ export default function Create() {
   const handleDispatchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedLink) {
-      alert('You must link this Dispatch to an existing substance or brand.');
+      toast('You must link this Dispatch to an existing substance or brand.', 'error');
       return;
     }
     
@@ -95,7 +97,7 @@ export default function Create() {
   const handleSignalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (signalData.bearings.length === 0) {
-      alert('You must select at least one Bearing.');
+      toast('You must select at least one Bearing.', 'error');
       return;
     }
     

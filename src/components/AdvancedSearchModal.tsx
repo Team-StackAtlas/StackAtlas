@@ -1,8 +1,8 @@
-import React from 'react';
-import { Settings2, X } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useFilters } from '../context/FilterContext';
-import { TYPE_TAGS, StatusClassification, AdministrationMethod } from '../data/mockData';
+import { StatusClassification, AdministrationMethod } from '../data/mockData';
+import { Modal } from './ui/Modal';
 
 const ADMIN_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injectable', '🧴 Topical', '👅 Sublingual'];
 const STATUSES: StatusClassification[] = ['🟢 Baseline', '🔵 Clinical', '🟣 Frontier', '🟡 Unregulated', '🟠 Restricted', '🔴 Illicit'];
@@ -20,25 +20,15 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
     toggleStatus
   } = useFilters();
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 dark:bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-zinc-800">
-        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-zinc-800">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-            <Settings2 className="w-5 h-5" />
-            Advanced Search
-          </h2>
-          <button 
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Advanced Search"
+      icon={<Settings2 className="h-5 w-5" />}
+      panelClassName="max-w-2xl"
+    >
+      <div className="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
           {/* Left Panel: Administration */}
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-4 uppercase tracking-wider">Administration</h3>
@@ -100,15 +90,14 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/50 flex justify-end">
-          <button 
-            onClick={onClose}
-            className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors shadow-sm"
-          >
-            Apply Filters
-          </button>
-        </div>
+      <div className="flex justify-end border-t border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <button
+          onClick={onClose}
+          className="rounded-xl bg-emerald-500 px-6 py-2 font-medium text-white shadow-sm transition-colors hover:bg-emerald-600"
+        >
+          Apply Filters
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }
