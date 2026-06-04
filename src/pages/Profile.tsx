@@ -8,12 +8,12 @@ import { useUserScope } from '../context/UserScopeContext';
 import { useSaved } from '../hooks/useSaved';
 import { SaveButton } from '../components/SaveButton';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
+import { Modal } from '../components/ui/Modal';
+import { useToast } from '../components/ui/ToastProvider';
 
 function VerificationModal({ isOpen, onClose, onVerify }: { isOpen: boolean, onClose: () => void, onVerify: () => void }) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!isOpen) return null;
 
   const handleSubmit = () => {
     setIsSubmitting(true);
@@ -26,9 +26,8 @@ function VerificationModal({ isOpen, onClose, onVerify }: { isOpen: boolean, onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 w-full max-w-md overflow-hidden shadow-xl">
-        <div className="p-6">
+    <Modal isOpen={isOpen} onClose={onClose} ariaLabel="Get verified">
+      <div className="p-6">
           <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-2">Get Verified</h2>
           <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">
             Verification helps build trust in the community and prevents fraudulent reviews.
@@ -120,8 +119,7 @@ function VerificationModal({ isOpen, onClose, onVerify }: { isOpen: boolean, onC
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -134,6 +132,7 @@ export default function Profile() {
   const [savedFilter, setSavedFilter] = useState<'all' | 'substance' | 'stack' | 'brand' | 'Dispatch' | 'Signal'>('all');
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
+  const { toast } = useToast();
   
   // Default user (admin)
   const defaultUser: User = USERS.find(u => u.username === 'admin') || USERS[0];
@@ -546,7 +545,7 @@ export default function Profile() {
                   </div>
                   {defaultUser.username === 'admin' && (
                     <button 
-                      onClick={() => alert('Stack approved! (Mock)')}
+                      onClick={() => toast('Stack approved! (Mock)')}
                       className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
                     >
                       Approve Stack
