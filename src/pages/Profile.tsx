@@ -454,7 +454,7 @@ export default function Profile() {
                       </h3>
                       <Link 
                         to={
-                          item.type === 'substance' ? `/supplement/${item.id}` :
+                          item.type === 'substance' ? `/substance/${item.id}` :
                           item.type === 'stack' ? `/stack/${item.id}` :
                           item.type === 'brand' ? `/brand/${item.id}` :
                           item.type === 'Dispatch' || item.type === 'Signal' ? `/post/${item.id}` : '#'

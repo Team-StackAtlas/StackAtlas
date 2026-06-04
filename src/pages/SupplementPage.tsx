@@ -6,6 +6,7 @@ import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
 import AccessBadge from '../components/AccessBadge';
+import Sources from '../components/Sources';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
@@ -21,11 +22,20 @@ export default function SupplementPage() {
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
   if (!supplement) {
-    return <div className="text-center py-20 text-zinc-400">Supplement not found.</div>;
+    return <div className="text-center py-20 text-zinc-400">Substance not found.</div>;
   }
 
   const popularBrand = BRANDS.find(b => b.id === supplement.mostPopularBrandId);
   const relatedPosts = getPosts().filter(p => p.supplementId === supplement.id);
+  // Global Average is derived ONLY from sufficiently complete Comprehensive
+  // Dispatches (quality >= 90 with a recorded dosage).
+  const comprehensiveDispatches = relatedPosts.filter(
+    p => p.type === 'Dispatch' && p.qualityScore >= 90 && p.logDetails?.dosage,
+  );
+  const globalAverageDose =
+    comprehensiveDispatches.length > 0
+      ? supplement.globalAverage ?? comprehensiveDispatches[0].logDetails?.dosage ?? null
+      : null;
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto w-full pb-8">
@@ -99,7 +109,7 @@ export default function SupplementPage() {
           <div className="flex gap-2 w-full">
             <SaveButton id={supplement.id} type="substance" className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800" />
             <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-semibold text-white dark:text-zinc-950 hover:bg-emerald-600 dark:hover:bg-emerald-400 transition-colors shadow-sm">
-              Follow Compound
+              Follow Substance
             </button>
           </div>
           <button 
@@ -138,26 +148,35 @@ export default function SupplementPage() {
               </p>
             </div>
             
-            {/* Global Average */}
-            <div 
-              className="pt-2 border-t border-slate-100 dark:border-zinc-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 p-1 -mx-1 rounded transition-colors"
-              onClick={() => navigate(`/square?substance=${supplement.id}&filter=dosage`)}
+            {/* Global Average — only from Comprehensive Dispatches */}
+            <div
+              className={`pt-2 border-t border-slate-100 dark:border-zinc-800/50 p-1 -mx-1 rounded transition-colors ${globalAverageDose ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50' : ''}`}
+              onClick={() => globalAverageDose && navigate(`/square?substance=${supplement.id}&filter=dosage`)}
             >
               <p className="text-xs text-emerald-600 dark:text-emerald-500 mb-1 flex items-center gap-1"><Users size={12} /> Global Average</p>
               <p className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                {supplement.globalAverage || supplement.averageDosage.replace(' - ', ' to ')} <span className="text-xs font-normal text-slate-500">(Gold Dispatches)</span>
+                {globalAverageDose ? (
+                  <>{globalAverageDose} <span className="text-xs font-normal text-slate-500">(Comprehensive Dispatches)</span></>
+                ) : (
+                  <span className="text-slate-500 dark:text-zinc-400 font-normal">Not enough Comprehensive Dispatch data</span>
+                )}
               </p>
             </div>
 
-            {/* Peer Match */}
-            <div 
-              className="pt-2 border-t border-slate-100 dark:border-zinc-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800/50 p-1 -mx-1 rounded transition-colors"
-            >
+            {/* Peer Match — placeholder until real matching exists */}
+            <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/50 p-1 -mx-1 rounded">
               <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1 flex items-center gap-1"><Activity size={12} /> Peer Match</p>
-              <p className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                {supplement.peerMatch || 'Not enough data'} <span className="text-xs font-normal text-slate-500">(Similar users)</span>
+              <p className="text-sm font-normal text-slate-500 dark:text-zinc-400">
+                Not enough Dispatch data
               </p>
             </div>
+
+            <p className="pt-2 text-[11px] leading-snug text-slate-400 dark:text-zinc-500">
+              For informational purposes only — not medical advice. Consult a qualified professional
+              before changing any regimen.
+            </p>
+
+            <Sources targetType="substance" targetId={supplement.id} section="dosage" />
           </div>
         </div>
         
@@ -215,6 +234,7 @@ export default function SupplementPage() {
                 </li>
               ))}
             </ul>
+            <Sources targetType="substance" targetId={supplement.id} section="side_effects" />
           </div>
 
           <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">

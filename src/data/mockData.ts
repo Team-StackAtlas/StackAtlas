@@ -104,7 +104,7 @@ export interface User {
   website?: string;
 }
 
-export interface Supplement {
+export interface Substance {
   classification: Classification;
   id: string;
   name: string;
@@ -127,16 +127,46 @@ export interface Supplement {
   formula?: string;
 }
 
+/** @deprecated Use `Substance`. Kept for back-compat during the rename. */
+export type Supplement = Substance;
+
+export type HealthLabel =
+  | 'Paleo'
+  | 'Organic'
+  | 'Vegan'
+  | 'Gluten-Free'
+  | 'Non-GMO'
+  | 'Third-Party Tested';
+
+export const HEALTH_LABELS: HealthLabel[] = [
+  'Paleo',
+  'Organic',
+  'Vegan',
+  'Gluten-Free',
+  'Non-GMO',
+  'Third-Party Tested',
+];
+
+export interface BrandProduct {
+  name: string;
+  substanceId?: string;
+  ingredients?: { name: string; amount?: string; notes?: string }[];
+  healthLabels?: HealthLabel[];
+}
+
 export interface Brand {
   id: string;
   name: string;
   description?: string;
   products?: string[];
+  productCatalog?: BrandProduct[];
   markers?: string[];
   shippingReliability: number; // 1-5
   contaminationReports: number;
   thirdPartyTestingLinks: string[];
   userRating: number; // 1-5
+  /** Number of seed ratings the average is based on (for the "enough ratings" gate). */
+  ratingCount?: number;
 }
 
 export interface Post {
@@ -280,22 +310,55 @@ export const BRANDS: Brand[] = [
     name: 'Nootropics Depot',
     description: 'A highly trusted vendor specializing in novel nootropics and standardized extracts.',
     products: ['caffeine', 'l-theanine', 'ashwagandha', 'lions-mane'],
+    productCatalog: [
+      {
+        name: 'L-Theanine 200mg',
+        substanceId: 'l-theanine',
+        ingredients: [{ name: 'L-Theanine', amount: '200 mg' }],
+        healthLabels: ['Vegan', 'Gluten-Free', 'Non-GMO', 'Third-Party Tested'],
+      },
+      {
+        name: 'Caffeine + L-Theanine',
+        substanceId: 'caffeine',
+        ingredients: [
+          { name: 'Caffeine', amount: '100 mg' },
+          { name: 'L-Theanine', amount: '200 mg' },
+        ],
+        healthLabels: ['Vegan', 'Non-GMO'],
+      },
+    ],
     markers: ['Cognitive Stack Culture'],
     shippingReliability: 4.8,
     contaminationReports: 0,
     thirdPartyTestingLinks: ['https://example.com/test1', 'https://example.com/test2'],
     userRating: 4.9,
+    ratingCount: 128,
   },
   {
     id: 'b2',
     name: 'Thorne',
     description: 'Premium supplement brand focused on clinical efficacy and clean ingredients.',
     products: ['magnesium-glycinate', 'creatine-monohydrate', 'melatonin'],
+    productCatalog: [
+      {
+        name: 'Magnesium Bisglycinate',
+        substanceId: 'magnesium-glycinate',
+        ingredients: [{ name: 'Magnesium (as bisglycinate)', amount: '200 mg' }],
+        healthLabels: ['Gluten-Free', 'Non-GMO', 'Third-Party Tested'],
+      },
+      {
+        name: 'Creatine',
+        substanceId: 'creatine-monohydrate',
+        ingredients: [{ name: 'Creatine Monohydrate', amount: '5 g' }],
+        healthLabels: ['Vegan', 'Gluten-Free', 'Non-GMO', 'Third-Party Tested'],
+      },
+    ],
     markers: ['Clinical Use'],
     shippingReliability: 4.9,
     contaminationReports: 0,
     thirdPartyTestingLinks: ['https://example.com/thorne-test'],
     userRating: 4.8,
+    ratingCount: 342,
   },
   {
     id: 'b3',
@@ -307,10 +370,11 @@ export const BRANDS: Brand[] = [
     contaminationReports: 1,
     thirdPartyTestingLinks: ['https://example.com/ps-test'],
     userRating: 4.2,
+    ratingCount: 11,
   }
 ];
 
-export const SUPPLEMENTS: Supplement[] = [
+export const SUBSTANCES: Substance[] = [
   {
     id: 'magnesium-glycinate',
     name: 'Magnesium Glycinate',
@@ -368,8 +432,7 @@ export const SUPPLEMENTS: Supplement[] = [
     paths: [
       { domain: 'Body', category: 'Strength & Muscle' },
       { domain: 'Mind', category: 'Memory' },
-      { domain: 'All', category: 'Popular' },
-      { domain: 'All', category: 'High Impact' }
+      { domain: 'All', category: 'Popular' }
     ],
     typeTags: ['💊 Supplement'],
     classification: 'Everyday',
@@ -673,6 +736,105 @@ export const SUPPLEMENTS: Supplement[] = [
     riskLevel: 'Moderate',
   }
 ];
+
+/** @deprecated Use `SUBSTANCES`. Kept for back-compat during the rename. */
+export const SUPPLEMENTS = SUBSTANCES;
+
+// ---------------------------------------------------------------------------
+// Sources — evidence that attaches to specific catalog claims/sections.
+// ---------------------------------------------------------------------------
+export type SourceType = 'study' | 'article' | 'official' | 'label' | 'database' | 'other';
+export type SourceSection =
+  | 'summary'
+  | 'dosage'
+  | 'side_effects'
+  | 'brand_claim'
+  | 'ingredient'
+  | 'testing'
+  | 'stack_description';
+export type SourceTargetType = 'substance' | 'brand' | 'stack';
+
+export interface Source {
+  id: string;
+  targetType: SourceTargetType;
+  targetId: string;
+  section: SourceSection;
+  title: string;
+  url: string;
+  sourceType: SourceType;
+  publisher?: string;
+  accessedAt?: string;
+}
+
+export const SOURCES: Source[] = [
+  {
+    id: 'src-mag-dosage',
+    targetType: 'substance',
+    targetId: 'magnesium-glycinate',
+    section: 'dosage',
+    title: 'Magnesium supplementation: dosing and bioavailability',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/29387426/',
+    sourceType: 'study',
+    publisher: 'PubMed',
+    accessedAt: '2026-05-01',
+  },
+  {
+    id: 'src-mag-side',
+    targetType: 'substance',
+    targetId: 'magnesium-glycinate',
+    section: 'side_effects',
+    title: 'Magnesium: tolerability and gastrointestinal effects',
+    url: 'https://ods.od.nih.gov/factsheets/Magnesium-HealthProfessional/',
+    sourceType: 'official',
+    publisher: 'NIH Office of Dietary Supplements',
+    accessedAt: '2026-05-01',
+  },
+  {
+    id: 'src-caffeine-dosage',
+    targetType: 'substance',
+    targetId: 'caffeine',
+    section: 'dosage',
+    title: 'Caffeine intake and performance: dose considerations',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/33388079/',
+    sourceType: 'study',
+    publisher: 'PubMed',
+    accessedAt: '2026-05-01',
+  },
+  {
+    id: 'src-thorne-testing',
+    targetType: 'brand',
+    targetId: 'b2',
+    section: 'testing',
+    title: 'Third-party testing & certificate of analysis',
+    url: 'https://www.thorne.com/quality',
+    sourceType: 'official',
+    publisher: 'Thorne',
+    accessedAt: '2026-05-01',
+  },
+  {
+    id: 'src-st2-desc',
+    targetType: 'stack',
+    targetId: 'st2',
+    section: 'stack_description',
+    title: 'Sleep architecture and combined magnesium/glycine/melatonin use',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/28503116/',
+    sourceType: 'study',
+    publisher: 'PubMed',
+    accessedAt: '2026-05-01',
+  },
+];
+
+export const getSources = (
+  targetType: SourceTargetType,
+  targetId: string,
+  section?: SourceSection,
+): Source[] =>
+  SOURCES.filter(
+    (s) =>
+      s.targetType === targetType &&
+      s.targetId === targetId &&
+      (section ? s.section === section : true),
+  );
 
 import { SEED_POSTS } from './seedPosts';
 

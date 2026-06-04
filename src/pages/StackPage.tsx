@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Flag } from 'lucide-react';
-import { STACKS, getPosts } from '../data/mockData';
+import { STACKS, SUBSTANCES, getPosts } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
+import Sources from '../components/Sources';
+import AccessBadge from '../components/AccessBadge';
 import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
@@ -23,6 +25,8 @@ export default function StackPage() {
   }
 
   const relatedPosts = getPosts().filter(p => p.stackId === stack.id);
+  const relatedDispatches = relatedPosts.filter(p => p.type === 'Dispatch');
+  const relatedSignals = relatedPosts.filter(p => p.type === 'Signal');
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto w-full pb-8 px-4 pt-6">
@@ -67,33 +71,46 @@ export default function StackPage() {
             </button>
           </div>
           
-          {/* Markers */}
-          {stack.markers && stack.markers.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {stack.markers.map((marker, i) => (
-                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-xs font-medium text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">
-                  {marker}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="text-lg text-slate-600 dark:text-zinc-400 max-w-2xl mb-6">
-            {stack.description}
+          <div className="max-w-2xl mb-6">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-1">Purpose</h3>
+            <p className="text-lg text-slate-600 dark:text-zinc-400">{stack.description}</p>
+            <Sources targetType="stack" targetId={stack.id} section="stack_description" />
           </div>
 
           {stack.substances && stack.substances.length > 0 && (
-            <div>
+            <div className="mb-6">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-2">Substances in this Stack</h3>
+              <div className="space-y-2">
+                {stack.substances.map((component, i) => {
+                  const substance = SUBSTANCES.find(s => s.id === component.id);
+                  return (
+                    <Link
+                      key={i}
+                      to={`/substance/${component.id}`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:bg-zinc-800"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-zinc-100">
+                        {substance && <AccessBadge classification={substance.classification} />}
+                        {component.name}
+                      </span>
+                      {substance?.averageDosage && (
+                        <span className="text-xs text-slate-500 dark:text-zinc-400">{substance.averageDosage}</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {stack.markers && stack.markers.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-2">Common reasons people combine these</h3>
               <div className="flex flex-wrap gap-2">
-                {stack.substances.map((substance, i) => (
-                  <Link 
-                    key={i} 
-                    to={`/supplement/${substance.id}`}
-                    className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-sm font-medium text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
-                  >
-                    {substance.name}
-                  </Link>
+                {stack.markers.map((marker, i) => (
+                  <span key={i} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    {marker}
+                  </span>
                 ))}
               </div>
             </div>
@@ -104,19 +121,26 @@ export default function StackPage() {
       <AdminObjectActions targetType="stack" targetId={stack.id} targetName={stack.name} />
 
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-6">Dispatches & Signals</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-4">Related Dispatches</h2>
         <div className="space-y-4">
-          {relatedPosts.length > 0 ? (
-            relatedPosts.map(post => (
-              <PostCard key={post.id} post={post} />
-            ))
+          {relatedDispatches.length > 0 ? (
+            relatedDispatches.map(post => <PostCard key={post.id} post={post} />)
           ) : (
-            <div className="text-center py-12 text-slate-500 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
-              <p>No posts yet for this stack.</p>
+            <div className="text-center py-8 text-slate-500 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
+              <p>No Dispatches yet for this stack.</p>
             </div>
           )}
         </div>
       </div>
+
+      {relatedSignals.length > 0 && (
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-4">Related Signals</h2>
+          <div className="space-y-4">
+            {relatedSignals.map(post => <PostCard key={post.id} post={post} />)}
+          </div>
+        </div>
+      )}
 
       <SuggestEditModal 
         isOpen={isSuggestEditOpen} 

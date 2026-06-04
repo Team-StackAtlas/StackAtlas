@@ -42,6 +42,7 @@ export default function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="profile/:username" element={<Profile />} />
               <Route path="post/:id" element={<PostDetail />} />
+              <Route path="substance/:id" element={<SupplementPage />} />
               <Route path="supplement/:id" element={<SupplementPage />} />
               <Route path="stack/:id" element={<StackPage />} />
               <Route path="brand/:id" element={<BrandPage />} />
