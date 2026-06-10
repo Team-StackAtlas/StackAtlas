@@ -1,374 +1,639 @@
-import { useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HelpCircle, ArrowLeft, Search, CheckCircle, AlertCircle, Star } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Search, X } from 'lucide-react';
 import { SUPPLEMENTS, BRANDS, Post, Domain, addPost } from '../data/mockData';
 import { cn } from '../lib/utils';
-import { useUserScope } from '../context/UserScopeContext';
-import { useToast } from '../components/ui/ToastProvider';
+import { useAuth } from '../context/AuthContext';
+
 
 type CreateType = 'Dispatch' | 'Signal';
+type EntityType = 'supplement' | 'brand' | 'stack';
+type EntityOption = { id: string; name: string; type: EntityType; categories: string[] };
+type BearingMode = 'dispatch' | 'signal';
+type Dose = { amount: string; unit: string };
+type Duration = { amount: string; unit: string };
+type CustomCycleMode = 'every' | 'blocks';
+type Frequency = {
+  preset: string;
+  customMode: CustomCycleMode;
+  everyAmount: string;
+  everyUnit: string;
+  onAmount: string;
+  onUnit: string;
+  offAmount: string;
+  offUnit: string;
+};
+type SubstanceProtocol = { dose: Dose; frequency: Frequency };
 
-const BEARINGS = [
-  'Sleep', 'Focus', 'Energy', 'Mood', 'Anxiety', 'Recovery', 'Strength', 'Endurance', 'Longevity', 'Libido'
+type FormErrors = Partial<Record<'auth' | 'entity' | 'title' | 'content' | 'dose' | 'frequency' | 'duration' | 'bearings', string>>;
+
+const MIN_DISPATCH_BODY_CHARS = 100;
+const DOSE_UNITS = ['mcg', 'mg', 'g', 'IU', 'mL', 'cc'];
+const DURATION_UNITS = ['days', 'weeks', 'months', 'years'];
+const FREQUENCY_PRESETS = ['Once daily', 'Twice daily', 'Three times daily', 'Every other day', 'Once weekly', 'Twice weekly', 'Three times weekly', 'Four times weekly', 'Five times weekly', 'Six times weekly', 'As needed', 'Pre-workout', 'Post-workout', 'Before bed', 'With meals', 'Fasted', 'Custom cycle'];
+const FREQUENCY_CYCLE_UNITS = ['days', 'weeks', 'months'];
+
+const BEARING_GROUPS = [
+  { name: 'Cognitive', bearings: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Creativity', 'Learning', 'Concentration', 'Mental Clarity'] },
+  { name: 'Sleep & Recovery', bearings: ['Sleep', 'Deep Sleep', 'Insomnia', 'Dreams', 'Relaxation', 'Recovery', 'Soreness', 'Fatigue'] },
+  { name: 'Performance', bearings: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training', 'Cardio', 'Reaction Time'] },
+  { name: 'Mood', bearings: ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Irritability', 'Confidence', 'Emotional Resilience'] },
+  { name: 'Hormonal & Sexual', bearings: ['Libido', 'Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Sexual Performance'] },
+  { name: 'Metabolic', bearings: ['Weight Loss', 'Fat Loss', 'Appetite', 'Satiety', 'Blood Sugar', 'Insulin Sensitivity'] },
+  { name: 'Digestive', bearings: ['Digestion', 'Gut Health', 'Bloating', 'Nausea', 'Microbiome'] },
+  { name: 'Cardiovascular', bearings: ['Blood Pressure', 'Cholesterol', 'Circulation', 'Heart Rate'] },
+  { name: 'Pain & Mobility', bearings: ['Pain', 'Injury Recovery', 'Mobility', 'Tendons', 'Ligaments', 'Joint Health'] },
+  { name: 'Beauty', bearings: ['Skin Health', 'Hair Health', 'Nails', 'Acne', 'Looksmaxxing'] },
+  { name: 'Experience', bearings: ['First Time Use', 'Long-Term Use', 'Dose Change', 'Interaction', 'Tolerance', 'Withdrawal', 'Dependency'] },
+  { name: 'Training', bearings: ['Bodybuilding', 'Strongman', 'Powerlifting', 'Olympic Weightlifting', 'CrossFit', 'Running', 'Cycling', 'Combat Sports', 'Climbing', 'Hypertrophy', 'Sports Performance'] },
+  { name: 'Traditional Medicine', bearings: ['East Asian Medicine', 'Ayurveda', 'Native American Medicine', 'Folk Medicine', 'Herbal Medicine', 'Western Herbalism'] },
+  { name: 'Modern Context', bearings: ['Biohacking', 'Longevity', 'Clinical Use', 'Sports Nutrition'] },
+  { name: 'Signal-only Discussion', bearings: ['Beginner Question', 'Stack Discussion', 'Protocol Discussion', 'Brand Experience', 'Product Quality', 'Cost / Value', 'Research', 'General Discussion'] },
 ];
+
+const SIGNAL_ONLY_BEARINGS = ['Beginner Question', 'Stack Discussion', 'Protocol Discussion', 'Brand Experience', 'Product Quality', 'Cost / Value', 'Research', 'General Discussion'];
+
+const CATEGORY_BEARING_SUGGESTIONS: Record<string, string[]> = {
+  Focus: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Mental Clarity'],
+  Memory: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Mental Clarity'],
+  Mood: ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Emotional Resilience'],
+  Stress: ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Emotional Resilience'],
+  Sleep: ['Sleep', 'Deep Sleep', 'Relaxation', 'Recovery', 'Soreness', 'Fatigue'],
+  Recovery: ['Sleep', 'Deep Sleep', 'Relaxation', 'Recovery', 'Soreness', 'Fatigue'],
+  'Strength & Muscle': ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
+  Strength: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
+  Endurance: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
+  Longevity: ['Long-Term Use', 'Longevity', 'Clinical Use', 'Biohacking'],
+  'Fat Loss': ['Weight Loss', 'Fat Loss', 'Appetite', 'Satiety', 'Blood Sugar', 'Insulin Sensitivity'],
+  'Metabolic Health': ['Weight Loss', 'Fat Loss', 'Appetite', 'Satiety', 'Blood Sugar', 'Insulin Sensitivity'],
+  Hormones: ['Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Libido'],
+  'Sexual Health': ['Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Libido'],
+  'Gut Health': ['Digestion', 'Gut Health', 'Bloating', 'Nausea', 'Microbiome'],
+  Cardiovascular: ['Blood Pressure', 'Cholesterol', 'Circulation', 'Heart Rate'],
+  'Heart Health': ['Blood Pressure', 'Cholesterol', 'Circulation', 'Heart Rate'],
+  'Pain & Injury': ['Pain', 'Injury Recovery', 'Tendons', 'Ligaments', 'Mobility'],
+  'Joint & Mobility': ['Joint Health', 'Mobility', 'Tendons', 'Ligaments', 'Pain'],
+  'Beauty & Skin': ['Skin Health', 'Hair Health', 'Nails', 'Acne', 'Looksmaxxing'],
+};
+
+const CURATED_COMPANION_PAIRS = [
+  ['bpc-157', 'tb-500'],
+  ['caffeine', 'l-theanine'],
+];
+
+const makeEmptyProtocol = (): SubstanceProtocol => ({
+  dose: { amount: '', unit: 'mg' },
+  frequency: { preset: '', customMode: 'every', everyAmount: '', everyUnit: 'days', onAmount: '', onUnit: 'weeks', offAmount: '', offUnit: 'weeks' },
+});
+
+const formatDose = (dose: Dose) => `${dose.amount} ${dose.unit}`.trim();
+
+const formatFrequency = (frequency: Frequency) => {
+  if (frequency.preset !== 'Custom cycle') return frequency.preset;
+  if (frequency.customMode === 'blocks') {
+    return frequency.onAmount && frequency.offAmount
+      ? `${frequency.onAmount} ${frequency.onUnit} on, ${frequency.offAmount} ${frequency.offUnit} off`
+      : '';
+  }
+  return frequency.everyAmount ? `Every ${frequency.everyAmount} ${frequency.everyUnit}` : '';
+};
+
+const formatDuration = (duration: Duration) => `${duration.amount} ${duration.unit}`.trim();
+
+const isPositiveNumber = (value: string) => value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) > 0;
+
+function getSubstanceOptions(): EntityOption[] {
+  return SUPPLEMENTS.map(s => ({ id: s.id, name: s.name, type: 'supplement' as const, categories: s.paths.map(path => path.category) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function getEntityOptions(): EntityOption[] {
+  const brands = BRANDS.map(b => ({ id: b.id, name: b.name, type: 'brand' as const, categories: b.markers ?? [] }));
+  return [...getSubstanceOptions(), ...brands].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function getEntityDomain(entity: EntityOption | null): Domain {
+  if (!entity || entity.type !== 'supplement') return 'All';
+  return SUPPLEMENTS.find(s => s.id === entity.id)?.paths[0]?.domain ?? 'All';
+}
+
+function getEntityCategory(entity: EntityOption | null) {
+  if (!entity || entity.type !== 'supplement') return 'General';
+  return SUPPLEMENTS.find(s => s.id === entity.id)?.paths[0]?.category ?? 'General';
+}
+
+function getAllowedBearings(mode: BearingMode) {
+  return BEARING_GROUPS.flatMap(group => group.bearings).filter(bearing => mode === 'signal' || !SIGNAL_ONLY_BEARINGS.includes(bearing));
+}
+
+function getSuggestedBearings(entity: EntityOption | null, mode: BearingMode) {
+  const allowed = getAllowedBearings(mode);
+  if (!entity) return allowed.slice(0, 5);
+  const suggestions = entity.categories.flatMap(category => CATEGORY_BEARING_SUGGESTIONS[category] ?? []);
+  return Array.from(new Set(suggestions)).filter(bearing => allowed.includes(bearing)).slice(0, 6);
+}
+
+function getCompanionOptions(entity: EntityOption | null) {
+  if (!entity || entity.type !== 'supplement') return [];
+  return CURATED_COMPANION_PAIRS.flatMap(([a, b]) => {
+    if (entity.id === a) return [b];
+    if (entity.id === b) return [a];
+    return [];
+  })
+    .map(id => SUPPLEMENTS.find(s => s.id === id))
+    .filter((substance): substance is NonNullable<typeof substance> => Boolean(substance));
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-zinc-300">{children}</label>;
+}
+
+function ErrorText({ children }: { children?: string }) {
+  if (!children) return null;
+  return <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">{children}</p>;
+}
+
+function getEntityTypeLabel(type: EntityType) {
+  if (type === 'supplement') return 'Substance';
+  if (type === 'brand') return 'Brand';
+  return 'Stack';
+}
+
+function EntityCombobox({ label, selected, onSelect, required, placeholder, options, selectedLabel, selectedTypeLabel }: {
+  label?: string;
+  selected: EntityOption | null;
+  onSelect: (entity: EntityOption | null) => void;
+  required?: boolean;
+  placeholder: string;
+  options?: EntityOption[];
+  selectedLabel?: string;
+  selectedTypeLabel?: string;
+}) {
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const defaultOptions = useMemo(() => getEntityOptions(), []);
+  const availableOptions = options ?? defaultOptions;
+  const filteredOptions = query.trim()
+    ? availableOptions.filter(option => option.name.toLowerCase().includes(query.toLowerCase())).slice(0, 8)
+    : availableOptions.slice(0, 8);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) setIsOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsOpen(false);
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef}>
+      {label && <FieldLabel>{label}{required && <span className="text-red-500"> *</span>}</FieldLabel>}
+      {selected ? (
+        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">
+            {selectedLabel ?? selected.name} <span className="text-xs text-emerald-600/70 dark:text-emerald-300/70">{selectedTypeLabel ?? getEntityTypeLabel(selected.type)}</span>
+          </span>
+          <button type="button" onClick={() => onSelect(null)} className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-500/20" aria-label="Clear entity">
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
+            onFocus={() => setIsOpen(true)}
+            placeholder={placeholder}
+            className="w-full rounded-xl border border-slate-200 bg-transparent py-2.5 pl-10 pr-4 focus:border-emerald-500 focus:outline-none dark:border-zinc-700"
+          />
+          {isOpen && (
+            <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+              {filteredOptions.length > 0 ? filteredOptions.map(option => (
+                <button
+                  key={`${option.type}-${option.id}`}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => { onSelect(option); setQuery(''); setIsOpen(false); }}
+                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-zinc-700"
+                >
+                  {option.name} <span className="ml-2 text-xs text-slate-400">{getEntityTypeLabel(option.type)}</span>
+                </button>
+              )) : (
+                <div className="px-4 py-3 text-sm text-slate-500 dark:text-zinc-400">No matching entity found.</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DoseField({ value, onChange }: { value: Dose; onChange: (value: Dose) => void }) {
+  return (
+    <div>
+      <FieldLabel>Dose <span className="text-red-500">*</span></FieldLabel>
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <input type="number" min="0" step="any" inputMode="decimal" placeholder="250" value={value.amount} onChange={e => onChange({ ...value, amount: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+        <select value={value.unit} onChange={e => onChange({ ...value, unit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+          {DOSE_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function FrequencyField({ value, onChange }: { value: Frequency; onChange: (value: Frequency) => void }) {
+  const fieldId = useId();
+
+  return (
+    <div>
+      <FieldLabel>Frequency <span className="text-red-500">*</span></FieldLabel>
+      <select value={value.preset} onChange={e => onChange({ ...value, preset: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+        <option value="">Select frequency</option>
+        {FREQUENCY_PRESETS.map(frequency => <option key={frequency} value={frequency}>{frequency}</option>)}
+      </select>
+      {value.preset === 'Custom cycle' && (
+        <div className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="flex flex-wrap gap-2 text-sm">
+            <label className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-slate-700 dark:text-zinc-300">
+              <input type="radio" name={`${fieldId}-frequency-mode`} checked={value.customMode === 'every'} onChange={() => onChange({ ...value, customMode: 'every' })} />
+              Every interval
+            </label>
+            <label className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-slate-700 dark:text-zinc-300">
+              <input type="radio" name={`${fieldId}-frequency-mode`} checked={value.customMode === 'blocks'} onChange={() => onChange({ ...value, customMode: 'blocks' })} />
+              On/off cycle
+            </label>
+          </div>
+          {value.customMode === 'every' ? (
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-sm">
+              <span className="text-slate-500 dark:text-zinc-400">Every</span>
+              <input type="number" min="1" step="1" inputMode="numeric" placeholder="3" value={value.everyAmount} onChange={e => onChange({ ...value, everyAmount: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-4 py-2 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900" />
+              <select value={value.everyUnit} onChange={e => onChange({ ...value, everyUnit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+                {FREQUENCY_CYCLE_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+              </select>
+            </div>
+          ) : (
+            <div className="grid gap-2 text-sm sm:grid-cols-[1fr_auto_1fr_auto] sm:items-center">
+              <input type="number" min="1" step="1" inputMode="numeric" placeholder="8" value={value.onAmount} onChange={e => onChange({ ...value, onAmount: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-4 py-2 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900" />
+              <select value={value.onUnit} onChange={e => onChange({ ...value, onUnit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+                {FREQUENCY_CYCLE_UNITS.map(unit => <option key={unit} value={unit}>{unit} on</option>)}
+              </select>
+              <input type="number" min="1" step="1" inputMode="numeric" placeholder="4" value={value.offAmount} onChange={e => onChange({ ...value, offAmount: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-4 py-2 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900" />
+              <select value={value.offUnit} onChange={e => onChange({ ...value, offUnit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+                {FREQUENCY_CYCLE_UNITS.map(unit => <option key={unit} value={unit}>{unit} off</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DurationField({ value, onChange }: { value: Duration; onChange: (value: Duration) => void }) {
+  return (
+    <div>
+      <FieldLabel>Duration <span className="text-red-500">*</span></FieldLabel>
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <input type="number" min="1" step="1" inputMode="numeric" placeholder="8" value={value.amount} onChange={e => onChange({ ...value, amount: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+        <select value={value.unit} onChange={e => onChange({ ...value, unit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
+          {DURATION_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function BearingPicker({ mode, selected, entity, onChange, error }: {
+  mode: BearingMode;
+  selected: string[];
+  entity: EntityOption | null;
+  onChange: (bearings: string[]) => void;
+  error?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isBrowsingAll, setIsBrowsingAll] = useState(false);
+  const [query, setQuery] = useState('');
+  const allowed = getAllowedBearings(mode);
+  const suggested = getSuggestedBearings(entity, mode);
+  const filtered = query.trim() ? allowed.filter(bearing => bearing.toLowerCase().includes(query.toLowerCase())) : suggested;
+
+  const toggle = (bearing: string) => {
+    if (selected.includes(bearing)) {
+      onChange(selected.filter(item => item !== bearing));
+      return;
+    }
+    if (selected.length < 5) onChange([...selected, bearing]);
+  };
+
+  const groupList = BEARING_GROUPS.map(group => ({ ...group, bearings: group.bearings.filter(bearing => allowed.includes(bearing)) })).filter(group => group.bearings.length > 0);
+
+  return (
+    <div>
+      <FieldLabel>Bearings <span className="text-red-500">*</span></FieldLabel>
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="mb-2 flex flex-wrap gap-2">
+          {selected.length > 0 ? selected.map(bearing => (
+            <button key={bearing} type="button" onClick={() => toggle(bearing)} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20">
+              {bearing}<X size={12} />
+            </button>
+          )) : <span className="text-sm text-slate-500 dark:text-zinc-400">Select 1-5 Bearings.</span>}
+        </div>
+        <button type="button" onClick={() => setIsOpen(!isOpen)} className="flex w-full items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+          <span>{isOpen ? 'Close Bearing picker' : 'Open Bearing picker'}</span>
+          <ChevronDown size={16} className={cn(isOpen && 'rotate-180')} />
+        </button>
+        {isOpen && (
+          <div className="mt-3 space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Bearings..." className="w-full rounded-xl border border-slate-200 bg-transparent py-2 pl-10 pr-3 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">{query.trim() ? 'Search results' : 'Suggested'}</p>
+              <div className="flex flex-wrap gap-2">
+                {filtered.map(bearing => (
+                  <button key={bearing} type="button" onClick={() => toggle(bearing)} disabled={!selected.includes(bearing) && selected.length >= 5} className={cn('rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40', selected.includes(bearing) ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800')}>
+                    {selected.includes(bearing) && <Check size={13} className="mr-1 inline" />}{bearing}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button type="button" onClick={() => setIsBrowsingAll(true)} className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Browse all Bearings</button>
+          </div>
+        )}
+      </div>
+      <ErrorText>{error}</ErrorText>
+      {isBrowsingAll && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold">Browse all Bearings</h3>
+              <button type="button" onClick={() => setIsBrowsingAll(false)} className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-zinc-800" aria-label="Close Bearings browser"><X size={18} /></button>
+            </div>
+            <div className="space-y-5">
+              {groupList.map(group => (
+                <section key={group.name}>
+                  <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-zinc-300">{group.name}</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {group.bearings.map(bearing => (
+                      <button key={bearing} type="button" onClick={() => toggle(bearing)} disabled={!selected.includes(bearing) && selected.length >= 5} className={cn('rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40', selected.includes(bearing) ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800')}>
+                        {bearing}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button type="button" onClick={() => setIsBrowsingAll(false)} className="rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-white hover:bg-emerald-600">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Create() {
   const navigate = useNavigate();
-  const { scope } = useUserScope();
-  const { toast } = useToast();
+  const { profile } = useAuth();
   const [activeType, setActiveType] = useState<CreateType | null>(null);
+  const [dispatchEntity, setDispatchEntity] = useState<EntityOption | null>(null);
+  const [signalEntity, setSignalEntity] = useState<EntityOption | null>(null);
+  const [companionId, setCompanionId] = useState<string | null>(null);
+  const [dispatchBearings, setDispatchBearings] = useState<string[]>([]);
+  const [signalBearings, setSignalBearings] = useState<string[]>([]);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [dispatchData, setDispatchData] = useState({ title: '', content: '', clarification: '' });
+  const [signalData, setSignalData] = useState({ title: '', content: '' });
+  const [primaryProtocol, setPrimaryProtocol] = useState<SubstanceProtocol>(makeEmptyProtocol);
+  const [companionProtocol, setCompanionProtocol] = useState<SubstanceProtocol>(makeEmptyProtocol);
+  const [duration, setDuration] = useState<Duration>({ amount: '', unit: 'weeks' });
 
-  // Dispatch State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLink, setSelectedLink] = useState<{ id: string, name: string, type: 'supplement' | 'brand' } | null>(null);
-  const [dispatchData, setDispatchData] = useState({
-    title: '',
-    content: '',
-    dose: '',
-    frequency: '',
-    duration: '',
-    startDate: '',
-    benefits: '',
-    sideEffects: '',
-    age: '',
-    weight: '',
-    sex: '',
-    goal: ''
-  });
+  const substanceOptions = useMemo(() => getSubstanceOptions(), []);
+  const signalEntityOptions = useMemo(() => getEntityOptions(), []);
+  const companionOptions = getCompanionOptions(dispatchEntity);
+  const companion = companionOptions.find(option => option.id === companionId) ?? null;
+  const primarySubstanceName = dispatchEntity?.name ?? 'Substance';
 
-  // Signal State
-  const [signalData, setSignalData] = useState({
-    title: '',
-    content: '',
-    bearings: [] as string[]
-  });
-
-  const getFilteredLinks = () => {
-    if (!searchQuery) return [];
-    const q = searchQuery.toLowerCase();
-    const supplements = SUPPLEMENTS.filter(s => s.name.toLowerCase().includes(q)).map(s => ({ id: s.id, name: s.name, type: 'supplement' as const }));
-    const brands = BRANDS.filter(b => b.name.toLowerCase().includes(q)).map(b => ({ id: b.id, name: b.name, type: 'brand' as const }));
-    return [...supplements, ...brands].slice(0, 5);
+  const selectDispatchEntity = (entity: EntityOption | null) => {
+    setDispatchEntity(entity);
+    setCompanionId(null);
+    setCompanionProtocol(makeEmptyProtocol());
   };
 
-  const calculateGoldProgress = () => {
-    const fields = ['dose', 'frequency', 'duration', 'startDate', 'benefits', 'sideEffects', 'age', 'weight', 'sex', 'goal'];
-    const filled = fields.filter(f => dispatchData[f as keyof typeof dispatchData].trim() !== '').length;
-    return {
-      percentage: Math.round((filled / fields.length) * 100),
-      missing: fields.filter(f => dispatchData[f as keyof typeof dispatchData].trim() === '')
-    };
+  const validateFrequency = (frequency: Frequency) => {
+    if (frequency.preset !== 'Custom cycle') return frequency.preset !== '';
+    if (frequency.customMode === 'blocks') return isPositiveNumber(frequency.onAmount) && isPositiveNumber(frequency.offAmount);
+    return isPositiveNumber(frequency.everyAmount);
   };
+
+  const validateProtocol = (protocol: SubstanceProtocol) => isPositiveNumber(protocol.dose.amount) && validateFrequency(protocol.frequency);
 
   const handleDispatchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedLink) {
-      toast('You must link this Dispatch to an existing substance or brand.', 'error');
-      return;
-    }
-    
+    const nextErrors: FormErrors = {};
+    if (!profile) nextErrors.auth = 'Sign in and complete your profile before creating a post.';
+    if (!dispatchEntity) nextErrors.entity = 'Choose a Substance.';
+    if (!dispatchData.title.trim()) nextErrors.title = 'Title is required.';
+    if (dispatchData.content.trim().length < MIN_DISPATCH_BODY_CHARS) nextErrors.content = `Content / Experience must be at least ${MIN_DISPATCH_BODY_CHARS} characters.`;
+    if (!validateProtocol(primaryProtocol) || (companion && !validateProtocol(companionProtocol))) nextErrors.dose = 'Enter a valid numeric dose and structured frequency for each substance.';
+    if (!isPositiveNumber(duration.amount)) nextErrors.duration = 'Enter a valid numeric duration.';
+    if (dispatchBearings.length < 1 || dispatchBearings.length > 5) nextErrors.bearings = 'Select 1-5 Bearings.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0 || !dispatchEntity || !profile) return;
+
+    const protocolEntries = [
+      { substanceId: dispatchEntity.type === 'supplement' ? dispatchEntity.id : undefined, substanceName: primarySubstanceName, dose: formatDose(primaryProtocol.dose), frequency: formatFrequency(primaryProtocol.frequency) },
+      ...(companion ? [{ substanceId: companion.id, substanceName: companion.name, dose: formatDose(companionProtocol.dose), frequency: formatFrequency(companionProtocol.frequency) }] : []),
+    ];
+    const durationLabel = formatDuration(duration);
+    const postId = `p${Math.round(e.timeStamp)}_${dispatchData.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`;
     const newPost: Post = {
-      id: `p${Date.now()}`,
+      id: postId,
       type: 'Dispatch',
-      title: dispatchData.title,
-      content: dispatchData.content,
-      structuredContent: {
-        dosages: `${dispatchData.dose} ${dispatchData.frequency}`,
-        effects: dispatchData.benefits,
-        sideEffects: dispatchData.sideEffects,
-        personalExperience: dispatchData.content
-      },
-      author: { id: 'u1', username: 'admin', isVerified: true, age: parseInt(dispatchData.age) || 30 },
-      domain: 'All', // Default or derived from selectedLink
-      category: 'General',
-      supplementId: selectedLink.type === 'supplement' ? selectedLink.id : undefined,
-      brandId: selectedLink.type === 'brand' ? selectedLink.id : undefined,
+      title: dispatchData.title.trim(),
+      content: dispatchData.content.trim(),
+      author: { id: profile.id, username: profile.username, displayName: profile.displayName, isVerified: profile.isVerified },
+      domain: getEntityDomain(dispatchEntity),
+      category: getEntityCategory(dispatchEntity),
+      supplementId: dispatchEntity.type === 'supplement' ? dispatchEntity.id : undefined,
+      brandId: undefined,
+      stackId: undefined,
       helpfulCount: 0,
       comments: 0,
       createdAt: new Date().toISOString(),
-      logDetails: { duration: dispatchData.duration, dosage: dispatchData.dose },
-      qualityScore: isGold ? 90 : 50
+      logDetails: { duration: durationLabel, dosage: protocolEntries.map(entry => `${entry.dose} · ${entry.frequency}`).join(' | '), stackIncluded: Boolean(companion) },
+      qualityScore: 50,
+      bearings: dispatchBearings,
+      dispatchProtocol: { entries: protocolEntries, duration: durationLabel, clarification: dispatchData.clarification.trim() || undefined },
     };
-    
     addPost(newPost);
     navigate('/square');
   };
 
   const handleSignalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (signalData.bearings.length === 0) {
-      toast('You must select at least one Bearing.', 'error');
-      return;
-    }
-    
+    const nextErrors: FormErrors = {};
+    if (!profile) nextErrors.auth = 'Sign in and complete your profile before creating a post.';
+    if (!signalData.title.trim()) nextErrors.title = 'Title is required.';
+    if (!signalData.content.trim()) nextErrors.content = 'Body text is required.';
+    if (signalBearings.length < 1 || signalBearings.length > 5) nextErrors.bearings = 'Select 1-5 Bearings.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0 || !profile) return;
+
+    const postId = `p${Math.round(e.timeStamp)}_${signalData.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`;
     const newPost: Post = {
-      id: `p${Date.now()}`,
+      id: postId,
       type: 'Signal',
-      title: signalData.title,
-      content: signalData.content,
-      author: { id: 'u1', username: 'admin', isVerified: true, age: 30 },
-      domain: 'All',
-      category: 'General',
+      title: signalData.title.trim(),
+      content: signalData.content.trim(),
+      author: { id: profile.id, username: profile.username, displayName: profile.displayName, isVerified: profile.isVerified },
+      domain: getEntityDomain(signalEntity),
+      category: signalEntity ? getEntityCategory(signalEntity) : 'General',
+      supplementId: signalEntity?.type === 'supplement' ? signalEntity.id : undefined,
+      brandId: signalEntity?.type === 'brand' ? signalEntity.id : undefined,
+      stackId: signalEntity?.type === 'stack' ? signalEntity.id : undefined,
       helpfulCount: 0,
       comments: 0,
       createdAt: new Date().toISOString(),
       qualityScore: 50,
-      bearings: signalData.bearings
+      bearings: signalBearings,
     };
-    
     addPost(newPost);
     navigate('/square');
   };
 
-  const toggleBearing = (bearing: string) => {
-    setSignalData(prev => {
-      if (prev.bearings.includes(bearing)) {
-        return { ...prev, bearings: prev.bearings.filter(b => b !== bearing) };
-      }
-      if (prev.bearings.length >= 5) return prev;
-      return { ...prev, bearings: [...prev.bearings, bearing] };
-    });
-  };
-
-  const progress = calculateGoldProgress();
-  const isGold = progress.percentage === 100;
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8">
-      <div className="sticky top-0 z-30 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors">
+    <div className="min-h-screen bg-slate-50 pb-24 text-slate-900 dark:bg-zinc-950 dark:text-zinc-50 md:pb-8">
+      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
+        <button onClick={() => activeType ? setActiveType(null) : navigate(-1)} className="-ml-2 rounded-full p-2 transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800" aria-label="Back">
           <ArrowLeft size={20} className="text-slate-700 dark:text-zinc-300" />
         </button>
         <h1 className="text-lg font-bold">Create</h1>
       </div>
 
-      <div className="max-w-4xl mx-auto w-full p-4 sm:p-6">
+      <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
         {!activeType ? (
-          <div className="flex flex-col sm:flex-row justify-center items-stretch gap-6 min-h-[50vh] max-w-2xl mx-auto mt-10">
-            <button 
-              onClick={() => setActiveType('Dispatch')}
-              className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 transition-all group"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Dispatch</h2>
-                <div className="relative group/tooltip">
-                  <HelpCircle size={18} className="text-slate-400 group-hover:text-emerald-400 transition-colors" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-800 dark:bg-zinc-800 text-white text-xs rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl">
-                    A structured log linked to a specific substance or brand. Reach Gold status to contribute to global averages.
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-zinc-800"></div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-slate-500 dark:text-zinc-400 text-center leading-relaxed">Create a detailed, structured log to track your experience and contribute to the community database.</p>
+          <div className="mx-auto mt-10 flex min-h-[50vh] max-w-2xl flex-col items-stretch justify-center gap-6 sm:flex-row">
+            <button onClick={() => setActiveType('Dispatch')} className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500">
+              <h2 className="mb-4 text-2xl font-bold text-slate-800 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">Dispatch</h2>
+              <p className="text-center text-sm leading-relaxed text-slate-500 dark:text-zinc-400">Create a written experience post linked to a substance.</p>
             </button>
-
-            <button 
-              onClick={() => setActiveType('Signal')}
-              className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 transition-all group"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Signal</h2>
-                <div className="relative group/tooltip">
-                  <HelpCircle size={18} className="text-slate-400 group-hover:text-blue-400 transition-colors" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-800 dark:bg-zinc-800 text-white text-xs rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl">
-                    An unstructured post to share thoughts, ask questions, or discuss topics using Bearings.
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-zinc-800"></div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-slate-500 dark:text-zinc-400 text-center leading-relaxed">Share a quick update, ask a question, or start a discussion with the community.</p>
+            <button onClick={() => setActiveType('Signal')} className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500">
+              <h2 className="mb-4 text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">Signal</h2>
+              <p className="text-center text-sm leading-relaxed text-slate-500 dark:text-zinc-400">Share a general or linked thought, question, or discussion with Bearings.</p>
             </button>
           </div>
         ) : activeType === 'Dispatch' ? (
           <form onSubmit={handleDispatchSubmit} className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">New Dispatch</h2>
-              <button type="button" onClick={() => setActiveType(null)} className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white">Change Type</button>
-            </div>
-
-            {/* Linking Section */}
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                1. Link to Entity <span className="text-red-500">*</span>
-              </h3>
-              {selectedLink ? (
-                <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
-                  <span className="font-medium text-emerald-700 dark:text-emerald-400">{selectedLink.name} ({selectedLink.type})</span>
-                  <button type="button" onClick={() => setSelectedLink(null)} className="text-sm text-emerald-600 hover:underline">Change</button>
+            <h2 className="text-2xl font-bold">New Dispatch</h2>
+            <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              {dispatchEntity ? (
+                <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                    {companion ? `${primarySubstanceName} + ${companion.name}` : primarySubstanceName} <span className="text-xs text-emerald-600/70 dark:text-emerald-300/70">Substance</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {companion && (
+                      <button type="button" onClick={() => setCompanionId(null)} className="rounded-lg px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-500/20">
+                        Remove {companion.name}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => selectDispatchEntity(null)} className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-500/20" aria-label="Clear Substance">
+                      <X size={16} />
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search for a substance or brand..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500"
-                  />
-                  {searchQuery && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl shadow-lg overflow-hidden z-20">
-                      {getFilteredLinks().map(link => (
-                        <button
-                          key={link.id}
-                          type="button"
-                          onClick={() => { setSelectedLink(link); setSearchQuery(''); }}
-                          className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-zinc-700 text-sm"
-                        >
-                          {link.name} <span className="text-slate-400 text-xs ml-2 capitalize">{link.type}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <EntityCombobox selected={null} onSelect={selectDispatchEntity} options={substanceOptions} placeholder="Search substances..." />
+              )}
+              <ErrorText>{errors.entity}</ErrorText>
+              {companionOptions.length > 0 && !companion && (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                  <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Companion substance(s) available</p>
+                  {companionOptions.map(option => (
+                    <button key={option.id} type="button" onClick={() => setCompanionId(option.id)} className="mt-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-emerald-700 shadow-sm hover:bg-emerald-100 dark:bg-zinc-900 dark:text-emerald-300 dark:hover:bg-zinc-800">Add {option.name} to this Dispatch?</button>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Gold Progress */}
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  2. Gold Completion
-                  <div className="relative group/tooltip">
-                    <HelpCircle size={14} className="text-slate-400" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 text-center">
-                      {isGold ? "Gold status achieved! This dispatch will contribute to global averages." : `Missing: ${progress.missing.join(', ')}`}
-                    </div>
-                  </div>
-                </h3>
-                <span className={cn("font-bold", isGold ? "text-amber-500" : "text-slate-500")}>
-                  {progress.percentage}%
-                </span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className={cn("h-full transition-all duration-500", isGold ? "bg-amber-500" : "bg-emerald-500")}
-                  style={{ width: `${progress.percentage}%` }}
-                />
-              </div>
-              {isGold && (
-                <div className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 group/platinum relative w-max">
-                  <Star size={12} className="fill-current" /> Gold Status Achieved! 
-                  <span className="text-slate-500 dark:text-zinc-400 ml-1 cursor-help underline decoration-dotted">What about Platinum?</span>
-                  <div className="absolute bottom-full left-0 mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 invisible group-hover/platinum:opacity-100 group-hover/platinum:visible transition-all z-10">
-                    Platinum status requires verified bloodwork and a minimum 6-month log duration. (Informational only, no upgrade logic implemented yet).
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Form Fields */}
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-4">
-              <h3 className="font-semibold">3. Details</h3>
-              
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Title"
-                  required
-                  value={dispatchData.title}
-                  onChange={e => setDispatchData({...dispatchData, title: e.target.value})}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500"
-                />
-                <textarea
-                  placeholder="Content / Experience"
-                  required
-                  rows={4}
-                  value={dispatchData.content}
-                  onChange={e => setDispatchData({...dispatchData, content: e.target.value})}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500"
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <input type="text" placeholder="Dose (e.g., 200mg)" value={dispatchData.dose} onChange={e => setDispatchData({...dispatchData, dose: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                  <input type="text" placeholder="Frequency (e.g., Daily)" value={dispatchData.frequency} onChange={e => setDispatchData({...dispatchData, frequency: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                  <input type="text" placeholder="Duration (e.g., 4 weeks)" value={dispatchData.duration} onChange={e => setDispatchData({...dispatchData, duration: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                  <input type="date" placeholder="Start Date" value={dispatchData.startDate} onChange={e => setDispatchData({...dispatchData, startDate: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                  <input type="text" placeholder="Benefits" value={dispatchData.benefits} onChange={e => setDispatchData({...dispatchData, benefits: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                  <input type="text" placeholder="Side Effects (or 'None')" value={dispatchData.sideEffects} onChange={e => setDispatchData({...dispatchData, sideEffects: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 dark:border-zinc-800">
-                  <h4 className="text-sm font-medium text-slate-500 mb-3">Demographics (for Peer Match)</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <input type="number" placeholder="Age" value={dispatchData.age} onChange={e => setDispatchData({...dispatchData, age: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                    <input type="text" placeholder="Weight" value={dispatchData.weight} onChange={e => setDispatchData({...dispatchData, weight: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                    <select value={dispatchData.sex} onChange={e => setDispatchData({...dispatchData, sex: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm">
-                      <option value="">Sex</option>
-                      <option value="M">Male</option>
-                      <option value="F">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                    <input type="text" placeholder="Goal" value={dispatchData.goal} onChange={e => setDispatchData({...dispatchData, goal: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button type="submit" className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors">
-                Submit Dispatch
-              </button>
-            </div>
-          </form>
-        ) : activeType === 'Signal' ? (
-          <form onSubmit={handleSignalSubmit} className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">New Signal</h2>
-              <button type="button" onClick={() => setActiveType(null)} className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white">Change Type</button>
-            </div>
-
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-6">
-              <input
-                type="text"
-                placeholder="Title"
-                required
-                value={signalData.title}
-                onChange={e => setSignalData({...signalData, title: e.target.value})}
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-blue-500 text-lg font-medium"
-              />
-
+            <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
               <div>
-                <h3 className="text-sm font-medium text-slate-500 mb-3">Select Bearings (1-5) <span className="text-red-500">*</span></h3>
-                <div className="flex flex-wrap gap-2">
-                  {BEARINGS.map(bearing => {
-                    const isSelected = signalData.bearings.includes(bearing);
-                    return (
-                      <button
-                        key={bearing}
-                        type="button"
-                        onClick={() => toggleBearing(bearing)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
-                          isSelected 
-                            ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20" 
-                            : "bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-700"
-                        )}
-                      >
-                        {bearing}
-                      </button>
-                    );
-                  })}
+                <FieldLabel>Title <span className="text-red-500">*</span></FieldLabel>
+                <input value={dispatchData.title} onChange={e => setDispatchData({ ...dispatchData, title: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 text-lg font-medium focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+                <ErrorText>{errors.title}</ErrorText>
+              </div>
+              <div>
+                <FieldLabel>Content / Experience <span className="text-red-500">*</span></FieldLabel>
+                <textarea rows={7} value={dispatchData.content} onChange={e => setDispatchData({ ...dispatchData, content: e.target.value })} placeholder="Describe benefits, side effects, context, and what happened." className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+                <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-zinc-400"><ErrorText>{errors.content}</ErrorText><span>{dispatchData.content.trim().length}/{MIN_DISPATCH_BODY_CHARS} minimum</span></div>
+              </div>
+              <BearingPicker mode="dispatch" selected={dispatchBearings} entity={dispatchEntity} onChange={setDispatchBearings} error={errors.bearings} />
+            </div>
+
+            <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <h3 className="font-semibold">Dose, frequency, and duration</h3>
+              <div className="space-y-4">
+                {companion && <h4 className="font-semibold text-slate-800 dark:text-zinc-200">{primarySubstanceName}</h4>}
+                <div className="grid gap-4 sm:grid-cols-2"><DoseField value={primaryProtocol.dose} onChange={dose => setPrimaryProtocol({ ...primaryProtocol, dose })} /><FrequencyField value={primaryProtocol.frequency} onChange={frequency => setPrimaryProtocol({ ...primaryProtocol, frequency })} /></div>
+                {companion && (
+                  <div className="space-y-4 border-t border-slate-100 pt-4 dark:border-zinc-800">
+                    <h4 className="font-semibold text-slate-800 dark:text-zinc-200">{companion.name}</h4>
+                    <div className="grid gap-4 sm:grid-cols-2"><DoseField value={companionProtocol.dose} onChange={dose => setCompanionProtocol({ ...companionProtocol, dose })} /><FrequencyField value={companionProtocol.frequency} onChange={frequency => setCompanionProtocol({ ...companionProtocol, frequency })} /></div>
+                  </div>
+                )}
+                <DurationField value={duration} onChange={setDuration} />
+                <ErrorText>{errors.dose ?? errors.duration}</ErrorText>
+                <div>
+                  <FieldLabel>Dose/frequency/duration clarification</FieldLabel>
+                  <input value={dispatchData.clarification} onChange={e => setDispatchData({ ...dispatchData, clarification: e.target.value })} placeholder="Started at 250 mcg daily, then increased to 500 mcg daily after two weeks." className="w-full rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
                 </div>
               </div>
-
-              <textarea
-                placeholder="What's on your mind?"
-                required
-                rows={6}
-                value={signalData.content}
-                onChange={e => setSignalData({...signalData, content: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-blue-500 resize-none"
-              />
             </div>
-
-            <div className="flex justify-end">
-              <button type="submit" className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-colors">
-                Broadcast Signal
-              </button>
-            </div>
+            <ErrorText>{errors.auth}</ErrorText>
+            <div className="flex justify-end"><button type="submit" className="rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-600">Submit Dispatch</button></div>
           </form>
-        ) : null}
+        ) : (
+          <form onSubmit={handleSignalSubmit} className="space-y-8">
+            <h2 className="text-2xl font-bold">New Signal</h2>
+            <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+              <div>
+                <FieldLabel>Linked entity</FieldLabel>
+                {!signalEntity && <p className="mb-2 text-sm font-medium text-slate-500 dark:text-zinc-400">General Signal</p>}
+                <EntityCombobox label="Search optional entity" selected={signalEntity} onSelect={setSignalEntity} options={signalEntityOptions} placeholder="Search substances or brands..." />
+              </div>
+              <div>
+                <FieldLabel>Title <span className="text-red-500">*</span></FieldLabel>
+                <input value={signalData.title} onChange={e => setSignalData({ ...signalData, title: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 text-lg font-medium focus:border-blue-500 focus:outline-none dark:border-zinc-700" />
+                <ErrorText>{errors.title}</ErrorText>
+              </div>
+              <div>
+                <FieldLabel>Body text <span className="text-red-500">*</span></FieldLabel>
+                <textarea rows={7} value={signalData.content} onChange={e => setSignalData({ ...signalData, content: e.target.value })} placeholder="What's on your mind?" className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 focus:border-blue-500 focus:outline-none dark:border-zinc-700" />
+                <ErrorText>{errors.content}</ErrorText>
+              </div>
+              <BearingPicker mode="signal" selected={signalBearings} entity={signalEntity} onChange={setSignalBearings} error={errors.bearings} />
+            </div>
+            <ErrorText>{errors.auth}</ErrorText>
+            <div className="flex justify-end"><button type="submit" className="rounded-xl bg-blue-500 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-600">Broadcast Signal</button></div>
+          </form>
+        )}
       </div>
     </div>
   );
