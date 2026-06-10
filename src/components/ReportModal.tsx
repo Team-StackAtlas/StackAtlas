@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { MockReportTargetType, useMockRole } from '../context/MockRoleContext';
+import { useAuth } from '../context/AuthContext';
+import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import { Modal } from './ui/Modal';
 
 interface ReportModalProps {
@@ -20,17 +22,14 @@ const REPORT_CATEGORIES = [
   'Other',
 ];
 
-export default function ReportModal({
-  isOpen,
-  onClose,
-  entityName,
-  targetType,
-  targetId,
-}: ReportModalProps) {
+export default function ReportModal({ isOpen, onClose, entityName, targetType, targetId }: ReportModalProps) {
   const { addReport } = useMockRole();
+  const { isBackendConfigured, services, user } = useAuth();
+  const requireAccount = useRequireAccountAction();
   const [category, setCategory] = useState('');
   const [details, setDetails] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
     setCategory('');
@@ -39,37 +38,43 @@ export default function ReportModal({
     onClose();
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    addReport({
-      targetType,
-      targetId,
-      targetName: entityName,
-      category,
-      details: details.trim(),
-    });
-
-    setCategory('');
-    setDetails('');
-    setConfirmation('Report submitted for review.');
+    if (!requireAccount()) return;
+    setSubmitting(true);
+    try {
+      if (isBackendConfigured && services && user) {
+        await services.reports.create(user.id, {
+          targetType,
+          targetId: targetId ?? entityName,
+          targetName: entityName,
+          category,
+          details: details.trim(),
+        });
+      } else {
+        addReport({ targetType, targetId, targetName: entityName, category, details: details.trim() });
+      }
+      setCategory('');
+      setDetails('');
+      setConfirmation('Report submitted for review.');
+    } catch (err) {
+      setConfirmation(err instanceof Error ? err.message : 'Failed to submit report.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={`Report ${entityName}`}>
       {confirmation ? (
-        <div className="p-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-            <CheckCircle size={24} />
+        <div className="space-y-4 p-5 text-sm text-slate-600 dark:text-zinc-300">
+          <div className="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+            <CheckCircle size={18} /> {confirmation}
           </div>
-          <p className="font-semibold text-slate-900 dark:text-zinc-100">{confirmation}</p>
-          <p className="mt-2 text-sm text-slate-500 dark:text-zinc-400">
-            This mock report is stored locally for Admin and Developer review.
-          </p>
           <button
             type="button"
             onClick={handleClose}
-            className="mt-5 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
+            className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
           >
             Done
           </button>
@@ -77,10 +82,7 @@ export default function ReportModal({
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 p-4">
           <div>
-            <label
-              htmlFor="reportCategory"
-              className="mb-2 block text-sm font-medium text-slate-700 dark:text-zinc-300"
-            >
+            <label htmlFor="reportCategory" className="mb-2 block text-sm font-medium text-slate-700 dark:text-zinc-300">
               Category
             </label>
             <select
@@ -92,18 +94,13 @@ export default function ReportModal({
             >
               <option value="">Select a category...</option>
               {REPORT_CATEGORIES.map((reportCategory) => (
-                <option key={reportCategory} value={reportCategory}>
-                  {reportCategory}
-                </option>
+                <option key={reportCategory} value={reportCategory}>{reportCategory}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label
-              htmlFor="reportDetails"
-              className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300"
-            >
+            <label htmlFor="reportDetails" className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300">
               Details (Optional)
             </label>
             <textarea
@@ -116,18 +113,11 @@ export default function ReportModal({
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            >
+            <button type="button" onClick={handleClose} className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
               Cancel
             </button>
-            <button
-              type="submit"
-              className="rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
-            >
-              Submit Report
+            <button type="submit" disabled={submitting} className="rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50">
+              {submitting ? 'Submitting…' : 'Submit Report'}
             </button>
           </div>
         </form>

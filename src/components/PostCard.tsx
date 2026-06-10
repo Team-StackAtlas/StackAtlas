@@ -8,6 +8,7 @@ import { SaveButton } from './SaveButton';
 import AccessBadge from './AccessBadge';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/ToastProvider';
+import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 
 interface PostCardProps {
   post: Post;
@@ -23,6 +24,7 @@ export default function PostCard({ post }: PostCardProps) {
   const [reportReason, setReportReason] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const requireAccount = useRequireAccountAction();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -36,7 +38,7 @@ export default function PostCard({ post }: PostCardProps) {
 
   const handleReport = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reportReason) return;
+    if (!reportReason || !requireAccount()) return;
     toast('Report submitted successfully.');
     setShowReportModal(false);
     setShowMenu(false);
@@ -44,6 +46,7 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   const handleSubmitToStackAtlas = () => {
+    if (!requireAccount()) return;
     toast('Submitted for review.');
     setShowMenu(false);
   };
@@ -99,7 +102,7 @@ export default function PostCard({ post }: PostCardProps) {
             {showMenu && (
               <div className="absolute right-0 top-8 w-48 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg overflow-hidden z-10">
                 <button 
-                  onClick={() => { setShowReportModal(true); setShowMenu(false); }}
+                  onClick={() => { if (requireAccount()) { setShowReportModal(true); setShowMenu(false); } }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-left"
                 >
                   <Flag size={14} />
@@ -200,11 +203,11 @@ export default function PostCard({ post }: PostCardProps) {
       {/* Footer Actions */}
       <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-zinc-800/50">
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+          <button onClick={() => requireAccount()} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
             <CheckCircle size={16} />
             Helpful ({post.helpfulCount})
           </button>
-          <button className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <button onClick={() => requireAccount()} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             <MessageSquare size={16} />
             Discuss ({post.comments})
           </button>

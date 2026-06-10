@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase, isBackendConfigured } from '../services/supabase/client';
 import { createSupabaseAccountServices } from '../services/supabase';
-import type { SessionUser } from '../services/types';
+import type { ProfileDTO, SessionUser } from '../services/types';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'unconfigured';
 
@@ -10,6 +10,7 @@ type AccountServices = ReturnType<typeof createSupabaseAccountServices>;
 interface AuthContextValue {
   status: AuthStatus;
   user: SessionUser | null;
+  profile: ProfileDTO | null;
   isBackendConfigured: boolean;
   /** Account services (auth/profiles/saved/hidden/follows/notifications), or null when unconfigured. */
   services: AccountServices | null;
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [status, setStatus] = useState<AuthStatus>(
     isBackendConfigured ? 'loading' : 'unconfigured',
   );
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!services) return;
     const current = await services.auth.getCurrentUser();
     setUser(current);
+    setProfile(current ? await services.profiles.get(current.id) : null);
     setStatus(current ? 'authenticated' : 'unauthenticated');
   };
 
@@ -67,12 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!services) throw new Error(NOT_CONFIGURED);
     await services.auth.signOut();
     setUser(null);
+    setProfile(null);
     setStatus('unauthenticated');
   };
 
   return (
     <AuthContext.Provider
-      value={{ status, user, isBackendConfigured, services, signUp, signIn, signOut, refresh }}
+      value={{ status, user, profile, isBackendConfigured, services, signUp, signIn, signOut, refresh }}
     >
       {children}
     </AuthContext.Provider>

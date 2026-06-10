@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useRequireAccountAction } from './useRequireAccountAction';
+import type { SavedItemType as BackendSavedItemType } from '../services/types';
 
-export type SavedItemType = 'substance' | 'stack' | 'brand' | 'Dispatch' | 'Signal';
+export type SavedItemType = 'substance' | 'stack' | 'brand' | 'Dispatch' | 'Signal' | 'dispatch' | 'signal';
 
 export interface SavedItem {
   id: string;
@@ -8,40 +11,91 @@ export interface SavedItem {
   savedAt: string;
 }
 
+const STORAGE_KEY = 'stackatlas_saved';
+
+function toBackendType(type: SavedItemType): BackendSavedItemType {
+  return type === 'Dispatch' ? 'dispatch' : type === 'Signal' ? 'signal' : type;
+}
+
+function sameType(a: SavedItemType, b: SavedItemType) {
+  return toBackendType(a) === toBackendType(b);
+}
+
+function readLocal(): SavedItem[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocal(items: SavedItem[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
 export function useSaved() {
-  const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
+  const { isBackendConfigured, services, user } = useAuth();
+  const requireAccount = useRequireAccountAction();
+  const backed = !!(isBackendConfigured && services && user);
+  const [savedItems, setSavedItems] = useState<SavedItem[]>(() => readLocal());
 
   useEffect(() => {
-    const stored = localStorage.getItem('stackatlas_saved');
-    if (stored) {
-      try {
-        setSavedItems(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse saved items', e);
-      }
+    if (backed && services && user) {
+      services.saved
+        .list(user.id)
+        .then((items) =>
+          setSavedItems(
+            items.map((item) => ({ id: item.itemId, type: item.itemType, savedAt: new Date().toISOString() })),
+          ),
+        )
+        .catch(() => {});
+      return;
     }
-  }, []);
+    if (!isBackendConfigured) setSavedItems(readLocal());
+  }, [backed, isBackendConfigured, services, user]);
 
-  const saveItem = (id: string, type: SavedItemType) => {
-    setSavedItems(prev => {
-      if (prev.some(item => item.id === id && item.type === type)) return prev;
-      const newItems = [...prev, { id, type, savedAt: new Date().toISOString() }];
-      localStorage.setItem('stackatlas_saved', JSON.stringify(newItems));
-      return newItems;
-    });
-  };
+  const saveItem = useCallback(
+    (id: string, type: SavedItemType) => {
+      if (!requireAccount()) return;
+      setSavedItems((prev) => {
+        if (prev.some((item) => item.id === id && sameType(item.type, type))) return prev;
+        const next = [...prev, { id, type, savedAt: new Date().toISOString() }];
+        if (!backed) writeLocal(next);
+        return next;
+      });
+      if (backed && services && user) {
+        services.saved.add(user.id, { itemId: id, itemType: toBackendType(type) }).catch(() => {
+          setSavedItems((prev) => prev.filter((item) => !(item.id === id && sameType(item.type, type))));
+        });
+      }
+    },
+    [backed, requireAccount, services, user],
+  );
 
-  const unsaveItem = (id: string, type: SavedItemType) => {
-    setSavedItems(prev => {
-      const newItems = prev.filter(item => !(item.id === id && item.type === type));
-      localStorage.setItem('stackatlas_saved', JSON.stringify(newItems));
-      return newItems;
-    });
-  };
+  const unsaveItem = useCallback(
+    (id: string, type: SavedItemType) => {
+      if (!requireAccount()) return;
+      setSavedItems((prev) => {
+        const next = prev.filter((item) => !(item.id === id && sameType(item.type, type)));
+        if (!backed) writeLocal(next);
+        return next;
+      });
+      if (backed && services && user) {
+        services.saved.remove(user.id, { itemId: id, itemType: toBackendType(type) }).catch(() => {
+          setSavedItems((prev) => [...prev, { id, type, savedAt: new Date().toISOString() }]);
+        });
+      }
+    },
+    [backed, requireAccount, services, user],
+  );
 
-  const isSaved = (id: string, type: SavedItemType) => {
-    return savedItems.some(item => item.id === id && item.type === type);
-  };
+  const isSaved = useCallback(
+    (id: string, type: SavedItemType) => savedItems.some((item) => item.id === id && sameType(item.type, type)),
+    [savedItems],
+  );
 
   return { savedItems, saveItem, unsaveItem, isSaved };
 }

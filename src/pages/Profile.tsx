@@ -1,575 +1,311 @@
-import { useState, useEffect } from 'react';
-import { ShieldCheck, Settings, LogOut, Bookmark, Activity, Award, ChevronRight, Users, Calendar, Link as LinkIcon, Upload, CheckCircle, EyeOff } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { Link, useParams } from 'react-router-dom';
-import { getPosts, SUPPLEMENTS, STACKS, BRANDS, USERS, User } from '../data/mockData';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck } from 'lucide-react';
+import { getPosts, STACKS, USERS } from '../data/mockData';
 import PostCard from '../components/PostCard';
-import { useUserScope } from '../context/UserScopeContext';
-import { useSaved } from '../hooks/useSaved';
-import { SaveButton } from '../components/SaveButton';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
-import { Modal } from '../components/ui/Modal';
+import { useSaved } from '../hooks/useSaved';
+import { useFollowing } from '../hooks/useFollowing';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
-import AccountSettingsPanel from '../components/AccountSettingsPanel';
+import type { ProfileDTO, ProfileSettings } from '../services/types';
+import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 
-function VerificationModal({ isOpen, onClose, onVerify }: { isOpen: boolean, onClose: () => void, onVerify: () => void }) {
-  const [step, setStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'hidden' | 'settings';
 
-  const handleSubmit = () => {
-    setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onVerify();
-      onClose();
-    }, 2000);
-  };
+const hiddenGroups: { key: HiddenGroup; label: string }[] = [
+  { key: 'substances', label: 'Substances' },
+  { key: 'stacks', label: 'Stacks' },
+  { key: 'brands', label: 'Brands' },
+  { key: 'tags', label: 'Tags' },
+];
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} ariaLabel="Get verified">
-      <div className="p-6">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-2">Get Verified</h2>
-          <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">
-            Verification helps build trust in the community and prevents fraudulent reviews.
-          </p>
+function numberOrNull(value: FormDataEntryValue | null) {
+  if (value === null || String(value).trim() === '') return null;
+  return Number(value);
+}
 
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950">
-                <h3 className="font-medium text-slate-900 dark:text-zinc-100 mb-2">Why verify?</h3>
-                <ul className="text-sm text-slate-600 dark:text-zinc-400 space-y-2">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                    <span>Get a verified badge on your profile and posts</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                    <span>Build reputation as a trusted researcher</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                    <span>Help maintain the quality of the StackAtlas database</span>
-                  </li>
-                </ul>
-              </div>
-              <button 
-                onClick={() => setStep(2)}
-                className="w-full bg-emerald-500 text-white font-medium py-2.5 rounded-xl hover:bg-emerald-600 transition-colors"
-              >
-                Start Verification
-              </button>
-              <button 
-                onClick={onClose}
-                className="w-full text-slate-500 dark:text-zinc-400 font-medium py-2 hover:text-slate-900 dark:hover:text-zinc-100 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2 block">
-                  Upload Identification
-                </label>
-                <div className="border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-xl p-8 text-center hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer">
-                  <Upload size={32} className="mx-auto text-slate-400 dark:text-zinc-500 mb-3" />
-                  <p className="text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500">
-                    Driver's License, Passport, or Medical ID (JPG, PNG, PDF)
-                  </p>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-zinc-300 mb-2 block">
-                  Verification Type
-                </label>
-                <select className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-emerald-500/50">
-                  <option>Independent Researcher</option>
-                  <option>Medical Professional</option>
-                  <option>Verified Athlete</option>
-                  <option>Verified User</option>
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button 
-                  onClick={() => setStep(1)}
-                  className="flex-1 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 font-medium py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  Back
-                </button>
-                <button 
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="flex-1 bg-emerald-500 text-white font-medium py-2.5 rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit ID'
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-    </Modal>
-  );
+function fieldVisible(profile: ProfileDTO, key: keyof Required<ProfileSettings>, isOwnProfile: boolean) {
+  if (isOwnProfile) return true;
+  return withDefaultProfileSettings(profile.settings)[key];
 }
 
 export default function Profile() {
   const { username } = useParams();
-  const { scope } = useUserScope();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'dispatches' | 'signals' | 'pending_stacks' | 'saved' | 'hidden'>('all');
-  const [savedFilter, setSavedFilter] = useState<'all' | 'substance' | 'stack' | 'brand' | 'Dispatch' | 'Signal'>('all');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { status, user, profile: authProfile, services, isBackendConfigured, refresh, signOut } = useAuth();
+  const { toast } = useToast();
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
-  const { toast } = useToast();
-  
-  // Default user (admin)
-  const defaultUser: User = USERS.find(u => u.username === 'admin') || USERS[0];
+  const { isFollowing, toggleFollow } = useFollowing();
+  const [profile, setProfile] = useState<ProfileDTO | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
+  const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
+  const [activeTab, setActiveTab] = useState<ProfileTab>('all');
+  const [saving, setSaving] = useState(false);
 
-  const [user, setUser] = useState<User>(defaultUser);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const isOwnProfile = !username || (!!authProfile && username.toLowerCase() === authProfile.username.toLowerCase());
+  const needsCompletion = isOwnProfile && !isProfileComplete(authProfile);
 
   useEffect(() => {
-    if (username) {
-      const foundUser = USERS.find(u => u.username.toLowerCase() === username.toLowerCase());
-      if (foundUser) {
-        setUser(foundUser);
-      } else {
-        // Fallback if user not found
-        setUser({
-          id: 'temp',
-          username: username,
-          displayName: username,
-          bio: 'User not found.',
-          joinDate: 'Joined recently',
-          followersCount: 0,
-          followingCount: 0,
-          goldCount: 0,
-          platinumCount: 0,
-        });
+    let active = true;
+    async function loadProfile() {
+      if (!isBackendConfigured || !services) {
+        const mock = username
+          ? USERS.find((candidate) => candidate.username.toLowerCase() === username.toLowerCase())
+          : USERS[0];
+        setProfile(
+          mock
+            ? {
+                id: mock.id,
+                username: mock.username,
+                displayName: mock.displayName,
+                bio: mock.bio,
+                role: 'User',
+                researchScope: 'Citizen',
+                isVerified: !!mock.isVerified,
+                joinDate: new Date().toISOString(),
+                settings: {},
+                stats: {
+                  followersCount: mock.followersCount,
+                  followingCount: mock.followingCount,
+                  dispatchCount: getPosts().filter((post) => post.author.username === mock.username && post.type === 'Dispatch').length,
+                  signalCount: getPosts().filter((post) => post.author.username === mock.username && post.type === 'Signal').length,
+                },
+              }
+            : null,
+        );
+        setLoadingProfile(false);
+        return;
       }
-    } else {
-      setUser(defaultUser);
-    }
-  }, [username]);
 
-  const isOwnProfile = !username || username.toLowerCase() === 'admin';
-  const userPosts = getPosts().filter(p => p.author.username.toLowerCase() === user.username.toLowerCase());
-  
-  const filteredPosts = userPosts.filter(p => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'dispatches') return p.type === 'Dispatch';
-    if (activeTab === 'signals') return p.type === 'Signal';
+      setLoadingProfile(true);
+      const loaded = username ? await services.profiles.getByUsername(normalizeUsername(username)) : authProfile;
+      if (active) {
+        setProfile(loaded ?? null);
+        setLoadingProfile(false);
+      }
+    }
+    loadProfile().catch((err) => {
+      if (active) {
+        toast(err instanceof Error ? err.message : 'Failed to load profile.', 'error');
+        setLoadingProfile(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [authProfile, isBackendConfigured, services, toast, username]);
+
+  if (isBackendConfigured && !username && status === 'unauthenticated') {
+    return <Navigate to={`/login?returnTo=${encodeURIComponent('/profile')}`} replace />;
+  }
+
+  const shownProfile = isOwnProfile ? authProfile ?? profile : profile;
+  const settings = withDefaultProfileSettings(shownProfile?.settings);
+  const userPosts = getPosts().filter((post) => post.author.username.toLowerCase() === shownProfile?.username.toLowerCase());
+  const filteredPosts = userPosts.filter((post) => {
+    if (activeTab === 'dispatches') return post.type === 'Dispatch';
+    if (activeTab === 'signals') return post.type === 'Signal';
     return true;
   });
-
-  const pendingStacks = STACKS.filter(s => s.creatorId === user.id && s.status === 'pending');
-
-  const hiddenGroups: { key: HiddenGroup; label: string }[] = [
-    { key: 'substances', label: 'Substances' },
-    { key: 'stacks', label: 'Stacks' },
-    { key: 'brands', label: 'Brands' },
-    { key: 'tags', label: 'Tags' },
-  ];
+  const publishedStacks = STACKS.filter((stack) => stack.creatorId === shownProfile?.id && stack.status === 'approved');
   const hiddenItemsCount = hiddenGroups.reduce((total, group) => total + hiddenItems[group.key].length, 0);
+  const following = shownProfile ? isFollowing('user', shownProfile.id) : false;
 
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!shownProfile || !services || !user) return;
+    const form = new FormData(event.currentTarget);
+    const nextUsername = normalizeUsername(String(form.get('username') ?? ''));
+    const usernameError = validateUsername(nextUsername);
+    if (usernameError) {
+      toast(usernameError, 'error');
+      return;
+    }
+    const displayName = String(form.get('displayName') ?? '').trim();
+    if (!displayName) {
+      toast('Display name is required to complete your profile.', 'error');
+      return;
+    }
 
-  const handleVerifySuccess = () => {
-    // Mock verify success
+    setSaving(true);
+    try {
+      const nextSettings = withDefaultProfileSettings(shownProfile.settings);
+      (Object.keys(nextSettings) as (keyof Required<ProfileSettings>)[]).forEach((key) => {
+        nextSettings[key] = form.get(key) === 'on';
+      });
+      nextSettings.savedPrivate = true;
+
+      await services.profiles.update(user.id, {
+        username: nextUsername,
+        displayName,
+        bio: String(form.get('bio') ?? '').trim() || undefined,
+        avatarUrl: String(form.get('avatarUrl') ?? '').trim() || undefined,
+        age: numberOrNull(form.get('age')),
+        weight: numberOrNull(form.get('weight')),
+        height: numberOrNull(form.get('height')),
+        sex: String(form.get('sex') ?? '').trim() || null,
+        bodyFatPercentage: numberOrNull(form.get('bodyFatPercentage')),
+        settings: nextSettings,
+      });
+      await refresh();
+      setIsEditing(false);
+      const returnTo = searchParams.get('returnTo');
+      toast('Profile saved.', 'success');
+      if (returnTo) navigate(returnTo);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to save profile.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
-    setUser(prev => ({
-      ...prev,
-      followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1
-    }));
-  };
+  if (loadingProfile || status === 'loading') {
+    return <div className="mx-auto max-w-3xl p-6 text-sm text-slate-500 dark:text-zinc-400">Loading profile…</div>;
+  }
+
+  if (!shownProfile) {
+    return <div className="mx-auto max-w-3xl p-6 text-sm text-slate-500 dark:text-zinc-400">Profile not found.</div>;
+  }
+
+  const showAvatar = fieldVisible(shownProfile, 'showAvatar', isOwnProfile);
+  const showBodyStats = fieldVisible(shownProfile, 'showBodyStats', isOwnProfile);
+  const bodyStats = [
+    fieldVisible(shownProfile, 'showAge', isOwnProfile) && shownProfile.age ? ['Age', String(shownProfile.age)] : null,
+    fieldVisible(shownProfile, 'showWeight', isOwnProfile) && shownProfile.weight ? ['Weight', `${shownProfile.weight} lb`] : null,
+    fieldVisible(shownProfile, 'showHeight', isOwnProfile) && shownProfile.height ? ['Height', `${shownProfile.height} in`] : null,
+    fieldVisible(shownProfile, 'showSex', isOwnProfile) && shownProfile.sex ? ['Sex', shownProfile.sex] : null,
+    fieldVisible(shownProfile, 'showBodyFat', isOwnProfile) && shownProfile.bodyFatPercentage ? ['Body fat', `${shownProfile.bodyFatPercentage}%`] : null,
+  ].filter(Boolean) as string[][];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8 px-4 pt-6 max-w-3xl mx-auto w-full transition-colors duration-200">
-      <VerificationModal 
-        isOpen={isVerifyModalOpen} 
-        onClose={() => setIsVerifyModalOpen(false)} 
-        onVerify={handleVerifySuccess}
-      />
-      {/* Profile Header */}
-      <div className="mb-6 flex flex-col">
-        <div className="flex justify-between items-start mb-4">
-          <div className="relative">
-            <div className="h-20 w-20 md:h-24 md:w-24 rounded-full bg-slate-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-950 flex items-center justify-center text-3xl md:text-4xl font-bold text-slate-500 dark:text-zinc-400 shadow-sm">
-              {user.username.charAt(0).toUpperCase()}
+    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col bg-slate-50 px-4 pb-24 pt-6 text-slate-900 transition-colors duration-200 dark:bg-zinc-950 dark:text-zinc-50 md:pb-8">
+      {needsCompletion && (
+        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+          Complete your profile with a valid username and display name before creating, saving, following, reporting, or editing content.
+        </div>
+      )}
+
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 text-3xl font-bold text-slate-500 shadow-sm dark:border-zinc-950 dark:bg-zinc-800 dark:text-zinc-400">
+              {showAvatar && shownProfile.avatarUrl ? <img src={shownProfile.avatarUrl} alt="" className="h-full w-full object-cover" /> : shownProfile.username.charAt(0).toUpperCase()}
             </div>
-            {user.isVerified && (
-              <div className="absolute bottom-0 right-0 rounded-full bg-emerald-500 p-1 border-2 border-white dark:border-zinc-950" title={user.verificationType}>
-                <ShieldCheck size={16} className="text-white" />
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">{shownProfile.displayName || shownProfile.username}</h1>
+                {shownProfile.isVerified && <ShieldCheck size={18} className="text-emerald-500" />}
+                {(shownProfile.role === 'Admin' || shownProfile.role === 'Developer') && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{shownProfile.role}</span>
+                )}
               </div>
-            )}
+              <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">@{shownProfile.username}</p>
+              {shownProfile.bio && <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-zinc-300">{shownProfile.bio}</p>}
+              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-zinc-500">
+                <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>
+                <span className="flex items-center gap-1"><Activity size={13} /> {shownProfile.stats?.dispatchCount ?? 0} Dispatches</span>
+                <span>{shownProfile.stats?.signalCount ?? 0} Signals</span>
+                {settings.showFollowers && <span>{shownProfile.stats?.followersCount ?? 0} followers</span>}
+                {settings.showFollowing && <span>{shownProfile.stats?.followingCount ?? 0} following</span>}
+              </div>
+            </div>
           </div>
-          
+
           {isOwnProfile ? (
-            <div className="flex gap-2">
-              <Link to="/onboarding" className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-300 dark:border-zinc-700 text-sm font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shadow-sm bg-white dark:bg-zinc-900">
-                <ShieldCheck
-                  size={16}
-                  className={cn(
-                    scope.accessLevel === 'Explorer' ? 'text-purple-500' : 'text-emerald-500'
-                  )}
-                />
-                Edit Scope
-              </Link>
-              {!user.isVerified && (
-                <button onClick={() => setIsVerifyModalOpen(true)} className="px-4 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors shadow-sm">
-                  Get Verified
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              {user && (
+                <button onClick={() => signOut()} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                  <LogOut size={14} className="inline" />
                 </button>
               )}
-              <button onClick={() => setIsEditing(!isEditing)} className="px-4 py-1.5 rounded-full border border-slate-300 dark:border-zinc-700 text-sm font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shadow-sm bg-white dark:bg-zinc-900">
+              <button onClick={() => setIsEditing((value) => !value)} className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
                 {isEditing ? 'Cancel' : 'Edit Profile'}
               </button>
             </div>
           ) : (
-            <button 
-              onClick={handleFollowToggle}
-              className={cn(
-                "px-6 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm",
-                isFollowing 
-                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 hover:bg-slate-300 dark:hover:bg-zinc-700" 
-                  : "bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-white"
-              )}
-            >
-              {isFollowing ? 'Following' : 'Follow'}
+            <button onClick={() => shownProfile && toggleFollow('user', shownProfile.id)} className="rounded-full bg-slate-900 px-6 py-1.5 text-sm font-medium text-white hover:bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white">
+              {following ? 'Following' : 'Follow'}
             </button>
           )}
         </div>
-        
-        {isEditing && isOwnProfile ? (
-          <div className="w-full space-y-3 mt-2 mb-6 bg-white dark:bg-zinc-900 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm">
-            <div>
-              <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-1 block">Username</label>
-              <input 
-                value={user.username} 
-                onChange={e => setUser({...user, username: e.target.value})} 
-                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-emerald-500/50" 
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-1 block">Bio</label>
-              <textarea 
-                value={user.bio} 
-                onChange={e => setUser({...user, bio: e.target.value})} 
-                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-emerald-500/50" 
-                rows={3} 
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-500 dark:text-zinc-400 mb-1 block">Website</label>
-              <input 
-                value={user.website} 
-                onChange={e => setUser({...user, website: e.target.value})} 
-                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-zinc-100 focus:outline-none focus:border-emerald-500/50" 
-              />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setIsEditing(false)} className="flex-1 bg-emerald-500 text-white font-medium py-2 rounded-lg text-sm hover:bg-emerald-600 transition-colors shadow-sm">Save Changes</button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-2">
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
-              {user.displayName ? `${user.displayName} ` : ''}
-              <span className="text-slate-500 dark:text-zinc-400 font-normal text-lg">@{user.username}</span>
-            </h2>
-            <p className="text-sm text-slate-700 dark:text-zinc-300 mt-3 leading-relaxed max-w-2xl">{user.bio}</p>
-            
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm text-slate-500 dark:text-zinc-400">
-              <div className="flex items-center gap-1.5">
-                <Calendar size={14} />
-                {user.joinDate}
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 mt-4 text-sm">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-slate-900 dark:text-zinc-100">{user.followingCount}</span>
-                <span className="text-slate-500 dark:text-zinc-400">Following</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-slate-900 dark:text-zinc-100">{user.followersCount}</span>
-                <span className="text-slate-500 dark:text-zinc-400">Followers</span>
-              </div>
-              <div className="flex items-center gap-1.5 ml-2 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs font-medium text-amber-600 dark:text-amber-400">
-                <Award size={14} />
-                {user.goldCount} Gold
-              </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs font-medium text-slate-600 dark:text-zinc-400">
-                <Award size={14} className="text-slate-400" />
-                {user.platinumCount} Platinum
-              </div>
-            </div>
+        {showBodyStats && bodyStats.length > 0 && (
+          <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50 sm:grid-cols-5">
+            {bodyStats.map(([label, value]) => (
+              <div key={label}><div className="text-xs text-slate-500 dark:text-zinc-500">{label}</div><div className="font-semibold">{value}</div></div>
+            ))}
           </div>
         )}
       </div>
 
-      {isOwnProfile && <AccountSettingsPanel />}
+      {isEditing && isOwnProfile && isBackendConfigured && (
+        <form onSubmit={saveProfile} className="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <h2 className="flex items-center gap-2 text-lg font-bold"><Settings size={18} /> Profile details</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm font-medium">Username<input name="username" defaultValue={shownProfile.username} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+            <label className="text-sm font-medium">Display name<input name="displayName" defaultValue={shownProfile.displayName ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+          </div>
+          <label className="block text-sm font-medium">Bio<textarea name="bio" defaultValue={shownProfile.bio ?? ''} className="mt-1 h-24 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+          <label className="block text-sm font-medium">Avatar URL<input name="avatarUrl" defaultValue={shownProfile.avatarUrl ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+          <div className="grid gap-3 sm:grid-cols-5">
+            <label className="text-sm font-medium">Age<input name="age" type="number" defaultValue={shownProfile.age ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+            <label className="text-sm font-medium">Weight<input name="weight" type="number" step="0.1" defaultValue={shownProfile.weight ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+            <label className="text-sm font-medium">Height<input name="height" type="number" step="0.1" defaultValue={shownProfile.height ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+            <label className="text-sm font-medium">Sex<input name="sex" defaultValue={shownProfile.sex ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+            <label className="text-sm font-medium">Body fat %<input name="bodyFatPercentage" type="number" step="0.1" defaultValue={shownProfile.bodyFatPercentage ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4 dark:border-zinc-800">
+            <h3 className="mb-3 text-sm font-bold">Public visibility toggles</h3>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ['showAvatar', 'Avatar/profile image'], ['showAge', 'Age'], ['showWeight', 'Weight'], ['showHeight', 'Height'], ['showSex', 'Sex'], ['showBodyFat', 'Body fat percentage'], ['showFollowers', 'Followers list/count'], ['showFollowing', 'Following list/count'], ['showBodyStats', 'Public body-stats section'],
+              ].map(([key, label]) => (
+                <label key={key} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-zinc-950/50">
+                  <span>{label}</span><input name={key} type="checkbox" defaultChecked={settings[key as keyof Required<ProfileSettings>]} className="accent-emerald-500" />
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-slate-500 dark:text-zinc-500">Saved items, hidden items, drafts, private notes, email, internal IDs, and body fields with toggles off stay private.</p>
+          </div>
+          <button disabled={saving} className="rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>
+        </form>
+      )}
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-zinc-800 mb-6">
-        <button 
-          onClick={() => setActiveTab('all')}
-          className={cn(
-            "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
-            activeTab === 'all' 
-              ? "border-emerald-500 text-slate-900 dark:text-zinc-100" 
-              : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
-          )}
-        >
-          All
-        </button>
-        <button 
-          onClick={() => setActiveTab('dispatches')}
-          className={cn(
-            "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
-            activeTab === 'dispatches' 
-              ? "border-emerald-500 text-slate-900 dark:text-zinc-100" 
-              : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
-          )}
-        >
-          Dispatches
-        </button>
-        <button 
-          onClick={() => setActiveTab('signals')}
-          className={cn(
-            "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
-            activeTab === 'signals' 
-              ? "border-emerald-500 text-slate-900 dark:text-zinc-100" 
-              : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
-          )}
-        >
-          Signals
-        </button>
-        {(isOwnProfile || defaultUser.username === 'admin') && pendingStacks.length > 0 && (
-          <button 
-            onClick={() => setActiveTab('pending_stacks')}
-            className={cn(
-              "px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-              activeTab === 'pending_stacks' 
-                ? "border-amber-500 text-amber-600 dark:text-amber-400" 
-                : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
-            )}
-          >
-            Pending Stacks
-            <span className="bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 px-1.5 py-0.5 rounded text-[10px] font-bold">
-              {pendingStacks.length}
-            </span>
-          </button>
-        )}
-        {isOwnProfile && (
-          <button 
-            onClick={() => setActiveTab('saved')}
-            className={cn(
-              "px-4 py-3 text-sm font-medium border-b-2 transition-colors",
-              activeTab === 'saved' 
-                ? "border-emerald-500 text-slate-900 dark:text-zinc-100" 
-                : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
-            )}
-          >
-            Saved
-          </button>
-        )}
-        {isOwnProfile && (
-          <button 
-            onClick={() => setActiveTab('hidden')}
-            className={cn(
-              "px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-              activeTab === 'hidden' 
-                ? "border-emerald-500 text-slate-900 dark:text-zinc-100" 
-                : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-300"
-            )}
-          >
-            Hidden Items
-            {hiddenItemsCount > 0 && (
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">{hiddenItemsCount}</span>
-            )}
-          </button>
-        )}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {(['all', 'dispatches', 'signals', 'stacks'] as ProfileTab[]).map((tab) => (
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
+        ))}
+        {isOwnProfile && ['saved', 'hidden'].map((tab) => (
+          <button key={tab} onClick={() => setActiveTab(tab as ProfileTab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
+        ))}
       </div>
 
-      {/* Tab Content */}
       <div className="space-y-4">
-        {activeTab === 'saved' ? (
-          <div>
-            <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-              {['all', 'substance', 'stack', 'brand', 'Dispatch', 'Signal'].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setSavedFilter(filter as any)}
-                  className={cn(
-                    "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                    savedFilter === filter
-                      ? "bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                  )}
-                >
-                  {filter === 'all' ? 'All' : filter === 'substance' ? 'Substances' : filter === 'stack' ? 'Stacks' : filter === 'brand' ? 'Brands' : filter === 'Dispatch' ? 'Dispatches' : 'Signals'}
-                </button>
-              ))}
-            </div>
-            
-            {savedItems.filter(item => savedFilter === 'all' || item.type === savedFilter).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedItems
-                  .filter(item => savedFilter === 'all' || item.type === savedFilter)
-                  .map(item => {
-                    let title = '';
-                    if (item.type === 'substance') {
-                      title = SUPPLEMENTS.find(s => s.id === item.id)?.name || `Substance ${item.id}`;
-                    } else if (item.type === 'stack') {
-                      title = STACKS.find(s => s.id === item.id)?.name || `Stack ${item.id}`;
-                    } else if (item.type === 'brand') {
-                      title = BRANDS.find(b => b.id === item.id)?.name || `Brand ${item.id}`;
-                    } else {
-                      const post = getPosts().find(p => p.id === item.id);
-                      title = post?.title || `${item.type} ${item.id}`;
-                    }
-
-                    return (
-                    <div key={`${item.type}-${item.id}`} className="p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 capitalize">
-                          {item.type}
-                        </span>
-                        <SaveButton id={item.id} type={item.type} />
-                      </div>
-                      <h3 className="font-semibold text-slate-900 dark:text-zinc-100 mb-1 truncate">
-                        {title}
-                      </h3>
-                      <Link 
-                        to={
-                          item.type === 'substance' ? `/substance/${item.id}` :
-                          item.type === 'stack' ? `/stack/${item.id}` :
-                          item.type === 'brand' ? `/brand/${item.id}` :
-                          item.type === 'Dispatch' || item.type === 'Signal' ? `/post/${item.id}` : '#'
-                        }
-                        className="mt-auto pt-4 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
-                      >
-                        View Details &rarr;
-                      </Link>
-                    </div>
-                  )})}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
-                <p>No saved items found.</p>
-              </div>
-            )}
-          </div>
-        ) : activeTab === 'hidden' ? (
+        {activeTab === 'stacks' ? (
+          publishedStacks.length ? publishedStacks.map((stack) => <Link key={stack.id} to={`/stack/${stack.id}`} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h3 className="font-bold">{stack.name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{stack.description}</p></Link>) : <EmptyState message="No published stacks." />
+        ) : activeTab === 'saved' && isOwnProfile ? (
+          savedItems.length ? <div className="grid gap-3 sm:grid-cols-2">{savedItems.map((item) => <div key={`${item.type}-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><Bookmark size={16} className="text-emerald-500" /><h3 className="mt-2 font-semibold">{item.id}</h3><p className="text-xs text-slate-500">{item.type}</p></div>)}</div> : <EmptyState message="No saved items found. Saved items are private." />
+        ) : activeTab === 'hidden' && isOwnProfile ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-            <div className="mb-5 flex items-center gap-2">
-              <EyeOff size={18} className="text-slate-500 dark:text-zinc-400" />
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Hidden Items</h2>
-                <p className="text-sm text-slate-500 dark:text-zinc-400">Unhide items to make them visible in normal StackAtlas results again.</p>
-              </div>
-            </div>
-
-            {hiddenItemsCount === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
-                No hidden items yet.
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {hiddenGroups.map((group) => {
-                  const groupItems: HiddenItem[] = hiddenItems[group.key];
-                  return (
-                    <section key={group.key}>
-                      <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-500">{group.label}</h3>
-                      {groupItems.length === 0 ? (
-                        <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500 dark:bg-zinc-950/50 dark:text-zinc-500">None hidden.</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {groupItems.map((item) => (
-                            <div key={`${item.type}-${item.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-zinc-800 dark:bg-zinc-950/50">
-                              <div className="min-w-0">
-                                <div className="truncate font-semibold text-slate-900 dark:text-zinc-100">{item.name}</div>
-                                <div className="text-xs text-slate-500 dark:text-zinc-500">
-                                  {item.tagType || item.type} • Hidden {new Date(item.hiddenAt).toLocaleDateString()}
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => unhideItem(item.type, item.id)}
-                                className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
-                              >
-                                Unhide
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  );
-                })}
-              </div>
-            )}
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><EyeOff size={18} /> Hidden Items</h2>
+            {hiddenItemsCount === 0 ? <EmptyState message="No hidden items yet. Hidden items are private." /> : hiddenGroups.map((group) => {
+              const groupItems: HiddenItem[] = hiddenItems[group.key];
+              return <section key={group.key} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</h3>{groupItems.length ? groupItems.map((item) => <div key={`${item.type}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{item.name}</span><button onClick={() => unhideItem(item.type, item.id)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Unhide</button></div>) : <p className="text-sm text-slate-500">None hidden.</p>}</section>;
+            })}
           </div>
-        ) : activeTab === 'pending_stacks' ? (
-          pendingStacks.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pendingStacks.map(stack => (
-                <div key={stack.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-amber-200 dark:border-amber-500/30 shadow-sm flex flex-col">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-900 dark:text-zinc-100">{stack.name}</h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                      Pending Review
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4 flex-1">{stack.description}</p>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {stack.substances.map((sub: any) => (
-                      <span key={sub.id || sub} className="px-2 py-1 bg-slate-100 dark:bg-zinc-800 rounded-md text-[10px] text-slate-600 dark:text-zinc-400">
-                        {sub.name || sub}
-                      </span>
-                    ))}
-                  </div>
-                  {defaultUser.username === 'admin' && (
-                    <button 
-                      onClick={() => toast('Stack approved! (Mock)')}
-                      className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
-                    >
-                      Approve Stack
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
-              <p>No pending stacks.</p>
-            </div>
-          )
-        ) : filteredPosts.length > 0 ? (
-          filteredPosts.map(post => (
-            <PostCard key={post.id} post={post} />
-          ))
+        ) : filteredPosts.length ? (
+          filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
-          <div className="text-center py-12 text-slate-500 dark:text-zinc-500">
-            <p>No posts found.</p>
-          </div>
+          <EmptyState message="No published Dispatches or Signals found." />
         )}
       </div>
     </div>
   );
+}
+
+function EmptyState({ message }: { message: string }) {
+  return <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800 dark:text-zinc-500">{message}</div>;
 }

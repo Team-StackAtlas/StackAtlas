@@ -1,23 +1,47 @@
 import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/ToastProvider';
+import { useAuth } from '../context/AuthContext';
+import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 
 interface SuggestEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   entityType: 'substance' | 'stack' | 'brand';
   entityName: string;
+  targetId?: string;
 }
 
-export default function SuggestEditModal({ isOpen, onClose, entityName }: SuggestEditModalProps) {
+export default function SuggestEditModal({ isOpen, onClose, entityType, entityName, targetId }: SuggestEditModalProps) {
   const [sources, setSources] = useState('');
   const [details, setDetails] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const { isBackendConfigured, services, user } = useAuth();
+  const requireAccount = useRequireAccountAction();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast('Your edit suggestion has been submitted for moderator review.');
-    onClose();
+    if (!requireAccount()) return;
+    setSubmitting(true);
+    try {
+      if (isBackendConfigured && services && user) {
+        await services.suggestEdits.create(user.id, {
+          targetType: entityType,
+          targetId: targetId ?? entityName,
+          sources,
+          details,
+        });
+      }
+      toast('Your edit suggestion has been submitted for moderator review.', 'success');
+      setSources('');
+      setDetails('');
+      onClose();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to submit edit suggestion.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -33,10 +57,7 @@ export default function SuggestEditModal({ isOpen, onClose, entityName }: Sugges
         </div>
 
         <div>
-          <label
-            htmlFor="suggestSources"
-            className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300"
-          >
+          <label htmlFor="suggestSources" className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300">
             Sources (URLs)
           </label>
           <textarea
@@ -50,10 +71,7 @@ export default function SuggestEditModal({ isOpen, onClose, entityName }: Sugges
         </div>
 
         <div>
-          <label
-            htmlFor="suggestDetails"
-            className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300"
-          >
+          <label htmlFor="suggestDetails" className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300">
             Proposed Changes
           </label>
           <textarea
@@ -67,18 +85,11 @@ export default function SuggestEditModal({ isOpen, onClose, entityName }: Sugges
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-          >
+          <button type="button" onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800">
             Cancel
           </button>
-          <button
-            type="submit"
-            className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600"
-          >
-            Submit Edit
+          <button type="submit" disabled={submitting} className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50">
+            {submitting ? 'Submitting…' : 'Submit Edit'}
           </button>
         </div>
       </form>

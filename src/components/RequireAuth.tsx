@@ -1,13 +1,15 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isProfileComplete } from '../lib/account';
 
 /**
- * Protects a route. When the backend is configured, unauthenticated users are
- * redirected to /login. When it's NOT configured (offline/dev), the route is
- * passed through so the prototype keeps working.
+ * Protects routes that create/change user-specific state. Public browsing stays
+ * open; only action routes should use this wrapper.
  */
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { status } = useAuth();
+  const { status, profile, isBackendConfigured } = useAuth();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
   if (status === 'loading') {
     return (
@@ -16,9 +18,11 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
       </div>
     );
   }
-  if (status === 'unauthenticated') {
-    return <Navigate to="/login" replace />;
+  if (isBackendConfigured && status !== 'authenticated') {
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
-  // 'authenticated' or 'unconfigured' → render.
+  if (isBackendConfigured && !isProfileComplete(profile)) {
+    return <Navigate to={`/profile?complete=1&returnTo=${encodeURIComponent(returnTo)}`} replace />;
+  }
   return <>{children}</>;
 }

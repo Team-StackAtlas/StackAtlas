@@ -9,7 +9,7 @@ import { useFilters } from '../context/FilterContext';
 import { useFollowing } from '../hooks/useFollowing';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import { useHiddenItems } from '../hooks/useHiddenItems';
-import { useMockRole } from '../context/MockRoleContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Square() {
   const { scope } = useUserScope();
@@ -18,7 +18,8 @@ export default function Square() {
     ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
     : CLASSIFICATIONS;
   const { isFollowing } = useFollowing();
-  const { isAdminLike } = useMockRole();
+  const { user } = useAuth();
+  const isAdminLike = user?.role === 'Admin' || user?.role === 'Developer';
   const { isHidden, hasHiddenTag } = useHiddenItems();
   const [searchParams] = useSearchParams();
   const substanceId = searchParams.get('substance');

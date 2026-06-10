@@ -12,7 +12,7 @@ import CreateStackModal from '../components/CreateStackModal';
 import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
 import { HideItemButton } from '../components/HideItemButton';
 import { useHiddenItems } from '../hooks/useHiddenItems';
-import { useMockRole } from '../context/MockRoleContext';
+import { useAuth } from '../context/AuthContext';
 
 type SearchableType = 'substance' | 'brand' | 'stack';
 type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
@@ -56,7 +56,8 @@ export default function Map() {
     ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
     : CLASSIFICATIONS;
   const { isFollowing } = useFollowing();
-  const { isAdminLike } = useMockRole();
+  const { user } = useAuth();
+  const isAdminLike = user?.role === 'Admin' || user?.role === 'Developer';
   const { isHidden, hasHiddenTag } = useHiddenItems();
   
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
