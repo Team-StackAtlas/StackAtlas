@@ -1,273 +1,101 @@
-import { MessageSquare, Clock, Scale, Activity, ShieldCheck, CheckCircle, Droplet, Layers, Award, MoreHorizontal, Flag, Send } from 'lucide-react';
+import { Heart, MessageCircle, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
-import { cn } from '../lib/utils';
-import { useState, useRef, useEffect } from 'react';
-import { SaveButton } from './SaveButton';
-import AccessBadge from './AccessBadge';
-import { Modal } from './ui/Modal';
-import { useToast } from './ui/ToastProvider';
-import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
+
+export const POST_CARD_TITLE_MAX_CHARS = 100;
+export const POST_CARD_BODY_PREVIEW_MAX_CHARS = 280;
 
 interface PostCardProps {
   post: Post;
 }
 
-export default function PostCard({ post }: PostCardProps) {
+function truncateText(value: string, maxChars: number) {
+  if (value.length <= maxChars) return value;
+  return `${value.slice(0, maxChars).trimEnd()}…`;
+}
+
+function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
   const brand = BRANDS.find(b => b.id === post.brandId);
   const stack = STACKS.find(s => s.id === post.stackId);
+  if (post.dispatchProtocol && post.dispatchProtocol.entries.length > 1) {
+    return { label: post.dispatchProtocol.entries.map(entry => entry.substanceName).join(' + '), href: `/post/${post.id}` };
+  }
+  if (supplement) return { label: supplement.name, href: `/substance/${supplement.id}` };
+  if (brand) return { label: brand.name, href: `/brand/${brand.id}` };
+  if (stack) return { label: stack.name, href: `/stack/${stack.id}` };
+  return null;
+}
 
-  const [showMenu, setShowMenu] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportReason, setReportReason] = useState('');
-  const menuRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-  const requireAccount = useRequireAccountAction();
+function getDispatchLine(post: Post) {
+  if (post.type !== 'Dispatch') return null;
+  if (post.dispatchProtocol) {
+    const entries = post.dispatchProtocol.entries.map(entry => `${entry.substanceName}: ${entry.dose} · ${entry.frequency}`);
+    return `${entries.join(' | ')} · ${post.dispatchProtocol.duration}`;
+  }
+  const dose = post.logDetails?.dosage ?? post.structuredContent?.dosages;
+  const frequency = post.structuredContent?.frequency;
+  const duration = post.logDetails?.duration;
+  return [dose, frequency, duration].filter(Boolean).join(' · ') || null;
+}
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleReport = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reportReason || !requireAccount()) return;
-    toast('Report submitted successfully.');
-    setShowReportModal(false);
-    setShowMenu(false);
-    setReportReason('');
-  };
-
-  const handleSubmitToStackAtlas = () => {
-    if (!requireAccount()) return;
-    toast('Submitted for review.');
-    setShowMenu(false);
-  };
+export default function PostCard({ post }: PostCardProps) {
+  const linkedEntity = getLinkedEntity(post);
+  const dispatchLine = getDispatchLine(post);
 
   return (
-    <>
-      <div className="group relative flex flex-col gap-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-900/80 shadow-sm">
-        {/* Header: User & Meta */}
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <Link to={`/profile/${post.author.username}`} className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 font-bold hover:opacity-80 transition-opacity">
-              {post.author.username.charAt(0).toUpperCase()}
-            </Link>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <Link to={`/profile/${post.author.username}`} className="font-semibold text-slate-900 dark:text-zinc-100 hover:underline">{post.author.username}</Link>
-                {post.author.isVerified && <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-500" />}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-500 mt-0.5">
-                {post.author.age && <span>{post.author.age}y</span>}
-                {post.author.weight && <span>• {post.author.weight}</span>}
-                {post.author.height && <span>• {post.author.height}</span>}
-                <span>• {formatDistanceToNow(new Date(post.createdAt))} ago</span>
-              </div>
+    <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link to={`/profile/${post.author.username}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 font-bold text-slate-700 transition-opacity hover:opacity-80 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+            {post.author.username.charAt(0).toUpperCase()}
+          </Link>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <Link to={`/profile/${post.author.username}`} className="truncate font-semibold text-slate-900 hover:underline dark:text-zinc-100">{post.author.username}</Link>
+              {post.author.isVerified && <ShieldCheck size={14} className="shrink-0 text-emerald-600 dark:text-emerald-500" />}
             </div>
-          </div>
-          {/* Quality Badge & Menu */}
-          <div className="flex items-center gap-2 relative" ref={menuRef}>
-            {post.isGold && (
-              <div
-                title="Gold: structured Dispatch with enough required fields for higher-quality review."
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20"
-              >
-                <Award size={12} className="text-amber-500" />
-                Gold
-              </div>
-            )}
-            <div className={cn(
-              "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border",
-              post.qualityScore >= 90 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" :
-              post.qualityScore >= 70 ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20" :
-              "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700"
-            )}>
-              {post.qualityScore >= 90 ? 'Comprehensive' : post.qualityScore >= 70 ? 'Detailed' : 'Basic'} Log
-            </div>
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-zinc-500 dark:hover:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <MoreHorizontal size={16} />
-            </button>
-            
-            {showMenu && (
-              <div className="absolute right-0 top-8 w-48 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg overflow-hidden z-10">
-                <button 
-                  onClick={() => { if (requireAccount()) { setShowReportModal(true); setShowMenu(false); } }}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-left"
-                >
-                  <Flag size={14} />
-                  Report
-                </button>
-                {post.type === 'Dispatch' && (
-                  <button 
-                    onClick={handleSubmitToStackAtlas}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors text-left border-t border-slate-100 dark:border-zinc-800"
-                  >
-                    <Send size={14} />
-                    Submit to StackAtlas
-                  </button>
-                )}
-              </div>
-            )}
+            <p className="text-xs text-slate-500 dark:text-zinc-500">{formatDistanceToNow(new Date(post.createdAt))} ago</p>
           </div>
         </div>
-
-      {/* Context Tags */}
-      <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium">
-        {supplement && <AccessBadge classification={supplement.classification} />}
-        <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">Domain: {post.domain}</span>
-        {supplement && (
-          <Link to={`/substance/${supplement.id}`} className="px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors border border-emerald-200 dark:border-emerald-500/20">
-            {supplement.name}
-          </Link>
-        )}
-        {brand && (
-          <Link to={`/brand/${brand.id}`} className="px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors border border-blue-200 dark:border-blue-500/20">
-            {brand.name}
-          </Link>
-        )}
-        {stack && (
-          <Link to={`/stack/${stack.id}`} className="px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors border border-purple-200 dark:border-purple-500/20">
-            {stack.name}
-          </Link>
-        )}
+        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span>
       </div>
 
-      {/* Title & Content */}
-      <div className="block group/post">
-        <Link to={`/post/${post.id}`}>
-          <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 mb-2 hover:text-emerald-600 dark:hover:text-emerald-500 transition-colors">
-            {post.title}
-          </h3>
-        </Link>
-        {post.bearings && post.bearings.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {post.bearings.map(bearing => (
-              <Link key={bearing} to={`/square?bearing=${encodeURIComponent(bearing)}`} className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 text-xs font-medium border border-slate-200 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors">
-                {bearing}
-              </Link>
-            ))}
-          </div>
+      <Link to={`/post/${post.id}`} className="block">
+        {linkedEntity && (
+          <span className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+            {linkedEntity.label}
+          </span>
         )}
-        <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400 line-clamp-3">
-          {post.content}
+        <h3 className="mb-2 text-xl font-bold leading-snug text-slate-950 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">
+          {truncateText(post.title, POST_CARD_TITLE_MAX_CHARS)}
+        </h3>
+        <p className="text-base leading-relaxed text-slate-700 dark:text-zinc-300">
+          {truncateText(post.content, POST_CARD_BODY_PREVIEW_MAX_CHARS)}
         </p>
-      </div>
+      </Link>
 
-      {/* Structured Log Details (The "Crafted" Indicators) */}
-      {post.logDetails && (
-        <div className="flex flex-wrap gap-3 p-3 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800/50">
-          {post.logDetails.duration && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300">
-              <Clock size={14} className="text-blue-500 dark:text-blue-400" />
-              <span>{post.logDetails.duration}</span>
-            </div>
-          )}
-          {post.logDetails.dosage && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300">
-              <Scale size={14} className="text-emerald-500 dark:text-emerald-400" />
-              <span>{post.logDetails.dosage}</span>
-            </div>
-          )}
-          {post.logDetails.brandMentioned && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300">
-              <Droplet size={14} className="text-purple-500 dark:text-purple-400" />
-              <span>{post.logDetails.brandMentioned}</span>
-            </div>
-          )}
-          {post.logDetails.stackIncluded && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300">
-              <Layers size={14} className="text-amber-500 dark:text-amber-400" />
-              <span>Stack Info</span>
-            </div>
-          )}
-          {post.logDetails.bloodworkIncluded && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300">
-              <Activity size={14} className="text-red-500 dark:text-red-400" />
-              <span>Bloodwork</span>
-            </div>
-          )}
+      {post.bearings && post.bearings.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {post.bearings.map(bearing => (
+            <Link key={bearing} to={`/square?bearing=${encodeURIComponent(bearing)}`} className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700">
+              {bearing}
+            </Link>
+          ))}
         </div>
       )}
 
-      {/* Footer Actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-zinc-800/50">
-        <div className="flex items-center gap-4">
-          <button onClick={() => requireAccount()} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-            <CheckCircle size={16} />
-            Helpful ({post.helpfulCount})
-          </button>
-          <button onClick={() => requireAccount()} className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-            <MessageSquare size={16} />
-            Discuss ({post.comments})
-          </button>
+      {dispatchLine && (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300">
+          {dispatchLine}
         </div>
-        <div>
-          <SaveButton id={post.id} type={post.type} />
-        </div>
+      )}
+
+      <div className="mt-4 flex items-center gap-5 border-t border-slate-200 pt-3 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
+        <span className="inline-flex items-center gap-1.5" aria-label={`${post.helpfulCount} hearts`}><Heart size={17} />{post.helpfulCount}</span>
+        <Link to={`/post/${post.id}#comments`} className="inline-flex items-center gap-1.5 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${post.comments} comments`}><MessageCircle size={17} />{post.comments}</Link>
       </div>
-      
-      <Modal
-        isOpen={showReportModal}
-        onClose={() => {
-          setShowReportModal(false);
-          setReportReason('');
-        }}
-        title="Report Content"
-      >
-        <form onSubmit={handleReport} className="p-6 pt-4">
-          <div className="mb-6 space-y-3">
-            {['Spam', 'Misinformation', 'Harassment', 'Dangerous Content'].map((reason) => (
-              <label
-                key={reason}
-                className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 transition-colors hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
-              >
-                <input
-                  type="radio"
-                  name="reportReason"
-                  value={reason}
-                  checked={reportReason === reason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  className="text-emerald-500 focus:ring-emerald-500"
-                />
-                <span className="text-sm font-medium text-slate-700 dark:text-zinc-300">
-                  {reason}
-                </span>
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setShowReportModal(false);
-                setReportReason('');
-              }}
-              className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!reportReason}
-              className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Submit Report
-            </button>
-          </div>
-        </form>
-      </Modal>
-    </div>
-    </>
+    </article>
   );
 }

@@ -169,6 +169,24 @@ export interface Brand {
   ratingCount?: number;
 }
 
+export interface PostComment {
+  id: string;
+  author: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface PostDispatchProtocol {
+  entries: {
+    substanceId?: string;
+    substanceName: string;
+    dose: string;
+    frequency: string;
+  }[];
+  duration: string;
+  clarification?: string;
+}
+
 export interface Post {
   id: string;
   type: 'Dispatch' | 'Signal';
@@ -213,6 +231,8 @@ export interface Post {
   };
   qualityScore: number;
   bearings?: string[];
+  dispatchProtocol?: PostDispatchProtocol;
+  commentItems?: PostComment[];
 }
 
 export interface Stack {
@@ -838,19 +858,40 @@ export const getSources = (
 
 import { SEED_POSTS } from './seedPosts';
 
+const MOCK_COMMENT_COPY = [
+  'This matched my experience too. The timing details are especially useful.',
+  'Appreciate the specific context here; it makes the protocol easier to compare.',
+  'Useful writeup. I would be interested to hear whether this changed after a few more weeks.',
+  'Good signal for others tracking the same outcome.',
+];
+
+const withDemoComments = (post: Post, index: number): Post => {
+  if (post.commentItems && post.commentItems.length > 0) return post;
+  const count = Math.min(Math.max(post.comments, 1), 2);
+  return {
+    ...post,
+    commentItems: Array.from({ length: count }, (_, commentIndex) => ({
+      id: `${post.id}_comment_${commentIndex + 1}`,
+      author: commentIndex === 0 ? 'atlas_member' : 'protocol_notes',
+      content: MOCK_COMMENT_COPY[(index + commentIndex) % MOCK_COMMENT_COPY.length],
+      createdAt: new Date(Date.now() - (index + commentIndex + 1) * 60 * 60 * 1000).toISOString(),
+    })),
+  };
+};
+
 export const getPosts = (): Post[] => {
   const stored = localStorage.getItem('stackatlas_posts');
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
-        return [...parsed, ...SEED_POSTS];
+        return [...parsed, ...SEED_POSTS.map(withDemoComments)];
       }
     } catch (e) {
       console.error('Failed to parse stored posts', e);
     }
   }
-  return SEED_POSTS;
+  return SEED_POSTS.map(withDemoComments);
 };
 
 export let POSTS: Post[] = getPosts();
@@ -861,7 +902,9 @@ export const addPost = (post: Post) => {
   if (stored) {
     try {
       current = JSON.parse(stored);
-    } catch (e) {}
+    } catch {
+      current = [];
+    }
   }
   current.unshift(post);
   localStorage.setItem('stackatlas_posts', JSON.stringify(current));
