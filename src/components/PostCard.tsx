@@ -12,7 +12,7 @@ interface PostCardProps {
 
 function truncateText(value: string, maxChars: number) {
   if (value.length <= maxChars) return value;
-  return `${value.slice(0, maxChars).trimEnd()}…`;
+  return `${value.slice(0, maxChars).trimEnd()}...`;
 }
 
 function getLinkedEntity(post: Post) {
@@ -20,11 +20,11 @@ function getLinkedEntity(post: Post) {
   const brand = BRANDS.find(b => b.id === post.brandId);
   const stack = STACKS.find(s => s.id === post.stackId);
   if (post.dispatchProtocol && post.dispatchProtocol.entries.length > 1) {
-    return { label: post.dispatchProtocol.entries.map(entry => entry.substanceName).join(' + '), href: `/post/${post.id}` };
+    return { label: post.dispatchProtocol.entries.map(entry => entry.substanceName).join(' + '), typeLabel: 'Substance', href: `/post/${post.id}` };
   }
-  if (supplement) return { label: supplement.name, href: `/substance/${supplement.id}` };
-  if (brand) return { label: brand.name, href: `/brand/${brand.id}` };
-  if (stack) return { label: stack.name, href: `/stack/${stack.id}` };
+  if (supplement) return { label: supplement.name, typeLabel: 'Substance', href: `/substance/${supplement.id}` };
+  if (brand) return { label: brand.name, typeLabel: 'Brand', href: `/brand/${brand.id}` };
+  if (stack) return { label: stack.name, typeLabel: 'Stack', href: `/stack/${stack.id}` };
   return null;
 }
 
@@ -32,7 +32,7 @@ function getDispatchLine(post: Post) {
   if (post.type !== 'Dispatch') return null;
   if (post.dispatchProtocol) {
     const entries = post.dispatchProtocol.entries.map(entry => `${entry.substanceName}: ${entry.dose} · ${entry.frequency}`);
-    return `${entries.join(' | ')} · ${post.dispatchProtocol.duration}`;
+    return `${entries.join(' · ')} · ${post.dispatchProtocol.duration}`;
   }
   const dose = post.logDetails?.dosage ?? post.structuredContent?.dosages;
   const frequency = post.structuredContent?.frequency;
@@ -56,22 +56,21 @@ export default function PostCard({ post }: PostCardProps) {
               <Link to={`/profile/${post.author.username}`} className="truncate font-semibold text-slate-900 hover:underline dark:text-zinc-100">{post.author.username}</Link>
               {post.author.isVerified && <ShieldCheck size={14} className="shrink-0 text-emerald-600 dark:text-emerald-500" />}
             </div>
-            <p className="text-xs text-slate-500 dark:text-zinc-500">{formatDistanceToNow(new Date(post.createdAt))} ago</p>
+            <p className="truncate text-xs text-slate-500 dark:text-zinc-500">{[post.author.displayName, `${formatDistanceToNow(new Date(post.createdAt))} ago`, post.type].filter(Boolean).join(' · ')}</p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span>
       </div>
 
       <Link to={`/post/${post.id}`} className="block">
         {linkedEntity && (
-          <span className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-            {linkedEntity.label}
+          <span className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-sm font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+            {linkedEntity.typeLabel}: {linkedEntity.label}
           </span>
         )}
-        <h3 className="mb-2 text-xl font-bold leading-snug text-slate-950 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">
+        <h3 className="mb-2 text-2xl font-bold leading-snug text-slate-950 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">
           {truncateText(post.title, POST_CARD_TITLE_MAX_CHARS)}
         </h3>
-        <p className="text-base leading-relaxed text-slate-700 dark:text-zinc-300">
+        <p className="text-lg leading-relaxed text-slate-700 dark:text-zinc-300">
           {truncateText(post.content, POST_CARD_BODY_PREVIEW_MAX_CHARS)}
         </p>
       </Link>
