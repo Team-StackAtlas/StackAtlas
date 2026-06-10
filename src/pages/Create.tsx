@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronDown, Search, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, HelpCircle, Search, X } from 'lucide-react';
 import { SUPPLEMENTS, BRANDS, Post, Domain, addPost } from '../data/mockData';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
@@ -531,11 +531,27 @@ export default function Create() {
         {!activeType ? (
           <div className="mx-auto mt-10 flex min-h-[50vh] max-w-2xl flex-col items-stretch justify-center gap-6 sm:flex-row">
             <button onClick={() => setActiveType('Dispatch')} className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500">
-              <h2 className="mb-4 text-2xl font-bold text-slate-800 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">Dispatch</h2>
+              <div className="mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-slate-800 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">Dispatch</h2>
+                <span className="relative inline-flex group/help">
+                  <HelpCircle size={18} className="text-slate-400 transition-colors group-hover:text-emerald-400" />
+                  <span className="invisible absolute bottom-full left-1/2 z-20 mb-3 w-72 -translate-x-1/2 rounded-xl bg-slate-900 p-3 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-xl transition-all group-hover/help:visible group-hover/help:opacity-100 dark:bg-zinc-800">
+                    A Dispatch is a structured experience post linked to what you took, with dose, frequency, duration, and Bearings.
+                  </span>
+                </span>
+              </div>
               <p className="text-center text-sm leading-relaxed text-slate-500 dark:text-zinc-400">Create a written experience post linked to a substance.</p>
             </button>
             <button onClick={() => setActiveType('Signal')} className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500">
-              <h2 className="mb-4 text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">Signal</h2>
+              <div className="mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">Signal</h2>
+                <span className="relative inline-flex group/help">
+                  <HelpCircle size={18} className="text-slate-400 transition-colors group-hover:text-blue-400" />
+                  <span className="invisible absolute bottom-full left-1/2 z-20 mb-3 w-72 -translate-x-1/2 rounded-xl bg-slate-900 p-3 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-xl transition-all group-hover/help:visible group-hover/help:opacity-100 dark:bg-zinc-800">
+                    A Signal is a shorter freeform community post for questions, observations, discussion, or updates, using Bearings and optional entity linking.
+                  </span>
+                </span>
+              </div>
               <p className="text-center text-sm leading-relaxed text-slate-500 dark:text-zinc-400">Share a general or linked thought, question, or discussion with Bearings.</p>
             </button>
           </div>
