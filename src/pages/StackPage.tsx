@@ -146,6 +146,7 @@ export default function StackPage() {
         isOpen={isSuggestEditOpen} 
         onClose={() => setIsSuggestEditOpen(false)} 
         entityType="stack" 
+        targetId={stack.id}
         entityName={stack.name} 
       />
       <ReportModal 

@@ -6,7 +6,10 @@ import type {
   HiddenService,
   FollowService,
   NotificationService,
+  ReportService,
+  SuggestEditService,
 } from '../contracts';
+import { isProfileComplete, normalizeUsername, validateUsername } from '../../lib/account';
 import type {
   SessionUser,
   ProfileDTO,
@@ -16,9 +19,26 @@ import type {
   Follow,
   NotificationDTO,
   ID,
+  ReportInput,
+  SuggestEditInput,
 } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+function readableProfileError(error: { message?: string; code?: string }) {
+  const message = error.message ?? 'Failed to save profile.';
+  if (error.code === '23505' || message.toLowerCase().includes('duplicate')) {
+    return 'That username is already taken.';
+  }
+  if (message.includes('username_change_cooldown')) {
+    return 'Usernames can only be changed once every 30 days.';
+  }
+  if (message.includes('profiles_username_format')) {
+    return 'Username must be 3–24 characters using lowercase letters, numbers, or underscores.';
+  }
+  return message;
+}
+
 function mapProfile(row: any, stats?: any): ProfileDTO {
   return {
     id: row.id,
@@ -27,6 +47,12 @@ function mapProfile(row: any, stats?: any): ProfileDTO {
     bio: row.bio ?? undefined,
     website: row.website ?? undefined,
     avatarUrl: row.avatar_url ?? undefined,
+    age: row.age ?? null,
+    weight: row.weight ?? null,
+    height: row.height ?? null,
+    sex: row.sex ?? null,
+    bodyFatPercentage: row.body_fat_percentage ?? null,
+    usernameLastChangedAt: row.username_last_changed_at ?? null,
     role: row.role ?? 'User',
     researchScope: row.research_scope ?? 'Citizen',
     isVerified: !!row.is_verified,
@@ -52,6 +78,7 @@ function mapSessionUser(profile: ProfileDTO, email: string | null): SessionUser 
     avatarUrl: profile.avatarUrl,
     researchScope: profile.researchScope,
     isVerified: profile.isVerified,
+    isProfileComplete: isProfileComplete(profile),
   };
 }
 
@@ -67,6 +94,8 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
   hidden: HiddenService;
   follows: FollowService;
   notifications: NotificationService;
+  reports: ReportService;
+  suggestEdits: SuggestEditService;
 } {
   const profiles: ProfileService = {
     async get(userId: ID) {
@@ -89,11 +118,22 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
     async update(userId: ID, patch: ProfileUpdate) {
       const payload: Record<string, unknown> = {};
-      if (patch.displayName !== undefined) payload.display_name = patch.displayName;
+      if (patch.username !== undefined) {
+        const username = normalizeUsername(patch.username);
+        const usernameError = validateUsername(username);
+        if (usernameError) throw new Error(usernameError);
+        payload.username = username;
+      }
+      if (patch.displayName !== undefined) payload.display_name = patch.displayName.trim();
       if (patch.bio !== undefined) payload.bio = patch.bio;
       if (patch.website !== undefined) payload.website = patch.website;
       if (patch.researchScope !== undefined) payload.research_scope = patch.researchScope;
-      if (patch.avatarUrl !== undefined) payload.avatar_url = patch.avatarUrl;
+      if (patch.avatarUrl !== undefined) payload.avatar_url = patch.avatarUrl || null;
+      if (patch.age !== undefined) payload.age = patch.age;
+      if (patch.weight !== undefined) payload.weight = patch.weight;
+      if (patch.height !== undefined) payload.height = patch.height;
+      if (patch.sex !== undefined) payload.sex = patch.sex || null;
+      if (patch.bodyFatPercentage !== undefined) payload.body_fat_percentage = patch.bodyFatPercentage;
       if (patch.settings !== undefined) payload.settings = patch.settings;
       payload.updated_at = new Date().toISOString();
       const { data, error } = await client
@@ -102,7 +142,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         .eq('id', userId)
         .select('*')
         .single();
-      if (error) throw error;
+      if (error) throw new Error(readableProfileError(error));
       return mapProfile(data);
     },
   };
@@ -117,10 +157,15 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       return mapSessionUser(profile, authUser.email ?? null);
     },
     async signUpWithEmail(email, password, username) {
+      const normalizedUsername = username ? normalizeUsername(username) : undefined;
+      if (normalizedUsername) {
+        const usernameError = validateUsername(normalizedUsername);
+        if (usernameError) throw new Error(usernameError);
+      }
       const { data, error } = await client.auth.signUp({
         email,
         password,
-        options: username ? { data: { username } } : undefined,
+        options: normalizedUsername ? { data: { username: normalizedUsername } } : undefined,
       });
       if (error) throw error;
       if (!data.user) return null; // email confirmation required
@@ -246,5 +291,32 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
   };
 
-  return { auth, profiles, saved, hidden, follows, notifications };
+  const reports: ReportService = {
+    async create(userId: ID | null, input: ReportInput) {
+      const { error } = await client.from('reports').insert({
+        reporter_id: userId,
+        target_type: input.targetType,
+        target_id: input.targetId,
+        target_name: input.targetName ?? null,
+        category: input.category,
+        details: input.details ?? null,
+      });
+      if (error) throw error;
+    },
+  };
+
+  const suggestEdits: SuggestEditService = {
+    async create(userId: ID | null, input: SuggestEditInput) {
+      const { error } = await client.from('suggest_edits').insert({
+        user_id: userId,
+        target_type: input.targetType,
+        target_id: input.targetId,
+        sources: input.sources ?? null,
+        details: input.details,
+      });
+      if (error) throw error;
+    },
+  };
+
+  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits };
 }

@@ -1,28 +1,22 @@
-import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
-import { Compass, Users, Wrench, Inbox, User, Moon, Sun, Layers, Shield, PenSquare } from 'lucide-react';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Compass, Users, Wrench, Inbox, User, Moon, Sun, Layers, PenSquare, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
-import { useUserScope } from '../context/UserScopeContext';
 import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';
-import { MockRolePanels } from './MockRolePanels';
 import { useMockComms } from '../hooks/useMockComms';
 
 export default function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { scope, isInitialized } = useUserScope();
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const { unreadBadgeCount } = useMockComms();
 
-  if (isInitialized && !scope.accessLevel) {
-    return <Navigate to="/onboarding" replace />;
-  }
 
   const navItems = [
     { name: 'Map', path: '/map', icon: Compass },
     { name: 'Square', path: '/square', icon: Users },
-    { name: 'Create', path: '/create', icon: PenSquare },
+    { name: 'Create', path: '/create', icon: PenSquare, Shield },
     { name: 'Lab', path: '/lab', icon: Wrench },
     { name: 'Comms', path: '/comms', icon: Inbox },
   ];
@@ -52,21 +46,7 @@ export default function Layout() {
               Stack<span className="text-emerald-600 dark:text-emerald-500">Atlas</span>
             </h2>
           </Link>
-          <div className="mt-6 px-2">
-            <Link to="/onboarding" className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors text-xs font-medium text-slate-600 dark:text-zinc-400">
-              <span className="flex items-center gap-2">
-                <Shield
-                  size={14}
-                  className={cn(
-                    scope.accessLevel === 'Explorer' ? 'text-purple-500' : 'text-emerald-500'
-                  )}
-                />
-                Current Scope
-              </span>
-              <span className="text-slate-900 dark:text-zinc-200">{scope.accessLevel || 'None'}</span>
-            </Link>
-          </div>
-        </div>
+    </div>
         <nav className="flex-1 px-4 space-y-2">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
@@ -90,9 +70,6 @@ export default function Layout() {
             );
           })}
         </nav>
-        <div className="px-4 pb-4">
-          <MockRolePanels />
-        </div>
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 space-y-2">
           <button 
             onClick={toggleTheme}
@@ -150,7 +127,7 @@ export default function Layout() {
         </header>
 
         <div className="md:hidden p-4 pb-0">
-          <MockRolePanels />
+
         </div>
 
         {/* Main Content */}

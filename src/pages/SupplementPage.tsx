@@ -374,6 +374,7 @@ export default function SupplementPage() {
         isOpen={isSuggestEditOpen} 
         onClose={() => setIsSuggestEditOpen(false)} 
         entityType="substance" 
+        targetId={supplement.id}
         entityName={supplement.name} 
       />
       <ReportModal 

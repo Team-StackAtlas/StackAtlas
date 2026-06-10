@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useRequireAccountAction } from './useRequireAccountAction';
 
 export type FollowTarget = 'user' | 'substance' | 'stack' | 'brand';
 export interface FollowEntry {
@@ -30,8 +31,9 @@ function readLocal(): FollowEntry[] {
 }
 
 export function useFollowing() {
-  const { services, user } = useAuth();
-  const backed = !!(services && user);
+  const { services, user, isBackendConfigured } = useAuth();
+  const requireAccount = useRequireAccountAction();
+  const backed = !!(isBackendConfigured && services && user);
   const [following, setFollowing] = useState<FollowEntry[]>(() => readLocal());
 
   useEffect(() => {
@@ -42,10 +44,12 @@ export function useFollowing() {
           setFollowing(rows.map((r) => ({ targetType: r.targetType as FollowTarget, targetId: r.targetId }))),
         )
         .catch(() => {});
-    } else {
+    } else if (!isBackendConfigured) {
       setFollowing(readLocal());
+    } else {
+      setFollowing([]);
     }
-  }, [backed, services, user]);
+  }, [backed, isBackendConfigured, services, user]);
 
   const persistLocal = (next: FollowEntry[]) => {
     setFollowing(next);
@@ -60,6 +64,7 @@ export function useFollowing() {
     following.some((f) => f.targetType === targetType && f.targetId === targetId);
 
   const toggleFollow = (targetType: FollowTarget, targetId: string) => {
+    if (!requireAccount()) return;
     const currentlyFollowing = isFollowing(targetType, targetId);
     if (backed && services && user) {
       const op = currentlyFollowing

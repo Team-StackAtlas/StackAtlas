@@ -65,10 +65,19 @@ export interface SourceDTO extends SourceInput {
 export type UserRole = 'User' | 'Admin' | 'Developer';
 
 export interface ProfileSettings {
-  /** When true, the user's saved/watchlist is private (default true). */
+  /** Saved items are always private; retained for older rows/UI copy. */
   savedPrivate?: boolean;
   /** When true, public activity feed is shown on the profile. */
   showActivity?: boolean;
+  showAvatar?: boolean;
+  showAge?: boolean;
+  showWeight?: boolean;
+  showHeight?: boolean;
+  showSex?: boolean;
+  showBodyFat?: boolean;
+  showFollowers?: boolean;
+  showFollowing?: boolean;
+  showBodyStats?: boolean;
 }
 
 export interface SessionUser {
@@ -79,6 +88,7 @@ export interface SessionUser {
   avatarUrl?: string;
   researchScope: 'Citizen' | 'Explorer';
   isVerified: boolean;
+  isProfileComplete: boolean;
 }
 
 export interface ProfileStats {
@@ -95,6 +105,12 @@ export interface ProfileDTO {
   bio?: string;
   website?: string;
   avatarUrl?: string;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  sex?: string | null;
+  bodyFatPercentage?: number | null;
+  usernameLastChangedAt?: ISODate | null;
   role: UserRole;
   researchScope: 'Citizen' | 'Explorer';
   isVerified: boolean;
@@ -103,7 +119,21 @@ export interface ProfileDTO {
   stats?: ProfileStats;
 }
 export type ProfileUpdate = Partial<
-  Pick<ProfileDTO, 'displayName' | 'bio' | 'website' | 'researchScope' | 'avatarUrl' | 'settings'>
+  Pick<
+    ProfileDTO,
+    | 'username'
+    | 'displayName'
+    | 'bio'
+    | 'website'
+    | 'researchScope'
+    | 'avatarUrl'
+    | 'age'
+    | 'weight'
+    | 'height'
+    | 'sex'
+    | 'bodyFatPercentage'
+    | 'settings'
+  >
 >;
 
 export type SavedItemType = 'substance' | 'brand' | 'stack' | 'dispatch' | 'signal';

@@ -1,13 +1,15 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Layers, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { validateUsername } from '../lib/account';
 import { useToast } from '../components/ui/ToastProvider';
 
 export default function Login() {
   const { signIn, signUp, isBackendConfigured } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -18,6 +20,13 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!isBackendConfigured || submitting) return;
+    if (mode === 'signup' && username) {
+      const usernameError = validateUsername(username);
+      if (usernameError) {
+        toast(usernameError, 'error');
+        return;
+      }
+    }
     setSubmitting(true);
     try {
       if (mode === 'signup') {
@@ -27,7 +36,9 @@ export default function Login() {
         await signIn(email, password);
         toast('Signed in.', 'success');
       }
-      navigate('/map');
+      const returnTo = searchParams.get('returnTo');
+      const next = returnTo || (mode === 'signup' ? '/profile?complete=1' : '/map');
+      navigate(next);
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Authentication failed.', 'error');
     } finally {

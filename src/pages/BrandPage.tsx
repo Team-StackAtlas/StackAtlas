@@ -235,6 +235,7 @@ export default function BrandPage() {
         isOpen={isSuggestEditOpen} 
         onClose={() => setIsSuggestEditOpen(false)} 
         entityType="brand" 
+        targetId={brand.id}
         entityName={brand.name} 
       />
       <ReportModal 

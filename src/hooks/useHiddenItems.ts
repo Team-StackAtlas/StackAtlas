@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useRequireAccountAction } from './useRequireAccountAction';
 
 export const HIDDEN_ITEMS_STORAGE_KEY = 'stackatlas.hiddenItems';
 
@@ -54,9 +56,32 @@ function writeHiddenItems(hiddenItems: HiddenItems) {
 }
 
 export function useHiddenItems() {
+  const { isBackendConfigured, services, user } = useAuth();
+  const requireAccount = useRequireAccountAction();
+  const backed = !!(isBackendConfigured && services && user);
   const [hiddenItems, setHiddenItems] = useState<HiddenItems>(() => readHiddenItems());
 
   useEffect(() => {
+    if (backed && services && user) {
+      services.hidden
+        .list(user.id)
+        .then((items) => {
+          const next: HiddenItems = { substances: [], stacks: [], brands: [], tags: [] };
+          items.forEach((item) => {
+            const type = item.itemType as HideableType;
+            next[groupForType(type)].push({
+              id: item.itemId,
+              name: item.itemId,
+              type,
+              tagType: item.tagType,
+              hiddenAt: new Date().toISOString(),
+            });
+          });
+          setHiddenItems(next);
+        })
+        .catch(() => {});
+      return;
+    }
     const syncHiddenItems = () => setHiddenItems(readHiddenItems());
     window.addEventListener('storage', syncHiddenItems);
     window.addEventListener('stackatlas:hiddenItemsChanged', syncHiddenItems);
@@ -64,9 +89,10 @@ export function useHiddenItems() {
       window.removeEventListener('storage', syncHiddenItems);
       window.removeEventListener('stackatlas:hiddenItemsChanged', syncHiddenItems);
     };
-  }, []);
+  }, [backed, services, user]);
 
   const hideItem = useCallback((item: Omit<HiddenItem, 'hiddenAt'>) => {
+    if (!requireAccount()) return;
     setHiddenItems((current) => {
       const group = groupForType(item.type);
       const hiddenItem: HiddenItem = { ...item, hiddenAt: new Date().toISOString() };
@@ -74,22 +100,34 @@ export function useHiddenItems() {
         ...current,
         [group]: [hiddenItem, ...current[group].filter((existing) => existing.id !== item.id)],
       };
-      writeHiddenItems(next);
+      if (!backed) writeHiddenItems(next);
       return next;
     });
-  }, []);
+    if (backed && services && user) {
+      services.hidden.add(user.id, { itemId: item.id, itemType: item.type, tagType: item.tagType }).catch(() => {
+        setHiddenItems((current) => {
+          const group = groupForType(item.type);
+          return { ...current, [group]: current[group].filter((existing) => existing.id !== item.id) };
+        });
+      });
+    }
+  }, [backed, requireAccount, services, user]);
 
   const unhideItem = useCallback((type: HideableType, id: string) => {
+    if (!requireAccount()) return;
     setHiddenItems((current) => {
       const group = groupForType(type);
       const next = {
         ...current,
         [group]: current[group].filter((item) => item.id !== id),
       };
-      writeHiddenItems(next);
+      if (!backed) writeHiddenItems(next);
       return next;
     });
-  }, []);
+    if (backed && services && user) {
+      services.hidden.remove(user.id, { itemId: id, itemType: type }).catch(() => {});
+    }
+  }, [backed, requireAccount, services, user]);
 
   const isHidden = useCallback((type: HideableType, id?: string) => {
     if (!id) return false;

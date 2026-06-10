@@ -4,6 +4,7 @@ import { SUPPLEMENTS, STACKS, Stack } from '../data/mockData';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/ToastProvider';
+import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 
 interface CreateStackModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function CreateStackModal({ isOpen, onClose }: CreateStackModalPr
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const requireAccount = useRequireAccountAction();
 
   const filteredSupplements = SUPPLEMENTS.filter(
     (s) =>
@@ -45,7 +47,7 @@ export default function CreateStackModal({ isOpen, onClose }: CreateStackModalPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (belowMinimum) return;
+    if (belowMinimum || !requireAccount()) return;
 
     // Check for duplicates ignoring trivial adjuncts
     const getCoreSubstances = (substanceIds: string[]) => {
