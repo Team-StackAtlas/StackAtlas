@@ -5,6 +5,15 @@ import { useAuth } from '../context/AuthContext';
 import { validateUsername } from '../lib/account';
 import { useToast } from '../components/ui/ToastProvider';
 
+function getAuthErrorMessage(err: unknown) {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const message = (err as { message?: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return 'Authentication failed.';
+}
+
 export default function Login() {
   const { signIn, signUp, isBackendConfigured } = useAuth();
   const { toast } = useToast();
@@ -40,7 +49,7 @@ export default function Login() {
       const next = returnTo || (mode === 'signup' ? '/profile?complete=1' : '/map');
       navigate(next);
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Authentication failed.', 'error');
+      toast(getAuthErrorMessage(err), 'error');
     } finally {
       setSubmitting(false);
     }

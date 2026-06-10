@@ -25,6 +25,19 @@ import type {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return 'Unknown error';
+}
+
+function fallbackUsername(userId: string) {
+  return `user_${userId.replace(/-/g, '').slice(0, 19)}`;
+}
+
 function readableProfileError(error: { message?: string; code?: string }) {
   const message = error.message ?? 'Failed to save profile.';
   if (error.code === '23505' || message.toLowerCase().includes('duplicate')) {
@@ -147,6 +160,23 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
   };
 
+  async function createProfileForAuthUser(authUser: { id: string; email?: string | null }) {
+    const { error: userError } = await client
+      .from('users')
+      .insert({ id: authUser.id, email: authUser.email ?? null });
+    if (userError && userError.code !== '23505') {
+      throw new Error(getErrorMessage(userError));
+    }
+
+    const { data, error } = await client
+      .from('profiles')
+      .insert({ id: authUser.id, username: fallbackUsername(authUser.id), settings: {} })
+      .select('*')
+      .single();
+    if (error) throw new Error(readableProfileError(error));
+    return mapProfile(data);
+  }
+
   const auth: AuthService = {
     async getCurrentUser() {
       const { data: sessionData } = await client.auth.getUser();
@@ -173,10 +203,29 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       return profile ? mapSessionUser(profile, data.user.email ?? null) : null;
     },
     async signInWithEmail(email, password) {
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      const profile = await profiles.get(data.user.id);
-      if (!profile) throw new Error('Profile not found for authenticated user');
+      const { data, error } = await client.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) throw new Error(`Sign-in failed: ${error.message}`);
+      if (!data.user) throw new Error('Sign-in failed: Supabase did not return an authenticated user.');
+
+      let profile: ProfileDTO | null;
+      try {
+        profile = await profiles.get(data.user.id);
+      } catch (profileError) {
+        throw new Error(
+          `Sign-in succeeded, but StackAtlas could not load your profile: ${getErrorMessage(profileError)}`,
+        );
+      }
+
+      if (!profile) {
+        try {
+          profile = await createProfileForAuthUser(data.user);
+        } catch (profileError) {
+          throw new Error(
+            `Sign-in succeeded, but StackAtlas could not create your profile: ${getErrorMessage(profileError)}`,
+          );
+        }
+      }
+
       return mapSessionUser(profile, data.user.email ?? null);
     },
     async signOut() {
