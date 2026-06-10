@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { SUPPLEMENTS, BRANDS, TYPE_TAGS } from '../data/mockData';
+import { SUPPLEMENTS, BRANDS, getPosts, TYPE_TAGS } from '../data/mockData';
 import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Flag } from 'lucide-react';
 import PostCard from '../components/PostCard';
-import { useCommunityPosts } from '../hooks/useCommunityPosts';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
 import AccessBadge from '../components/AccessBadge';
@@ -23,14 +22,13 @@ export default function SupplementPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
-  const { posts } = useCommunityPosts();
 
   if (!supplement) {
     return <div className="text-center py-20 text-zinc-400">Substance not found.</div>;
   }
 
   const popularBrand = BRANDS.find(b => b.id === supplement.mostPopularBrandId);
-  const relatedPosts = posts.filter(p => p.supplementId === supplement.id);
+  const relatedPosts = getPosts().filter(p => p.supplementId === supplement.id);
   // Global Average is derived ONLY from sufficiently complete Comprehensive
   // Dispatches (quality >= 90 with a recorded dosage).
   const comprehensiveDispatches = relatedPosts.filter(

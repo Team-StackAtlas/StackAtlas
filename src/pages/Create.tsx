@@ -1,329 +1,374 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ImagePlus, Search, X } from 'lucide-react';
-import { BRANDS, STACKS, SUPPLEMENTS, type Post } from '../data/mockData';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { HelpCircle, ArrowLeft, Search, CheckCircle, AlertCircle, Star } from 'lucide-react';
+import { SUPPLEMENTS, BRANDS, Post, Domain, addPost } from '../data/mockData';
 import { cn } from '../lib/utils';
+import { useUserScope } from '../context/UserScopeContext';
 import { useToast } from '../components/ui/ToastProvider';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../services/supabase/client';
-import { listDraftPosts, saveCommunityPost, uploadPostImage, type CommunityPostInput, type EntityType } from '../services/community';
-import { BEARING_GROUPS, DISPATCH_BEARINGS, SIGNAL_BEARINGS, getSuggestedBearings } from '../data/communityTaxonomy';
 
 type CreateType = 'Dispatch' | 'Signal';
-type LinkOption = { id: string; name: string; type: EntityType };
 
-const emptyDispatch = {
-  title: '',
-  content: '',
-  dose: '',
-  frequency: '',
-  duration: '',
-  startDate: '',
-  productsUsed: '',
-  quality: '',
-  shipping: '',
-  testing: '',
-  value: '',
-  buyAgain: '',
-  sideEffects: '',
-  shareAge: false,
-  shareWeight: false,
-  bearings: [] as string[],
-};
-
-const emptySignal = { title: '', content: '', bearings: [] as string[], entityId: '', entityType: '' as EntityType | '' };
+const BEARINGS = [
+  'Sleep', 'Focus', 'Energy', 'Mood', 'Anxiety', 'Recovery', 'Strength', 'Endurance', 'Longevity', 'Libido'
+];
 
 export default function Create() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { scope } = useUserScope();
   const { toast } = useToast();
-  const { profile, isBackendConfigured, user } = useAuth();
-  const [activeType, setActiveType] = useState<CreateType | null>((searchParams.get('type') as CreateType) || null);
-  const [draftId, setDraftId] = useState<string | undefined>();
+  const [activeType, setActiveType] = useState<CreateType | null>(null);
+
+  // Dispatch State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLink, setSelectedLink] = useState<LinkOption | null>(null);
-  const [dispatchData, setDispatchData] = useState(emptyDispatch);
-  const [signalData, setSignalData] = useState(emptySignal);
-  const [doseHistoryOpen, setDoseHistoryOpen] = useState(false);
-  const [doseHistory, setDoseHistory] = useState([{ label: '', dose: '', frequency: '' }]);
-  const [stackDosing, setStackDosing] = useState<Record<string, { dose: string; frequency: string }>>({});
-  const [images, setImages] = useState<string[]>([]);
-  const [autosaveState, setAutosaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [submitting, setSubmitting] = useState(false);
-  const [drafts, setDrafts] = useState<Post[]>([]);
+  const [selectedLink, setSelectedLink] = useState<{ id: string, name: string, type: 'supplement' | 'brand' } | null>(null);
+  const [dispatchData, setDispatchData] = useState({
+    title: '',
+    content: '',
+    dose: '',
+    frequency: '',
+    duration: '',
+    startDate: '',
+    benefits: '',
+    sideEffects: '',
+    age: '',
+    weight: '',
+    sex: '',
+    goal: ''
+  });
 
-  const linkOptions = useMemo<LinkOption[]>(() => [
-    ...SUPPLEMENTS.map((item) => ({ id: item.id, name: item.name, type: 'substance' as const })),
-    ...STACKS.filter((stack) => stack.status === 'approved').map((item) => ({ id: item.id, name: item.name, type: 'stack' as const })),
-    ...BRANDS.map((item) => ({ id: item.id, name: item.name, type: 'brand' as const })),
-  ], []);
+  // Signal State
+  const [signalData, setSignalData] = useState({
+    title: '',
+    content: '',
+    bearings: [] as string[]
+  });
 
-  useEffect(() => {
-    if (!isBackendConfigured || !supabase || !user) return;
-    listDraftPosts(supabase, user.id).then(setDrafts).catch(() => {});
-  }, [isBackendConfigured, user?.id]);
-
-  const filteredLinks = searchQuery
-    ? linkOptions.filter((link) => link.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 8)
-    : [];
-
-  const selectedStack = selectedLink?.type === 'stack' ? STACKS.find((stack) => stack.id === selectedLink.id) : null;
-  const suggestedBearings = getSuggestedBearings(selectedLink?.type ?? null, selectedLink?.id ?? null, activeType ?? 'Signal');
-
-  useEffect(() => {
-    if (!selectedStack) return;
-    setStackDosing(Object.fromEntries(selectedStack.substances.map((substance) => [substance.id, stackDosing[substance.id] ?? { dose: '', frequency: '' }])));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStack?.id]);
-
-  const currentBearings = activeType === 'Dispatch' ? dispatchData.bearings : signalData.bearings;
-  const setCurrentBearings = (bearings: string[]) => {
-    if (activeType === 'Dispatch') setDispatchData((prev) => ({ ...prev, bearings }));
-    if (activeType === 'Signal') setSignalData((prev) => ({ ...prev, bearings }));
+  const getFilteredLinks = () => {
+    if (!searchQuery) return [];
+    const q = searchQuery.toLowerCase();
+    const supplements = SUPPLEMENTS.filter(s => s.name.toLowerCase().includes(q)).map(s => ({ id: s.id, name: s.name, type: 'supplement' as const }));
+    const brands = BRANDS.filter(b => b.name.toLowerCase().includes(q)).map(b => ({ id: b.id, name: b.name, type: 'brand' as const }));
+    return [...supplements, ...brands].slice(0, 5);
   };
 
-  const toggleBearing = (bearing: string) => {
-    const allowed = activeType === 'Dispatch' ? DISPATCH_BEARINGS : SIGNAL_BEARINGS;
-    if (!(allowed as readonly string[]).includes(bearing)) return;
-    if (currentBearings.includes(bearing)) setCurrentBearings(currentBearings.filter((item) => item !== bearing));
-    else if (currentBearings.length < 5) setCurrentBearings([...currentBearings, bearing]);
-  };
-
-  const buildInput = (status: 'draft' | 'published'): CommunityPostInput | null => {
-    if (!activeType) return null;
-    if (activeType === 'Dispatch') {
-      return {
-        id: draftId,
-        type: 'Dispatch',
-        status,
-        title: dispatchData.title,
-        content: dispatchData.content,
-        entityType: selectedLink?.type ?? null,
-        entityId: selectedLink?.id ?? null,
-        bearings: dispatchData.bearings,
-        dose: dispatchData.dose,
-        frequency: dispatchData.frequency,
-        duration: dispatchData.duration,
-        startDate: dispatchData.startDate,
-        sideEffects: dispatchData.sideEffects.split(',').map((item) => item.trim()).filter(Boolean),
-        doseHistory: doseHistory.filter((item) => item.label || item.dose || item.frequency),
-        stackDosing: selectedStack?.substances.map((substance) => ({
-          substanceId: substance.id,
-          substanceName: substance.name,
-          dose: stackDosing[substance.id]?.dose ?? '',
-          frequency: stackDosing[substance.id]?.frequency ?? '',
-        })) ?? [],
-        brandDetails: selectedLink?.type === 'brand' ? {
-          productsUsed: dispatchData.productsUsed,
-          quality: dispatchData.quality,
-          shipping: dispatchData.shipping,
-          testing: dispatchData.testing,
-          value: dispatchData.value,
-          buyAgain: dispatchData.buyAgain,
-        } : undefined,
-        sharedAge: dispatchData.shareAge ? profile?.age ?? null : null,
-        sharedWeight: dispatchData.shareWeight && profile?.weight ? `${profile.weight} lbs` : null,
-        imageUrls: images,
-      };
-    }
-    const signalLink = signalData.entityType && signalData.entityId ? { type: signalData.entityType, id: signalData.entityId } : null;
+  const calculateGoldProgress = () => {
+    const fields = ['dose', 'frequency', 'duration', 'startDate', 'benefits', 'sideEffects', 'age', 'weight', 'sex', 'goal'];
+    const filled = fields.filter(f => dispatchData[f as keyof typeof dispatchData].trim() !== '').length;
     return {
-      id: draftId,
-      type: 'Signal',
-      status,
-      title: signalData.title,
-      content: signalData.content,
-      entityType: signalLink?.type ?? null,
-      entityId: signalLink?.id ?? null,
-      bearings: signalData.bearings,
-      imageUrls: images,
+      percentage: Math.round((filled / fields.length) * 100),
+      missing: fields.filter(f => dispatchData[f as keyof typeof dispatchData].trim() === '')
     };
   };
 
-  useEffect(() => {
-    if (!isBackendConfigured || !supabase || !profile || !activeType) return;
-    const input = buildInput('draft');
-    if (!input || (!input.title && !input.content && !input.entityId && input.bearings.length === 0 && images.length === 0)) return;
-    const timeout = window.setTimeout(() => {
-      setAutosaveState('saving');
-      saveCommunityPost(supabase!, input, profile)
-        .then((id) => {
-          setDraftId(id);
-          setAutosaveState('saved');
-        })
-        .catch(() => setAutosaveState('idle'));
-    }, 1200);
-    return () => window.clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeType, dispatchData, signalData, selectedLink, images, doseHistory, stackDosing, isBackendConfigured, profile?.id]);
-
-  const validate = () => {
-    if (!activeType) return false;
-    const input = buildInput('published');
-    if (!input) return false;
-    if (!input.title.trim() || !input.content.trim()) return toast('Title and written experience are required.', 'error'), false;
-    if (input.bearings.length < 1 || input.bearings.length > 5) return toast('Select 1–5 Bearings.', 'error'), false;
-    if (activeType === 'Dispatch') {
-      if (!selectedLink) return toast('A Dispatch must link to an approved substance, stack, or brand.', 'error'), false;
-      if (selectedLink.type === 'substance' && (!dispatchData.dose.trim() || !dispatchData.frequency.trim() || !(dispatchData.duration.trim() || dispatchData.startDate.trim()))) return toast('Substance Dispatches require dose, frequency, and duration or start date.', 'error'), false;
-      if (selectedLink.type === 'stack') {
-        if (!(dispatchData.duration.trim() || dispatchData.startDate.trim())) return toast('Stack Dispatches require duration or start date.', 'error'), false;
-        const missing = selectedStack?.substances.some((substance) => !stackDosing[substance.id]?.dose.trim() || !stackDosing[substance.id]?.frequency.trim());
-        if (missing) return toast('Each stack component needs a dose and frequency.', 'error'), false;
-      }
-      if (selectedLink.type === 'brand' && (!dispatchData.productsUsed.trim() || !(dispatchData.duration.trim() || dispatchData.startDate.trim()))) return toast('Brand Dispatches require products used and duration or start date.', 'error'), false;
-    }
-    return true;
-  };
-
-  const handleImageUpload = async (files: FileList | null) => {
-    if (!files || images.length >= 4 || !user) return;
-    const selected = Array.from(files).slice(0, 4 - images.length);
-    if (!isBackendConfigured || !supabase) {
-      setImages((prev) => [...prev, ...selected.map((file) => URL.createObjectURL(file))].slice(0, 4));
+  const handleDispatchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLink) {
+      toast('You must link this Dispatch to an existing substance or brand.', 'error');
       return;
     }
-    try {
-      const urls = await Promise.all(selected.map((file) => uploadPostImage(supabase!, user.id, file)));
-      setImages((prev) => [...prev, ...urls].slice(0, 4));
-    } catch {
-      toast('Could not upload image.', 'error');
-    }
+    
+    const newPost: Post = {
+      id: `p${Date.now()}`,
+      type: 'Dispatch',
+      title: dispatchData.title,
+      content: dispatchData.content,
+      structuredContent: {
+        dosages: `${dispatchData.dose} ${dispatchData.frequency}`,
+        effects: dispatchData.benefits,
+        sideEffects: dispatchData.sideEffects,
+        personalExperience: dispatchData.content
+      },
+      author: { id: 'u1', username: 'admin', isVerified: true, age: parseInt(dispatchData.age) || 30 },
+      domain: 'All', // Default or derived from selectedLink
+      category: 'General',
+      supplementId: selectedLink.type === 'supplement' ? selectedLink.id : undefined,
+      brandId: selectedLink.type === 'brand' ? selectedLink.id : undefined,
+      helpfulCount: 0,
+      comments: 0,
+      createdAt: new Date().toISOString(),
+      logDetails: { duration: dispatchData.duration, dosage: dispatchData.dose },
+      qualityScore: isGold ? 90 : 50
+    };
+    
+    addPost(newPost);
+    navigate('/square');
   };
 
-  const submit = async (e: React.FormEvent) => {
+  const handleSignalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile || !validate()) return;
-    const input = buildInput('published');
-    if (!input) return;
-    setSubmitting(true);
-    try {
-      if (isBackendConfigured && supabase) await saveCommunityPost(supabase, input, profile);
-      toast(`${activeType} published.`);
-      navigate('/square');
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Could not publish post.', 'error');
-    } finally {
-      setSubmitting(false);
+    if (signalData.bearings.length === 0) {
+      toast('You must select at least one Bearing.', 'error');
+      return;
     }
+    
+    const newPost: Post = {
+      id: `p${Date.now()}`,
+      type: 'Signal',
+      title: signalData.title,
+      content: signalData.content,
+      author: { id: 'u1', username: 'admin', isVerified: true, age: 30 },
+      domain: 'All',
+      category: 'General',
+      helpfulCount: 0,
+      comments: 0,
+      createdAt: new Date().toISOString(),
+      qualityScore: 50,
+      bearings: signalData.bearings
+    };
+    
+    addPost(newPost);
+    navigate('/square');
   };
 
-  const loadDraft = (draft: Post) => {
-    setDraftId(draft.id);
-    setActiveType(draft.type);
-    setImages(draft.images ?? []);
-    if (draft.type === 'Dispatch') {
-      const linkType = draft.supplementId ? 'substance' : draft.stackId ? 'stack' : draft.brandId ? 'brand' : null;
-      const linkId = draft.supplementId ?? draft.stackId ?? draft.brandId ?? '';
-      const link = linkType ? linkOptions.find((option) => option.type === linkType && option.id === linkId) ?? null : null;
-      setSelectedLink(link);
-      setDispatchData({
-        ...emptyDispatch,
-        title: draft.title,
-        content: draft.content,
-        dose: draft.logDetails?.dosage ?? '',
-        duration: draft.logDetails?.duration ?? '',
-        sideEffects: draft.sideEffects?.join(', ') ?? '',
-        bearings: draft.bearings ?? [],
-      });
-      setDoseHistory(draft.doseHistory?.length ? draft.doseHistory : [{ label: '', dose: '', frequency: '' }]);
-      setStackDosing(Object.fromEntries((draft.stackDosing ?? []).map((item) => [item.substanceId, { dose: item.dose, frequency: item.frequency }])));
-    } else {
-      setSignalData({ title: draft.title, content: draft.content, bearings: draft.bearings ?? [], entityId: draft.entityId ?? '', entityType: (draft.entityType as EntityType) ?? '' });
-    }
+  const toggleBearing = (bearing: string) => {
+    setSignalData(prev => {
+      if (prev.bearings.includes(bearing)) {
+        return { ...prev, bearings: prev.bearings.filter(b => b !== bearing) };
+      }
+      if (prev.bearings.length >= 5) return prev;
+      return { ...prev, bearings: [...prev.bearings, bearing] };
+    });
   };
 
-  const renderBearingPicker = () => {
-    const groups = Object.entries(BEARING_GROUPS).filter(([group]) => activeType === 'Signal' || group !== 'Signal-only Discussion');
-    return (
-      <div className="space-y-4">
-        {suggestedBearings.length > 0 && (
-          <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Suggested for this link</h4>
-            <div className="flex flex-wrap gap-2">{suggestedBearings.map(renderBearingButton)}</div>
-          </section>
-        )}
-        {groups.map(([group, bearings]) => (
-          <section key={group}>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">{group}</h4>
-            <div className="flex flex-wrap gap-2">{bearings.map(renderBearingButton)}</div>
-          </section>
-        ))}
-      </div>
-    );
-  };
-
-  const renderBearingButton = (bearing: string) => {
-    const selected = currentBearings.includes(bearing);
-    return <button key={bearing} type="button" onClick={() => toggleBearing(bearing)} className={cn('rounded-full border px-3 py-1 text-xs font-medium transition-colors', selected ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800')}>{bearing}</button>;
-  };
+  const progress = calculateGoldProgress();
+  const isGold = progress.percentage === 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 text-slate-900 dark:bg-zinc-950 dark:text-zinc-50 md:pb-8">
-      <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
-        <button onClick={() => navigate(-1)} className="-ml-2 rounded-full p-2 transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"><ArrowLeft size={20} /></button>
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8">
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors">
+          <ArrowLeft size={20} className="text-slate-700 dark:text-zinc-300" />
+        </button>
         <h1 className="text-lg font-bold">Create</h1>
-        <span className="ml-auto text-xs text-slate-500 dark:text-zinc-500">{autosaveState === 'saving' ? 'Saving draft…' : autosaveState === 'saved' ? 'Draft saved' : ''}</span>
       </div>
 
-      <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto w-full p-4 sm:p-6">
         {!activeType ? (
-          <div className="space-y-8">
-            {drafts.length > 0 && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500">Your drafts</h2>
-                <div className="space-y-2">{drafts.map((draft) => <button key={draft.id} type="button" onClick={() => loadDraft(draft)} className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-800"><span>{draft.title || 'Untitled draft'}</span><span className="text-xs text-slate-500">{draft.type}</span></button>)}</div>
-              </section>
-            )}
-            <div className="mx-auto mt-10 flex min-h-[50vh] max-w-2xl flex-col items-stretch justify-center gap-6 sm:flex-row">
-              {(['Dispatch', 'Signal'] as CreateType[]).map((type) => <button key={type} onClick={() => setActiveType(type)} className="flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-emerald-500 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"><h2 className="mb-3 text-2xl font-bold">{type}</h2><p className="text-center text-sm leading-relaxed text-slate-500 dark:text-zinc-400">{type === 'Dispatch' ? 'Write a structured experience report linked to one approved entity.' : 'Share a short freeform community post.'}</p></button>)}
-            </div>
+          <div className="flex flex-col sm:flex-row justify-center items-stretch gap-6 min-h-[50vh] max-w-2xl mx-auto mt-10">
+            <button 
+              onClick={() => setActiveType('Dispatch')}
+              className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 transition-all group"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Dispatch</h2>
+                <div className="relative group/tooltip">
+                  <HelpCircle size={18} className="text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-800 dark:bg-zinc-800 text-white text-xs rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl">
+                    A structured log linked to a specific substance or brand. Reach Gold status to contribute to global averages.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-zinc-800"></div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-zinc-400 text-center leading-relaxed">Create a detailed, structured log to track your experience and contribute to the community database.</p>
+            </button>
+
+            <button 
+              onClick={() => setActiveType('Signal')}
+              className="flex-1 flex flex-col items-center justify-center p-8 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 transition-all group"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Signal</h2>
+                <div className="relative group/tooltip">
+                  <HelpCircle size={18} className="text-slate-400 group-hover:text-blue-400 transition-colors" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-800 dark:bg-zinc-800 text-white text-xs rounded-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 shadow-xl">
+                    An unstructured post to share thoughts, ask questions, or discuss topics using Bearings.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-zinc-800"></div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-zinc-400 text-center leading-relaxed">Share a quick update, ask a question, or start a discussion with the community.</p>
+            </button>
           </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-6">
-            <div className="flex items-center justify-between"><h2 className="text-2xl font-bold">New {activeType}</h2><button type="button" onClick={() => setActiveType(null)} className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white">Change Type</button></div>
+        ) : activeType === 'Dispatch' ? (
+          <form onSubmit={handleDispatchSubmit} className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">New Dispatch</h2>
+              <button type="button" onClick={() => setActiveType(null)} className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white">Change Type</button>
+            </div>
 
-            {activeType === 'Dispatch' && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="mb-3 font-semibold">Link one approved entity</h3>
-                {selectedLink ? <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"><span>{selectedLink.name} · {selectedLink.type}</span><button type="button" onClick={() => setSelectedLink(null)}><X size={16} /></button></div> : <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search substances, stacks, or brands" className="w-full rounded-xl border border-slate-200 bg-transparent py-2 pl-10 pr-4 focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />{filteredLinks.length > 0 && <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">{filteredLinks.map((link) => <button key={`${link.type}-${link.id}`} type="button" onClick={() => { setSelectedLink(link); setSearchQuery(''); }} className="w-full px-4 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-zinc-700">{link.name} <span className="ml-2 text-xs capitalize text-slate-400">{link.type}</span></button>)}</div>}</div>}
-              </section>
-            )}
+            {/* Linking Section */}
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                1. Link to Entity <span className="text-red-500">*</span>
+              </h3>
+              {selectedLink ? (
+                <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
+                  <span className="font-medium text-emerald-700 dark:text-emerald-400">{selectedLink.name} ({selectedLink.type})</span>
+                  <button type="button" onClick={() => setSelectedLink(null)} className="text-sm text-emerald-600 hover:underline">Change</button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search for a substance or brand..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500"
+                  />
+                  {searchQuery && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl shadow-lg overflow-hidden z-20">
+                      {getFilteredLinks().map(link => (
+                        <button
+                          key={link.id}
+                          type="button"
+                          onClick={() => { setSelectedLink(link); setSearchQuery(''); }}
+                          className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-zinc-700 text-sm"
+                        >
+                          {link.name} <span className="text-slate-400 text-xs ml-2 capitalize">{link.type}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-            {activeType === 'Signal' && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="mb-3 font-semibold">Optional link</h3>
-                <select value={`${signalData.entityType}:${signalData.entityId}`} onChange={(e) => { const [type, id] = e.target.value.split(':') as [EntityType | '', string]; setSignalData((prev) => ({ ...prev, entityType: type, entityId: id ?? '' })); }} className="w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 dark:border-zinc-700">
-                  <option value=":">General Signal — no entity</option>
-                  {linkOptions.map((link) => <option key={`${link.type}-${link.id}`} value={`${link.type}:${link.id}`}>{link.name} · {link.type}</option>)}
-                </select>
-              </section>
-            )}
+            {/* Gold Progress */}
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold flex items-center gap-2">
+                  2. Gold Completion
+                  <div className="relative group/tooltip">
+                    <HelpCircle size={14} className="text-slate-400" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-10 text-center">
+                      {isGold ? "Gold status achieved! This dispatch will contribute to global averages." : `Missing: ${progress.missing.join(', ')}`}
+                    </div>
+                  </div>
+                </h3>
+                <span className={cn("font-bold", isGold ? "text-amber-500" : "text-slate-500")}>
+                  {progress.percentage}%
+                </span>
+              </div>
+              <div className="h-2 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div 
+                  className={cn("h-full transition-all duration-500", isGold ? "bg-amber-500" : "bg-emerald-500")}
+                  style={{ width: `${progress.percentage}%` }}
+                />
+              </div>
+              {isGold && (
+                <div className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 group/platinum relative w-max">
+                  <Star size={12} className="fill-current" /> Gold Status Achieved! 
+                  <span className="text-slate-500 dark:text-zinc-400 ml-1 cursor-help underline decoration-dotted">What about Platinum?</span>
+                  <div className="absolute bottom-full left-0 mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 invisible group-hover/platinum:opacity-100 group-hover/platinum:visible transition-all z-10">
+                    Platinum status requires verified bloodwork and a minimum 6-month log duration. (Informational only, no upgrade logic implemented yet).
+                  </div>
+                </div>
+              )}
+            </div>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-              <input required value={activeType === 'Dispatch' ? dispatchData.title : signalData.title} onChange={(e) => activeType === 'Dispatch' ? setDispatchData({ ...dispatchData, title: e.target.value }) : setSignalData({ ...signalData, title: e.target.value })} placeholder="Title" className="mb-4 w-full border-0 bg-transparent text-xl font-semibold outline-none placeholder:text-slate-400" />
-              <textarea required rows={8} value={activeType === 'Dispatch' ? dispatchData.content : signalData.content} onChange={(e) => activeType === 'Dispatch' ? setDispatchData({ ...dispatchData, content: e.target.value }) : setSignalData({ ...signalData, content: e.target.value })} placeholder={activeType === 'Dispatch' ? 'Write the experience first. What changed, what surprised you, and what should others know?' : 'What do you want to share with the community?'} className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 leading-relaxed focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
-            </section>
+            {/* Form Fields */}
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-4">
+              <h3 className="font-semibold">3. Details</h3>
+              
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Title"
+                  required
+                  value={dispatchData.title}
+                  onChange={e => setDispatchData({...dispatchData, title: e.target.value})}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500"
+                />
+                <textarea
+                  placeholder="Content / Experience"
+                  required
+                  rows={4}
+                  value={dispatchData.content}
+                  onChange={e => setDispatchData({...dispatchData, content: e.target.value})}
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500"
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <input type="text" placeholder="Dose (e.g., 200mg)" value={dispatchData.dose} onChange={e => setDispatchData({...dispatchData, dose: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                  <input type="text" placeholder="Frequency (e.g., Daily)" value={dispatchData.frequency} onChange={e => setDispatchData({...dispatchData, frequency: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                  <input type="text" placeholder="Duration (e.g., 4 weeks)" value={dispatchData.duration} onChange={e => setDispatchData({...dispatchData, duration: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                  <input type="date" placeholder="Start Date" value={dispatchData.startDate} onChange={e => setDispatchData({...dispatchData, startDate: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                  <input type="text" placeholder="Benefits" value={dispatchData.benefits} onChange={e => setDispatchData({...dispatchData, benefits: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                  <input type="text" placeholder="Side Effects (or 'None')" value={dispatchData.sideEffects} onChange={e => setDispatchData({...dispatchData, sideEffects: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                </div>
 
-            {activeType === 'Dispatch' && selectedLink && (
-              <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="font-semibold">Dose and timing</h3>
-                {selectedLink.type === 'stack' && selectedStack ? <div className="space-y-3">{selectedStack.substances.map((substance) => <div key={substance.id} className="rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><div className="mb-2 text-sm font-medium">{substance.name}</div><div className="grid gap-3 sm:grid-cols-2"><input placeholder="Dose / amount" value={stackDosing[substance.id]?.dose ?? ''} onChange={(e) => setStackDosing({ ...stackDosing, [substance.id]: { ...stackDosing[substance.id], dose: e.target.value } })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /><input placeholder="Frequency / schedule" value={stackDosing[substance.id]?.frequency ?? ''} onChange={(e) => setStackDosing({ ...stackDosing, [substance.id]: { ...stackDosing[substance.id], frequency: e.target.value } })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /></div></div>)}</div> : selectedLink.type === 'brand' ? <div className="grid gap-3 sm:grid-cols-2"><input placeholder="Product or products used" value={dispatchData.productsUsed} onChange={(e) => setDispatchData({ ...dispatchData, productsUsed: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 dark:border-zinc-700" /><input placeholder="Duration or start date" value={dispatchData.duration} onChange={(e) => setDispatchData({ ...dispatchData, duration: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 dark:border-zinc-700" /></div> : <div className="grid gap-3 sm:grid-cols-3"><input placeholder="Current dose / amount" value={dispatchData.dose} onChange={(e) => setDispatchData({ ...dispatchData, dose: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 dark:border-zinc-700" /><input placeholder="Frequency / schedule" value={dispatchData.frequency} onChange={(e) => setDispatchData({ ...dispatchData, frequency: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 dark:border-zinc-700" /><input placeholder="Duration or start date" value={dispatchData.duration} onChange={(e) => setDispatchData({ ...dispatchData, duration: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 dark:border-zinc-700" /></div>}
-                <button type="button" onClick={() => setDoseHistoryOpen(!doseHistoryOpen)} className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{doseHistoryOpen ? 'Hide dose history' : 'Dose changed over time'}</button>
-                {doseHistoryOpen && <div className="space-y-2">{doseHistory.map((row, index) => <div key={index} className="grid gap-2 sm:grid-cols-3"><input placeholder="Week 1 / Current" value={row.label} onChange={(e) => setDoseHistory(doseHistory.map((item, i) => i === index ? { ...item, label: e.target.value } : item))} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /><input placeholder="Dose" value={row.dose} onChange={(e) => setDoseHistory(doseHistory.map((item, i) => i === index ? { ...item, dose: e.target.value } : item))} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /><input placeholder="Frequency" value={row.frequency} onChange={(e) => setDoseHistory(doseHistory.map((item, i) => i === index ? { ...item, frequency: e.target.value } : item))} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /></div>)}<button type="button" onClick={() => setDoseHistory([...doseHistory, { label: '', dose: '', frequency: '' }])} className="text-xs font-medium text-slate-500">Add another change</button></div>}
-                {selectedLink.type === 'brand' && <div className="grid gap-3 sm:grid-cols-2"><input placeholder="Quality notes" value={dispatchData.quality} onChange={(e) => setDispatchData({ ...dispatchData, quality: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /><input placeholder="Shipping / customer service" value={dispatchData.shipping} onChange={(e) => setDispatchData({ ...dispatchData, shipping: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /><input placeholder="Testing / COA" value={dispatchData.testing} onChange={(e) => setDispatchData({ ...dispatchData, testing: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /><input placeholder="Price / value / buy again?" value={dispatchData.value} onChange={(e) => setDispatchData({ ...dispatchData, value: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" /></div>}
-                <input placeholder="Side effects (optional, comma-separated)" value={dispatchData.sideEffects} onChange={(e) => setDispatchData({ ...dispatchData, sideEffects: e.target.value })} className="w-full rounded-xl border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700" />
-                <div className="flex flex-wrap gap-4 text-sm text-slate-600 dark:text-zinc-400"><label><input type="checkbox" checked={dispatchData.shareAge} onChange={(e) => setDispatchData({ ...dispatchData, shareAge: e.target.checked })} /> Attach age</label><label><input type="checkbox" checked={dispatchData.shareWeight} onChange={(e) => setDispatchData({ ...dispatchData, shareWeight: e.target.checked })} /> Attach weight</label></div>
-              </section>
-            )}
+                <div className="pt-4 border-t border-slate-100 dark:border-zinc-800">
+                  <h4 className="text-sm font-medium text-slate-500 mb-3">Demographics (for Peer Match)</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <input type="number" placeholder="Age" value={dispatchData.age} onChange={e => setDispatchData({...dispatchData, age: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                    <input type="text" placeholder="Weight" value={dispatchData.weight} onChange={e => setDispatchData({...dispatchData, weight: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                    <select value={dispatchData.sex} onChange={e => setDispatchData({...dispatchData, sex: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm">
+                      <option value="">Sex</option>
+                      <option value="M">Male</option>
+                      <option value="F">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <input type="text" placeholder="Goal" value={dispatchData.goal} onChange={e => setDispatchData({...dispatchData, goal: e.target.value})} className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-emerald-500 text-sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"><h3 className="mb-3 font-semibold">Bearings <span className="text-red-500">*</span></h3>{renderBearingPicker()}</section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"><h3 className="mb-3 font-semibold">Images</h3><div className="grid gap-3 sm:grid-cols-4">{images.map((image) => <div key={image} className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-800"><img src={image} alt="Upload preview" className="h-28 w-full object-cover" /><button type="button" onClick={() => setImages(images.filter((item) => item !== image))} className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white"><X size={14} /></button></div>)}{images.length < 4 && <label className="flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 text-sm text-slate-500 dark:border-zinc-700"><ImagePlus size={22} /><span>Add image</span><input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e.target.files)} /></label>}</div></section>
-
-            <div className="flex justify-end"><button type="submit" disabled={submitting} className="rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-60">Publish {activeType}</button></div>
+            <div className="flex justify-end">
+              <button type="submit" className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors">
+                Submit Dispatch
+              </button>
+            </div>
           </form>
-        )}
+        ) : activeType === 'Signal' ? (
+          <form onSubmit={handleSignalSubmit} className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold">New Signal</h2>
+              <button type="button" onClick={() => setActiveType(null)} className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white">Change Type</button>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 space-y-6">
+              <input
+                type="text"
+                placeholder="Title"
+                required
+                value={signalData.title}
+                onChange={e => setSignalData({...signalData, title: e.target.value})}
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-blue-500 text-lg font-medium"
+              />
+
+              <div>
+                <h3 className="text-sm font-medium text-slate-500 mb-3">Select Bearings (1-5) <span className="text-red-500">*</span></h3>
+                <div className="flex flex-wrap gap-2">
+                  {BEARINGS.map(bearing => {
+                    const isSelected = signalData.bearings.includes(bearing);
+                    return (
+                      <button
+                        key={bearing}
+                        type="button"
+                        onClick={() => toggleBearing(bearing)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
+                          isSelected 
+                            ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20" 
+                            : "bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-700"
+                        )}
+                      >
+                        {bearing}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <textarea
+                placeholder="What's on your mind?"
+                required
+                rows={6}
+                value={signalData.content}
+                onChange={e => setSignalData({...signalData, content: e.target.value})}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-700 bg-transparent focus:outline-none focus:border-blue-500 resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button type="submit" className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-colors">
+                Broadcast Signal
+              </button>
+            </div>
+          </form>
+        ) : null}
       </div>
     </div>
   );

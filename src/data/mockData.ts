@@ -175,18 +175,6 @@ export interface Post {
   title: string;
   content: string;
   isGold?: boolean;
-  status?: 'draft' | 'published';
-  entityType?: 'substance' | 'stack' | 'brand' | null;
-  entityId?: string | null;
-  images?: string[];
-  likedByMe?: boolean;
-  deletedAt?: string | null;
-  sideEffects?: string[];
-  doseHistory?: { label: string; dose: string; frequency: string }[];
-  stackDosing?: { substanceId: string; substanceName: string; dose: string; frequency: string }[];
-  brandDetails?: { productsUsed?: string; quality?: string; shipping?: string; testing?: string; value?: string; buyAgain?: string };
-  sharedAge?: number | null;
-  sharedWeight?: string | null;
   structuredContent?: {
     dosages: string;
     frequency?: string;
@@ -214,7 +202,6 @@ export interface Post {
   brandId?: string;
   stackId?: string;
   helpfulCount: number;
-  likeCount?: number;
   comments: number;
   createdAt: string;
   logDetails?: {
@@ -850,68 +837,6 @@ export const getSources = (
   );
 
 import { SEED_POSTS } from './seedPosts';
-
-
-export interface MockReply {
-  id: string;
-  author: Post['author'];
-  content: string;
-  createdAt: string;
-  likeCount: number;
-  deletedAt?: string | null;
-  likedByMe?: boolean;
-}
-
-export interface MockComment extends MockReply {
-  replies: MockReply[];
-}
-
-export const MOCK_COMMENTS: Record<string, MockComment[]> = {
-  p_mg_dispatch: [
-    {
-      id: 'c_mg_1',
-      author: { id: 'u_tchen', username: 'tchen', displayName: 'Tyler Chen', isVerified: false },
-      content: 'Did you notice any next-day grogginess at 300mg, or did it feel clean in the morning?',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 7).toISOString(),
-      likeCount: 6,
-      replies: [
-        {
-          id: 'r_mg_1',
-          author: { id: 'u_evcross', username: 'evcross_fit', displayName: 'Evelyn Cross', isVerified: true },
-          content: 'Clean for me, but I also take it at least an hour before bed with food.',
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-          likeCount: 4,
-        },
-      ],
-    },
-    {
-      id: 'c_mg_2',
-      author: { id: 'u_lgrant', username: 'lgrant', displayName: 'Lila Grant', isVerified: false },
-      content: 'The recovery note matches my experience after heavier leg days.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-      likeCount: 3,
-      replies: [],
-    },
-  ],
-  p_caf_signal: [
-    {
-      id: 'c_caf_1',
-      author: { id: 'u_nprice', username: 'nprice_ops', displayName: 'Nolan Price', isVerified: true },
-      content: 'Agree. Splitting the dose has been much better than one large morning spike.',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
-      likeCount: 9,
-      replies: [
-        {
-          id: 'r_caf_1',
-          author: { id: 'u_imoreno', username: 'imoreno', displayName: 'Isla Moreno', isVerified: false },
-          content: 'Same here. I cap the second dose before lunch so sleep does not drift.',
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-          likeCount: 5,
-        },
-      ],
-    },
-  ],
-};
 
 export const getPosts = (): Post[] => {
   const stored = localStorage.getItem('stackatlas_posts');
