@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Flag, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
-import { BRANDS, getPosts, SUPPLEMENTS } from '../data/mockData';
+import { BRANDS, SUPPLEMENTS } from '../data/mockData';
 import PostCard from '../components/PostCard';
+import { useCommunityPosts } from '../hooks/useCommunityPosts';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
 import Sources from '../components/Sources';
@@ -21,6 +22,7 @@ export default function BrandPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { setRating, getSummary } = useBrandRatings();
+  const { posts } = useCommunityPosts();
 
   if (!brand) {
     return <div className="text-center py-20 text-zinc-400">Brand not found.</div>;
@@ -28,7 +30,7 @@ export default function BrandPage() {
 
   const ratingSummary = getSummary(brand.id);
 
-  const relatedPosts = getPosts().filter(p => p.brandId === brand.id);
+  const relatedPosts = posts.filter(p => p.brandId === brand.id);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto w-full pb-8 px-4 pt-6">

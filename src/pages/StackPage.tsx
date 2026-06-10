@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Flag } from 'lucide-react';
-import { STACKS, SUBSTANCES, getPosts } from '../data/mockData';
+import { STACKS, SUBSTANCES } from '../data/mockData';
 import PostCard from '../components/PostCard';
+import { useCommunityPosts } from '../hooks/useCommunityPosts';
 import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
 import Sources from '../components/Sources';
@@ -19,12 +20,13 @@ export default function StackPage() {
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const { posts } = useCommunityPosts();
 
   if (!stack) {
     return <div className="text-center py-20 text-zinc-400">Stack not found.</div>;
   }
 
-  const relatedPosts = getPosts().filter(p => p.stackId === stack.id);
+  const relatedPosts = posts.filter(p => p.stackId === stack.id);
   const relatedDispatches = relatedPosts.filter(p => p.type === 'Dispatch');
   const relatedSignals = relatedPosts.filter(p => p.type === 'Signal');
 

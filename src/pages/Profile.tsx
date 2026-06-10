@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { getPosts, STACKS, USERS } from '../data/mockData';
 import PostCard from '../components/PostCard';
+import { useCommunityPosts } from '../hooks/useCommunityPosts';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
 import { useSaved } from '../hooks/useSaved';
 import { useFollowing } from '../hooks/useFollowing';
@@ -39,6 +40,7 @@ export default function Profile() {
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
   const { isFollowing, toggleFollow } = useFollowing();
+  const { posts: communityPosts } = useCommunityPosts();
   const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
@@ -104,7 +106,7 @@ export default function Profile() {
 
   const shownProfile = isOwnProfile ? authProfile ?? profile : profile;
   const settings = withDefaultProfileSettings(shownProfile?.settings);
-  const userPosts = getPosts().filter((post) => post.author.username.toLowerCase() === shownProfile?.username.toLowerCase());
+  const userPosts = communityPosts.filter((post) => post.author.username.toLowerCase() === shownProfile?.username.toLowerCase());
   const filteredPosts = userPosts.filter((post) => {
     if (activeTab === 'dispatches') return post.type === 'Dispatch';
     if (activeTab === 'signals') return post.type === 'Signal';
