@@ -20,7 +20,7 @@ type FormErrors = Partial<Record<'auth' | 'entity' | 'title' | 'content' | 'dose
 const MIN_DISPATCH_BODY_CHARS = 100;
 const DOSE_UNITS = ['mcg', 'mg', 'g', 'IU', 'mL', 'cc'];
 const DURATION_UNITS = ['days', 'weeks', 'months', 'years'];
-const FREQUENCY_PRESETS = ['Once daily', 'Twice daily', 'Three times daily', 'Every other day', 'Once weekly', 'Twice weekly', 'Three times weekly', 'Four times weekly', 'Five times weekly', 'Six times weekly', 'As needed', 'Pre-workout', 'Post-workout', 'Before bed', 'With meals', 'Fasted', 'Custom cycle'];
+const FREQUENCY_PRESETS = ['Once daily', 'Twice daily', 'Three times daily', 'Every other day', 'Once weekly', 'Twice weekly', 'Three times weekly', 'Four times weekly', 'Five times weekly', 'Six times weekly', 'As needed', 'Pre-workout', 'Post-workout', 'Before bed', 'Custom cycle'];
 const FREQUENCY_CYCLE_UNITS = ['days', 'weeks', 'months'];
 
 const BEARING_GROUPS = [
@@ -75,6 +75,13 @@ const CURATED_COMPANION_PAIRS = [
   ['caffeine', 'l-theanine'],
 ];
 
+const COMPANION_ALIASES: Record<string, string[]> = {
+  'bpc-157': ['bpc-157', 'bpc157', 'bpc 157'],
+  'tb-500': ['tb-500', 'tb500', 'tb 500'],
+  caffeine: ['caffeine'],
+  'l-theanine': ['l-theanine', 'l theanine', 'theanine'],
+};
+
 const makeEmptyProtocol = (): SubstanceProtocol => ({
   dose: { amount: '', unit: 'mg' },
   frequency: { preset: '', cycleMode: 'every', everyAmount: '', everyUnit: 'days', onAmount: '', onUnit: 'days', offAmount: '', offUnit: 'days' },
@@ -124,15 +131,40 @@ function getSuggestedBearings(entity: EntityOption | null, mode: BearingMode) {
   return Array.from(new Set(suggestions)).filter(bearing => allowed.includes(bearing)).slice(0, 6);
 }
 
-function getCompanionOptions(entity: EntityOption | null) {
+const normalizeCompanionKey = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+function companionMatches(entity: EntityOption, canonicalId: string) {
+  const candidates = [canonicalId, ...(COMPANION_ALIASES[canonicalId] ?? [])].map(normalizeCompanionKey);
+  return candidates.includes(normalizeCompanionKey(entity.id)) || candidates.includes(normalizeCompanionKey(entity.name));
+}
+
+function getCompanionOptions(entity: EntityOption | null): EntityOption[] {
   if (!entity || entity.type !== 'supplement') return [];
-  return CURATED_COMPANION_PAIRS.flatMap(([a, b]) => {
-    if (entity.id === a) return [b];
-    if (entity.id === b) return [a];
+  const companionIds = CURATED_COMPANION_PAIRS.flatMap(([a, b]) => {
+    if (companionMatches(entity, a)) return [b];
+    if (companionMatches(entity, b)) return [a];
     return [];
-  })
-    .map(id => SUPPLEMENTS.find(s => s.id === id))
-    .filter((substance): substance is NonNullable<typeof substance> => Boolean(substance));
+  });
+  return companionIds.map(id => {
+    const supplement = SUPPLEMENTS.find(s => companionMatches({ id: s.id, name: s.name, type: 'supplement', categories: [] }, id));
+    return supplement
+      ? { id: supplement.id, name: supplement.name, type: 'supplement' as const, categories: supplement.paths.map(path => path.category) }
+      : { id, name: id === 'tb-500' ? 'TB-500' : id, type: 'supplement' as const, categories: [] };
+  });
+}
+
+
+function InfoTooltip({ label, text }: { label: string; text: string }) {
+  return (
+    <span className="relative inline-flex">
+      <span tabIndex={0} role="button" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()} className="peer rounded-full text-slate-400 transition-colors hover:text-slate-700 focus:text-slate-700 focus:outline-none dark:text-zinc-500 dark:hover:text-zinc-200 dark:focus:text-zinc-200" aria-label={label}>
+        <HelpCircle size={16} />
+      </span>
+      <span role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-72 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-100 peer-hover:opacity-100 peer-focus:opacity-100 dark:bg-zinc-100 dark:text-zinc-900">
+        {text}
+      </span>
+    </span>
+  );
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
@@ -287,7 +319,7 @@ function DurationField({ value, onChange }: { value: Duration; onChange: (value:
   return (
     <div>
       <FieldLabel>Duration <span className="text-red-500">*</span></FieldLabel>
-      <div className="grid grid-cols-[1fr_auto] gap-2">
+      <div className="grid max-w-xs grid-cols-[7rem_auto] gap-2">
         <input type="number" min="1" step="1" inputMode="numeric" placeholder="8" value={value.amount} onChange={e => onChange({ ...value, amount: e.target.value })} className="rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
         <select value={value.unit} onChange={e => onChange({ ...value, unit: e.target.value })} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 focus:border-emerald-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900">
           {DURATION_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}
@@ -307,6 +339,8 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
   const [isOpen, setIsOpen] = useState(false);
   const [isBrowsingAll, setIsBrowsingAll] = useState(false);
   const [query, setQuery] = useState('');
+  const [modalQuery, setModalQuery] = useState('');
+  const [activeGroupName, setActiveGroupName] = useState<string>('Suggested');
   const allowed = getAllowedBearings(mode);
   const suggested = getSuggestedBearings(entity, mode);
   const filtered = query.trim() ? allowed.filter(bearing => bearing.toLowerCase().includes(query.toLowerCase())) : suggested;
@@ -320,6 +354,11 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
   };
 
   const groupList = BEARING_GROUPS.map(group => ({ ...group, bearings: group.bearings.filter(bearing => allowed.includes(bearing)) })).filter(group => group.bearings.length > 0);
+  const navItems = suggested.length > 0 ? [{ name: 'Suggested', bearings: suggested }, ...groupList] : groupList;
+  const activeGroup = navItems.find(group => group.name === activeGroupName) ?? navItems[0];
+  const modalSearchGroups = modalQuery.trim()
+    ? groupList.map(group => ({ ...group, bearings: group.bearings.filter(bearing => bearing.toLowerCase().includes(modalQuery.toLowerCase())) })).filter(group => group.bearings.length > 0)
+    : [];
 
   return (
     <div>
@@ -352,38 +391,72 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
                 ))}
               </div>
             </div>
-            <button type="button" onClick={() => setIsBrowsingAll(true)} className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Browse all Bearings</button>
+            <button type="button" onClick={() => { setActiveGroupName(suggested.length > 0 ? 'Suggested' : groupList[0]?.name ?? ''); setIsBrowsingAll(true); }} className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Browse all Bearings</button>
           </div>
         )}
       </div>
       <ErrorText>{error}</ErrorText>
       {isBrowsingAll && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
-          <div className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-zinc-900">
+            <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-zinc-800">
               <h3 className="text-xl font-bold">Browse all Bearings</h3>
               <button type="button" onClick={() => setIsBrowsingAll(false)} className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-zinc-800" aria-label="Close Bearings browser"><X size={18} /></button>
             </div>
-            <div className="space-y-5">
-              {groupList.map(group => (
-                <section key={group.name}>
-                  <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-zinc-300">{group.name}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {group.bearings.map(bearing => (
-                      <button key={bearing} type="button" onClick={() => toggle(bearing)} disabled={!selected.includes(bearing) && selected.length >= 5} className={cn('rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40', selected.includes(bearing) ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800')}>
-                        {bearing}
+            <div className="sticky top-0 z-10 space-y-3 border-b border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input value={modalQuery} onChange={e => setModalQuery(e.target.value)} placeholder="Search all Bearings..." className="w-full rounded-xl border border-slate-200 bg-transparent py-2 pl-10 pr-3 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selected.length > 0 ? selected.map(bearing => (
+                  <button key={bearing} type="button" onClick={() => toggle(bearing)} className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20">
+                    {bearing}<X size={12} />
+                  </button>
+                )) : <span className="text-sm text-slate-500 dark:text-zinc-400">No Bearings selected yet.</span>}
+              </div>
+            </div>
+            <div className="grid min-h-0 flex-1 md:grid-cols-[14rem_1fr]">
+              {!modalQuery.trim() && (
+                <div className="overflow-auto border-b border-slate-200 p-3 dark:border-zinc-800 md:border-b-0 md:border-r">
+                  <div className="flex gap-2 overflow-x-auto md:block md:space-y-1">
+                    {navItems.map(group => (
+                      <button key={group.name} type="button" onClick={() => setActiveGroupName(group.name)} className={cn('whitespace-nowrap rounded-xl px-3 py-2 text-left text-sm font-medium md:w-full', activeGroup?.name === group.name ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800')}>
+                        {group.name}
                       </button>
                     ))}
                   </div>
-                </section>
-              ))}
+                </div>
+              )}
+              <div className="min-h-0 overflow-auto p-4">
+                {modalQuery.trim() ? (
+                  <div className="space-y-5">
+                    {modalSearchGroups.length > 0 ? modalSearchGroups.map(group => (
+                      <section key={group.name}>
+                        <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-zinc-300">{group.name}</h4>
+                        <div className="flex flex-wrap gap-2">{group.bearings.map(bearing => (
+                          <button key={bearing} type="button" onClick={() => toggle(bearing)} disabled={!selected.includes(bearing) && selected.length >= 5} className={cn('rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40', selected.includes(bearing) ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800')}>{bearing}</button>
+                        ))}</div>
+                      </section>
+                    )) : <p className="text-sm text-slate-500 dark:text-zinc-400">No matching Bearings.</p>}
+                  </div>
+                ) : (
+                  <section>
+                    <h4 className="mb-3 text-sm font-semibold text-slate-700 dark:text-zinc-300">{activeGroup?.name}</h4>
+                    <div className="flex flex-wrap gap-2">{activeGroup?.bearings.map(bearing => (
+                      <button key={bearing} type="button" onClick={() => toggle(bearing)} disabled={!selected.includes(bearing) && selected.length >= 5} className={cn('rounded-full border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40', selected.includes(bearing) ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800')}>{bearing}</button>
+                    ))}</div>
+                  </section>
+                )}
+              </div>
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="flex justify-end border-t border-slate-200 p-4 dark:border-zinc-800">
               <button type="button" onClick={() => setIsBrowsingAll(false)} className="rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-white hover:bg-emerald-600">Done</button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
@@ -403,6 +476,7 @@ export default function Create() {
   const [primaryProtocol, setPrimaryProtocol] = useState<SubstanceProtocol>(makeEmptyProtocol);
   const [companionProtocol, setCompanionProtocol] = useState<SubstanceProtocol>(makeEmptyProtocol);
   const [duration, setDuration] = useState<Duration>({ amount: '', unit: 'weeks' });
+  const [isClarificationOpen, setIsClarificationOpen] = useState(false);
 
   const companionOptions = getCompanionOptions(dispatchEntity);
   const companion = companionOptions.find(option => option.id === companionId) ?? null;
@@ -509,12 +583,14 @@ export default function Create() {
       <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
         {!activeType ? (
           <div className="mx-auto mt-10 flex min-h-[50vh] max-w-2xl flex-col items-stretch justify-center gap-6 sm:flex-row">
-            <button onClick={() => setActiveType('Dispatch')} className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500">
-              <h2 className="mb-4 inline-flex items-center gap-2 text-2xl font-bold text-slate-800 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">Dispatch <HelpCircle size={16} aria-label="Dispatch details"><title>A structured experience post linked to what you took. Includes dose, frequency, duration, and Bearings.</title></HelpCircle></h2>
-            </button>
-            <button onClick={() => setActiveType('Signal')} className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500">
-              <h2 className="mb-4 inline-flex items-center gap-2 text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">Signal <HelpCircle size={16} aria-label="Signal details"><title>A shorter freeform post for questions, updates, observations, and discussion. Signals use Bearings and may optionally link to entities.</title></HelpCircle></h2>
-            </button>
+            <div role="button" tabIndex={0} onClick={() => setActiveType('Dispatch')} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setActiveType('Dispatch'); }} className="group flex flex-1 cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 text-center transition-all hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500">
+              <h2 className="mb-3 inline-flex items-center gap-2 text-2xl font-bold text-slate-800 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">Dispatch <InfoTooltip label="Dispatch details" text="Dispatches help StackAtlas turn real user experiences into useful community data. Use them when you can share what you took, dose, frequency, duration, and enough context for others to compare." /></h2>
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400">Log a structured experience with what you took, how much, how often, and what happened.</p>
+            </div>
+            <div role="button" tabIndex={0} onClick={() => setActiveType('Signal')} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setActiveType('Signal'); }} className="group flex flex-1 cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 text-center transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500">
+              <h2 className="mb-3 inline-flex items-center gap-2 text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">Signal <InfoTooltip label="Signal details" text="Signals are freeform community posts. They can be general, or linked to a substance, brand, or stack if you want the post connected to something specific." /></h2>
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400">Ask a question, share an observation, or start a discussion.</p>
+            </div>
           </div>
         ) : activeType === 'Dispatch' ? (
           <form onSubmit={handleDispatchSubmit} className="space-y-8">
@@ -560,8 +636,14 @@ export default function Create() {
                 <DurationField value={duration} onChange={setDuration} />
                 <ErrorText>{errors.dose ?? errors.duration}</ErrorText>
                 <div>
-                  <FieldLabel>Dose/frequency/duration clarification</FieldLabel>
-                  <input value={dispatchData.clarification} onChange={e => setDispatchData({ ...dispatchData, clarification: e.target.value })} placeholder="Started at 250 mcg daily, then increased to 500 mcg daily after two weeks." className="w-full rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+                  {!isClarificationOpen ? (
+                    <button type="button" onClick={() => setIsClarificationOpen(true)} className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Add dose/frequency note</button>
+                  ) : (
+                    <div>
+                      <FieldLabel>Dose/frequency note</FieldLabel>
+                      <textarea rows={3} value={dispatchData.clarification} onChange={e => setDispatchData({ ...dispatchData, clarification: e.target.value })} placeholder="Started at 250 mcg daily, then increased to 500 mcg daily after two weeks." className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
