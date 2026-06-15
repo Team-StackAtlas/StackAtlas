@@ -1,4 +1,5 @@
 import { ExternalLink } from 'lucide-react';
+import { SaveButton } from './SaveButton';
 import { getSources, type SourceSection, type SourceTargetType } from '../data/mockData';
 
 interface SourcesProps {
@@ -24,7 +25,7 @@ export default function Sources({ targetType, targetId, section, label = 'Source
       </p>
       <ul className="space-y-1.5">
         {sources.map((source) => (
-          <li key={source.id}>
+          <li key={source.id} className="flex items-start justify-between gap-2">
             <a
               href={source.url}
               target="_blank"
@@ -42,6 +43,7 @@ export default function Sources({ targetType, targetId, section, label = 'Source
                 </span>
               </span>
             </a>
+            <SaveButton id={source.id} type="source" className="h-7 w-7 shrink-0 p-1" metadata={{ title: source.title, url: source.url, siteName: source.publisher, relatedType: source.targetType, relatedId: source.targetId }} />
           </li>
         ))}
       </ul>

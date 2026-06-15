@@ -16,6 +16,8 @@ import type {
   ProfileUpdate,
   SessionUser,
   SavedItem,
+  LibraryAlbum,
+  AlbumItem,
   HiddenItem,
   Follow,
   ReportInput,
@@ -70,6 +72,17 @@ export interface SavedService {
   list(userId: ID): Promise<SavedItem[]>;
   add(userId: ID, item: SavedItem): Promise<void>;
   remove(userId: ID, item: SavedItem): Promise<void>;
+}
+
+export interface LibraryService {
+  listAlbums(userId: ID): Promise<LibraryAlbum[]>;
+  getAlbum(albumId: ID): Promise<LibraryAlbum | null>;
+  createAlbum(userId: ID, input: { title: string; description?: string; privacy: 'private' | 'public' }): Promise<LibraryAlbum>;
+  updateAlbum(albumId: ID, input: { title: string; description?: string; privacy: 'private' | 'public' }): Promise<LibraryAlbum>;
+  deleteAlbum(albumId: ID): Promise<void>;
+  listAlbumItems(albumId: ID): Promise<AlbumItem[]>;
+  addAlbumItem(albumId: ID, item: SavedItem): Promise<void>;
+  removeAlbumItem(albumItemId: ID): Promise<void>;
 }
 
 export interface HiddenService {
