@@ -4,6 +4,7 @@ import { ArrowLeft, Check, ChevronDown, HelpCircle, Search, X } from 'lucide-rea
 import { SUPPLEMENTS, BRANDS, Post, Domain, addPost } from '../data/mockData';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
+import { BEARING_GROUPS, CATEGORY_BEARING_SUGGESTIONS, getAllowedBearings } from '../lib/bearings';
 
 
 type CreateType = 'Dispatch' | 'Signal';
@@ -22,53 +23,6 @@ const DOSE_UNITS = ['mcg', 'mg', 'g', 'IU', 'mL', 'cc'];
 const DURATION_UNITS = ['days', 'weeks', 'months', 'years'];
 const FREQUENCY_PRESETS = ['Once daily', 'Twice daily', 'Three times daily', 'Every other day', 'Once weekly', 'Twice weekly', 'Three times weekly', 'Four times weekly', 'Five times weekly', 'Six times weekly', 'As needed', 'Pre-workout', 'Post-workout', 'Before bed', 'Custom cycle'];
 const FREQUENCY_CYCLE_UNITS = ['days', 'weeks', 'months'];
-
-const BEARING_GROUPS = [
-  { name: 'Cognitive', bearings: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Creativity', 'Learning', 'Concentration', 'Mental Clarity'] },
-  { name: 'Sleep & Recovery', bearings: ['Sleep', 'Deep Sleep', 'Insomnia', 'Dreams', 'Relaxation', 'Recovery', 'Soreness', 'Fatigue'] },
-  { name: 'Performance', bearings: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training', 'Cardio', 'Reaction Time'] },
-  { name: 'Mood', bearings: ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Irritability', 'Confidence', 'Emotional Resilience'] },
-  { name: 'Hormonal & Sexual', bearings: ['Libido', 'Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Sexual Performance'] },
-  { name: 'Metabolic', bearings: ['Weight Loss', 'Fat Loss', 'Appetite', 'Satiety', 'Blood Sugar', 'Insulin Sensitivity'] },
-  { name: 'Digestive', bearings: ['Digestion', 'Gut Health', 'Bloating', 'Nausea', 'Microbiome'] },
-  { name: 'Cardiovascular', bearings: ['Blood Pressure', 'Cholesterol', 'Circulation', 'Heart Rate'] },
-  { name: 'Pain & Mobility', bearings: ['Pain', 'Injury Recovery', 'Mobility', 'Tendons', 'Ligaments', 'Joint Health'] },
-  { name: 'Beauty', bearings: ['Skin Health', 'Hair Health', 'Nails', 'Acne', 'Looksmaxxing'] },
-  { name: 'Experience', bearings: ['First Time Use', 'Long-Term Use', 'Dose Change', 'Interaction', 'Tolerance', 'Withdrawal', 'Dependency'] },
-  { name: 'Training', bearings: ['Bodybuilding', 'Strongman', 'Powerlifting', 'Olympic Weightlifting', 'CrossFit', 'Running', 'Cycling', 'Combat Sports', 'Climbing', 'Hypertrophy', 'Sports Performance'] },
-  { name: 'Traditional Medicine', bearings: ['East Asian Medicine', 'Ayurveda', 'Native American Medicine', 'Folk Medicine', 'Herbal Medicine', 'Western Herbalism'] },
-  { name: 'Modern Context', bearings: ['Biohacking', 'Longevity', 'Clinical Use', 'Sports Nutrition'] },
-  { name: 'Signal-only Discussion', bearings: ['Beginner Question', 'Stack Discussion', 'Protocol Discussion', 'Brand Experience', 'Product Quality', 'Cost / Value', 'Research', 'General Discussion'] },
-];
-
-const SIGNAL_ONLY_BEARINGS = ['Beginner Question', 'Stack Discussion', 'Protocol Discussion', 'Brand Experience', 'Product Quality', 'Cost / Value', 'Research', 'General Discussion'];
-
-const CATEGORY_BEARING_SUGGESTIONS: Record<string, string[]> = {
-  Cognition: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Mental Clarity'],
-  Focus: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Mental Clarity'],
-  Memory: ['Focus', 'Memory', 'Brain Fog', 'Productivity', 'Motivation', 'Mental Clarity'],
-  Recovery: ['Sleep', 'Deep Sleep', 'Relaxation', 'Recovery', 'Soreness', 'Fatigue'],
-  Sleep: ['Sleep', 'Deep Sleep', 'Relaxation', 'Recovery', 'Soreness', 'Fatigue'],
-  Performance: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
-  'Strength & Muscle': ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
-  Strength: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
-  Endurance: ['Strength', 'Endurance', 'Energy', 'Athletic Performance', 'Muscle Growth', 'Pump', 'Training'],
-  Longevity: ['Long-Term Use', 'Longevity', 'Clinical Use', 'Biohacking'],
-  'Mood & Stress': ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Emotional Resilience'],
-  Mood: ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Emotional Resilience'],
-  Stress: ['Mood', 'Anxiety', 'Stress', 'Calmness', 'Depression', 'Emotional Resilience'],
-  'Metabolic Health': ['Weight Loss', 'Fat Loss', 'Appetite', 'Satiety', 'Blood Sugar', 'Insulin Sensitivity'],
-  'Fat Loss': ['Weight Loss', 'Fat Loss', 'Appetite', 'Satiety', 'Blood Sugar', 'Insulin Sensitivity'],
-  'Hormonal Health': ['Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Libido'],
-  Hormones: ['Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Libido'],
-  'Sexual Health': ['Testosterone', 'Estrogen', 'Thyroid', 'Fertility', 'Libido'],
-  'Digestive Health': ['Digestion', 'Gut Health', 'Bloating', 'Nausea', 'Microbiome'],
-  'Gut Health': ['Digestion', 'Gut Health', 'Bloating', 'Nausea', 'Microbiome'],
-  'Heart Health': ['Blood Pressure', 'Cholesterol', 'Circulation', 'Heart Rate'],
-  'Pain & Injury': ['Pain', 'Injury Recovery', 'Tendons', 'Ligaments', 'Mobility'],
-  'Joint & Mobility': ['Joint Health', 'Mobility', 'Tendons', 'Ligaments', 'Pain'],
-  'Beauty & Skin': ['Skin Health', 'Hair Health', 'Nails', 'Acne', 'Looksmaxxing'],
-};
 
 const CURATED_COMPANION_PAIRS = [
   ['bpc-157', 'tb-500'],
@@ -118,10 +72,6 @@ function getEntityDomain(entity: EntityOption | null): Domain {
 function getEntityCategory(entity: EntityOption | null) {
   if (!entity || entity.type !== 'supplement') return 'General';
   return SUPPLEMENTS.find(s => s.id === entity.id)?.paths[0]?.category ?? 'General';
-}
-
-function getAllowedBearings(mode: BearingMode) {
-  return BEARING_GROUPS.flatMap(group => group.bearings).filter(bearing => mode === 'signal' || !SIGNAL_ONLY_BEARINGS.includes(bearing));
 }
 
 function getSuggestedBearings(entity: EntityOption | null, mode: BearingMode) {

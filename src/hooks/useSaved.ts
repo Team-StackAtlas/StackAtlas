@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRequireAccountAction } from './useRequireAccountAction';
 import type { SavedItemType as BackendSavedItemType } from '../services/types';
 
-export type SavedItemType = 'Dispatch' | 'Signal' | 'dispatch' | 'signal' | 'source' | 'external_link';
+export type SavedItemType = 'Dispatch' | 'Signal' | 'dispatch' | 'signal' | 'source' | 'external_link' | 'post';
 
 export interface SavedItem {
   id: string;
@@ -25,7 +25,7 @@ const CHANGE_EVENT = 'stackatlas:savedChanged';
 const STORAGE_KEY = 'stackatlas_saved';
 
 function toBackendType(type: SavedItemType): BackendSavedItemType {
-  return type === 'Dispatch' ? 'dispatch' : type === 'Signal' ? 'signal' : type;
+  return type === 'Dispatch' ? 'dispatch' : type === 'Signal' ? 'signal' : type === 'post' ? 'dispatch' : type;
 }
 
 function sameType(a: SavedItemType, b: SavedItemType) {
