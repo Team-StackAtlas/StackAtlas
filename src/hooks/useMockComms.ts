@@ -1,177 +1,273 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-export const MOCK_COMMS_STORAGE_KEY = 'stackatlas.mockCommsState';
+export const MOCK_COMMS_STORAGE_KEY = 'stackatlas.mockComms.v2';
 
-type CommsKind = 'notification' | 'dm' | 'quarter';
+export type CommsMessageKind = 'text' | 'image' | 'voice' | 'file';
+export type CommsMessageScope = 'dm' | 'quarter';
 
-export interface MockCommsItem {
+export interface CommsUser {
   id: string;
-  kind: CommsKind;
-  label: string;
+  username: string;
+  displayName: string;
+  avatarInitial: string;
+  isPrivate?: boolean;
+  followsViewer?: boolean;
+  viewerFollows?: boolean;
+}
+
+export interface CommsAttachment {
+  id: string;
+  type: 'image' | 'voice' | 'file';
+  name: string;
+  url: string;
+  mimeType: string;
+  size: number;
+  durationSeconds?: number;
+}
+
+export interface CommsMessage {
+  id: string;
+  scope: CommsMessageScope;
+  conversationId?: string;
+  quarterId?: string;
+  senderId: string;
+  kind: CommsMessageKind;
+  body: string;
+  createdAt: string;
+  readBy: string[];
+  attachment?: CommsAttachment;
+  reactions: Record<string, string[]>;
+  deleted?: boolean;
+}
+
+export interface CommsConversation {
+  id: string;
+  participantIds: string[];
+  accepted: boolean;
+  requestedBy?: string;
+  declined?: boolean;
+  typingUserIds: string[];
+}
+
+export interface Quarter {
+  id: string;
   title: string;
-  preview: string;
-  timestamp: string;
-  iconType?: 'substance' | 'status' | 'reply' | 'helpful' | 'gold' | 'mention' | 'quarter';
-  unreadByDefault: boolean;
+  description?: string;
+  ownerId: string;
+  adminIds: string[];
+  memberIds: string[];
+  invitedUserIds: string[];
+  declinedUserIds: string[];
+  typingUserIds: string[];
 }
 
-interface MockCommsState {
-  readIds: string[];
-  badgeViewed: boolean;
+interface CommsState {
+  users: CommsUser[];
+  conversations: CommsConversation[];
+  messages: CommsMessage[];
+  quarters: Quarter[];
+  readConversationIds: string[];
+  readQuarterIds: string[];
 }
 
+const VIEWER_ID = 'u-viewer';
 const now = Date.now();
 
-export const MOCK_NOTIFICATIONS: MockCommsItem[] = [
-  {
-    id: 'notif-caffeine-status',
-    kind: 'notification',
-    label: 'Followed substance update',
-    title: 'Caffeine status summary updated',
-    preview: 'New structured notes were added for tolerance and common administration patterns.',
-    timestamp: new Date(now - 1000 * 60 * 18).toISOString(),
-    iconType: 'substance',
-    unreadByDefault: true,
-  },
-  {
-    id: 'notif-reply-sleep',
-    kind: 'notification',
-    label: 'Discussion activity',
-    title: 'sable_lane replied in Sleep Optimization',
-    preview: '“Timing seems more important than adding more ingredients.”',
-    timestamp: new Date(now - 1000 * 60 * 120).toISOString(),
-    iconType: 'reply',
-    unreadByDefault: false,
-  },
-  {
-    id: 'notif-helpful-creatine',
-    kind: 'notification',
-    label: 'Helpful activity',
-    title: 'Your creatine note was marked helpful',
-    preview: 'Three readers marked your comment helpful in the Strength & Muscle thread.',
-    timestamp: new Date(now - 1000 * 60 * 60 * 5).toISOString(),
-    iconType: 'helpful',
-    unreadByDefault: false,
-  },
-  {
-    id: 'notif-gold-following',
-    kind: 'notification',
-    label: 'Gold Dispatch activity',
-    title: 'evcross_fit posted a Gold Dispatch',
-    preview: 'A followed researcher published a structured Dispatch on sleep and recovery.',
-    timestamp: new Date(now - 1000 * 60 * 60 * 8).toISOString(),
-    iconType: 'gold',
-    unreadByDefault: true,
-  },
-];
+const seed: CommsState = {
+  users: [
+    { id: VIEWER_ID, username: 'admin', displayName: 'You', avatarInitial: 'A' },
+    {
+      id: 'u-marlow',
+      username: 'marlow_notes',
+      displayName: 'Marlow Notes',
+      avatarInitial: 'M',
+      followsViewer: true,
+      viewerFollows: true,
+    },
+    {
+      id: 'u-sable',
+      username: 'sable_lane',
+      displayName: 'Sable Lane',
+      avatarInitial: 'S',
+      followsViewer: false,
+      viewerFollows: true,
+    },
+    {
+      id: 'u-arden',
+      username: 'arden_index',
+      displayName: 'Arden Index',
+      avatarInitial: 'A',
+      isPrivate: true,
+      followsViewer: false,
+      viewerFollows: false,
+    },
+    {
+      id: 'u-evan',
+      username: 'evcross_fit',
+      displayName: 'Evan Cross',
+      avatarInitial: 'E',
+      followsViewer: true,
+      viewerFollows: false,
+    },
+  ],
+  conversations: [
+    {
+      id: 'dm-marlow',
+      participantIds: [VIEWER_ID, 'u-marlow'],
+      accepted: true,
+      typingUserIds: ['u-marlow'],
+    },
+    { id: 'dm-sable', participantIds: [VIEWER_ID, 'u-sable'], accepted: true, typingUserIds: [] },
+    {
+      id: 'req-evan',
+      participantIds: [VIEWER_ID, 'u-evan'],
+      accepted: false,
+      requestedBy: 'u-evan',
+      typingUserIds: [],
+    },
+  ],
+  messages: [
+    {
+      id: 'msg-marlow-1',
+      scope: 'dm',
+      conversationId: 'dm-marlow',
+      senderId: 'u-marlow',
+      kind: 'text',
+      body: 'Saw your note on creatine timing. Are you tracking training days separately?',
+      createdAt: new Date(now - 1000 * 60 * 24).toISOString(),
+      readBy: ['u-marlow'],
+      reactions: {},
+    },
+    {
+      id: 'msg-marlow-2',
+      scope: 'dm',
+      conversationId: 'dm-marlow',
+      senderId: VIEWER_ID,
+      kind: 'image',
+      body: 'Here is the current split.',
+      createdAt: new Date(now - 1000 * 60 * 20).toISOString(),
+      readBy: [VIEWER_ID, 'u-marlow'],
+      reactions: { '👍': ['u-marlow'] },
+      attachment: {
+        id: 'att-marlow-image',
+        type: 'image',
+        name: 'training-days.png',
+        url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&auto=format&fit=crop',
+        mimeType: 'image/png',
+        size: 248000,
+      },
+    },
+    {
+      id: 'msg-sable-1',
+      scope: 'dm',
+      conversationId: 'dm-sable',
+      senderId: 'u-sable',
+      kind: 'voice',
+      body: 'Voice note',
+      createdAt: new Date(now - 1000 * 60 * 60 * 3).toISOString(),
+      readBy: [VIEWER_ID, 'u-sable'],
+      reactions: {},
+      attachment: {
+        id: 'att-sable-voice',
+        type: 'voice',
+        name: 'sleep-template-note.webm',
+        url: 'https://www.w3schools.com/html/horse.mp3',
+        mimeType: 'audio/mpeg',
+        size: 44500,
+        durationSeconds: 7,
+      },
+    },
+    {
+      id: 'msg-evan-1',
+      scope: 'dm',
+      conversationId: 'req-evan',
+      senderId: 'u-evan',
+      kind: 'text',
+      body: 'Could I ask a quick question about your recovery log?',
+      createdAt: new Date(now - 1000 * 60 * 90).toISOString(),
+      readBy: ['u-evan'],
+      reactions: {},
+    },
+    {
+      id: 'q-sleep-1',
+      scope: 'quarter',
+      quarterId: 'quarter-sleep',
+      senderId: 'u-sable',
+      kind: 'text',
+      body: '@admin the Deep Sleep Protocol thread could use your classification note.',
+      createdAt: new Date(now - 1000 * 60 * 38).toISOString(),
+      readBy: ['u-sable'],
+      reactions: {},
+    },
+    {
+      id: 'q-sleep-2',
+      scope: 'quarter',
+      quarterId: 'quarter-sleep',
+      senderId: VIEWER_ID,
+      kind: 'file',
+      body: 'Added the comparison template.',
+      createdAt: new Date(now - 1000 * 60 * 30).toISOString(),
+      readBy: [VIEWER_ID],
+      reactions: {},
+      attachment: {
+        id: 'att-quarter-file',
+        type: 'file',
+        name: 'sleep-stack-template.pdf',
+        url: '#',
+        mimeType: 'application/pdf',
+        size: 128000,
+      },
+    },
+  ],
+  quarters: [
+    {
+      id: 'quarter-sleep',
+      title: 'Sleep Optimization',
+      description: 'Small group for sleep stacks, logs, and source checks.',
+      ownerId: VIEWER_ID,
+      adminIds: [VIEWER_ID],
+      memberIds: [VIEWER_ID, 'u-sable', 'u-marlow'],
+      invitedUserIds: ['u-arden'],
+      declinedUserIds: [],
+      typingUserIds: [],
+    },
+  ],
+  readConversationIds: ['dm-sable'],
+  readQuarterIds: [],
+};
 
-export const MOCK_DIRECT_MESSAGES: MockCommsItem[] = [
-  {
-    id: 'dm-marlow',
-    kind: 'dm',
-    label: 'marlow_notes',
-    title: 'marlow_notes',
-    preview: 'Saw your note on creatine timing. Are you tracking training days separately?',
-    timestamp: new Date(now - 1000 * 60 * 24).toISOString(),
-    unreadByDefault: true,
-  },
-  {
-    id: 'dm-sable',
-    kind: 'dm',
-    label: 'sable_lane',
-    title: 'sable_lane',
-    preview: 'I can share the sleep stack comparison template if helpful.',
-    timestamp: new Date(now - 1000 * 60 * 60 * 3).toISOString(),
-    unreadByDefault: false,
-  },
-  {
-    id: 'dm-arden',
-    kind: 'dm',
-    label: 'arden_index',
-    title: 'arden_index',
-    preview: 'The brand testing trail you mentioned is a useful review signal.',
-    timestamp: new Date(now - 1000 * 60 * 60 * 20).toISOString(),
-    unreadByDefault: true,
-  },
-];
-
-export const MOCK_QUARTER_UPDATES: MockCommsItem[] = [
-  {
-    id: 'quarter-mention-sleep',
-    kind: 'quarter',
-    label: 'Sleep Optimization',
-    title: '@admin mentioned in Sleep Optimization',
-    preview: '@admin the Deep Sleep Protocol thread could use your classification note.',
-    timestamp: new Date(now - 1000 * 60 * 38).toISOString(),
-    iconType: 'mention',
-    unreadByDefault: true,
-  },
-  {
-    id: 'quarter-followed-bodybuilding',
-    kind: 'quarter',
-    label: 'Bodybuilding',
-    title: 'New followed Quarter activity',
-    preview: 'A new discussion compared creatine consistency, hydration, and recovery logs.',
-    timestamp: new Date(now - 1000 * 60 * 75).toISOString(),
-    iconType: 'quarter',
-    unreadByDefault: true,
-  },
-  {
-    id: 'quarter-peptide-review',
-    kind: 'quarter',
-    label: 'Peptide Research',
-    title: 'Peptide Research weekly review',
-    preview: 'Members flagged three threads for clearer sourcing and safety language.',
-    timestamp: new Date(now - 1000 * 60 * 60 * 9).toISOString(),
-    iconType: 'quarter',
-    unreadByDefault: false,
-  },
-];
-
-export const MOCK_COMMS_ITEMS = [...MOCK_NOTIFICATIONS, ...MOCK_DIRECT_MESSAGES, ...MOCK_QUARTER_UPDATES];
-
-function readState(): MockCommsState {
-  if (typeof window === 'undefined') return { readIds: [], badgeViewed: false };
-
+function readState(): CommsState {
+  if (typeof window === 'undefined') return seed;
   try {
-    const stored = window.localStorage.getItem(MOCK_COMMS_STORAGE_KEY);
-    if (!stored) return { readIds: [], badgeViewed: false };
-    const parsed = JSON.parse(stored);
-    return {
-      readIds: Array.isArray(parsed?.readIds) ? parsed.readIds : [],
-      badgeViewed: Boolean(parsed?.badgeViewed),
-    };
+    const parsed = JSON.parse(window.localStorage.getItem(MOCK_COMMS_STORAGE_KEY) || '');
+    return parsed?.users ? parsed : seed;
   } catch {
-    return { readIds: [], badgeViewed: false };
+    return seed;
   }
 }
 
-function writeState(state: MockCommsState) {
+function writeState(state: CommsState) {
   window.localStorage.setItem(MOCK_COMMS_STORAGE_KEY, JSON.stringify(state));
-  window.dispatchEvent(new Event('stackatlas:mockCommsStateChanged'));
+  window.dispatchEvent(new Event('stackatlas:mockCommsChanged'));
+}
+
+function mentions(body: string) {
+  return Array.from(new Set(body.match(/@([a-zA-Z0-9_]+)/g)?.map((m) => m.slice(1)) ?? []));
 }
 
 export function useMockComms() {
-  const [state, setState] = useState<MockCommsState>(() => readState());
-
+  const [state, setState] = useState<CommsState>(() => readState());
   useEffect(() => {
     const sync = () => setState(readState());
     window.addEventListener('storage', sync);
-    window.addEventListener('stackatlas:mockCommsStateChanged', sync);
+    window.addEventListener('stackatlas:mockCommsChanged', sync);
     return () => {
       window.removeEventListener('storage', sync);
-      window.removeEventListener('stackatlas:mockCommsStateChanged', sync);
+      window.removeEventListener('stackatlas:mockCommsChanged', sync);
     };
   }, []);
 
-  const readIds = useMemo(() => new Set(state.readIds), [state.readIds]);
-
-  const isUnread = useCallback((item: MockCommsItem) => item.unreadByDefault && !readIds.has(item.id), [readIds]);
-
-  const unreadItems = useMemo(() => MOCK_COMMS_ITEMS.filter(isUnread), [isUnread]);
-  const unreadBadgeCount = state.badgeViewed ? 0 : unreadItems.length;
-
-  const updateState = useCallback((updater: (current: MockCommsState) => MockCommsState) => {
+  const update = useCallback((updater: (current: CommsState) => CommsState) => {
     setState((current) => {
       const next = updater(current);
       writeState(next);
@@ -179,23 +275,214 @@ export function useMockComms() {
     });
   }, []);
 
-  const markItemRead = useCallback((id: string) => {
-    updateState((current) => current.readIds.includes(id)
-      ? current
-      : { ...current, readIds: [...current.readIds, id] });
-  }, [updateState]);
+  const getUser = useCallback(
+    (id: string) => state.users.find((user) => user.id === id),
+    [state.users],
+  );
+  const unreadConversationCount = useCallback(
+    (id: string) =>
+      state.messages.filter(
+        (m) => m.conversationId === id && m.senderId !== VIEWER_ID && !m.readBy.includes(VIEWER_ID),
+      ).length,
+    [state.messages],
+  );
+  const unreadQuarterCount = useCallback(
+    (id: string) =>
+      state.messages.filter(
+        (m) => m.quarterId === id && m.senderId !== VIEWER_ID && !m.readBy.includes(VIEWER_ID),
+      ).length,
+    [state.messages],
+  );
 
-  const markInboxViewed = useCallback(() => {
-    updateState((current) => current.badgeViewed ? current : { ...current, badgeViewed: true });
-  }, [updateState]);
+  const sendMessage = (
+    target: { conversationId?: string; quarterId?: string },
+    body: string,
+    attachment?: CommsAttachment,
+  ) =>
+    update((current) => {
+      const scope = target.quarterId ? 'quarter' : 'dm';
+      const id = `${scope}-${Date.now()}`;
+      const kind = attachment?.type ?? 'text';
+      const message: CommsMessage = {
+        id,
+        scope,
+        conversationId: target.conversationId,
+        quarterId: target.quarterId,
+        senderId: VIEWER_ID,
+        kind,
+        body: body.trim() || attachment?.name || '',
+        createdAt: new Date().toISOString(),
+        readBy: [VIEWER_ID],
+        attachment,
+        reactions: {},
+      };
+      console.info(
+        'Mock notification integration:',
+        mentions(message.body).map((username) => `mention:${username}`),
+      );
+      return { ...current, messages: [...current.messages, message] };
+    });
+
+  const markConversationRead = (conversationId: string) =>
+    update((current) => ({
+      ...current,
+      messages: current.messages.map((m) =>
+        m.conversationId === conversationId
+          ? { ...m, readBy: Array.from(new Set([...m.readBy, VIEWER_ID])) }
+          : m,
+      ),
+      readConversationIds: Array.from(new Set([...current.readConversationIds, conversationId])),
+    }));
+
+  const markQuarterRead = (quarterId: string) =>
+    update((current) => ({
+      ...current,
+      messages: current.messages.map((m) =>
+        m.quarterId === quarterId
+          ? { ...m, readBy: Array.from(new Set([...m.readBy, VIEWER_ID])) }
+          : m,
+      ),
+      readQuarterIds: Array.from(new Set([...current.readQuarterIds, quarterId])),
+    }));
+
+  const acceptRequest = (id: string) =>
+    update((current) => ({
+      ...current,
+      conversations: current.conversations.map((c) => (c.id === id ? { ...c, accepted: true } : c)),
+    }));
+  const declineRequest = (id: string) =>
+    update((current) => ({
+      ...current,
+      conversations: current.conversations.map((c) => (c.id === id ? { ...c, declined: true } : c)),
+    }));
+  const react = (messageId: string, emoji = '👍') =>
+    update((current) => ({
+      ...current,
+      messages: current.messages.map((m) => {
+        if (m.id !== messageId) return m;
+        const users = m.reactions[emoji] ?? [];
+        return {
+          ...m,
+          reactions: {
+            ...m.reactions,
+            [emoji]: users.includes(VIEWER_ID)
+              ? users.filter((id) => id !== VIEWER_ID)
+              : [...users, VIEWER_ID],
+          },
+        };
+      }),
+    }));
+
+  const startConversation = (userId: string) =>
+    update((current) => {
+      const target = current.users.find((user) => user.id === userId);
+      if (!target || (target.isPrivate && !target.followsViewer)) return current;
+      const existing = current.conversations.find(
+        (c) => c.participantIds.includes(VIEWER_ID) && c.participantIds.includes(userId),
+      );
+      if (existing) return current;
+      const accepted = Boolean(target.followsViewer && target.viewerFollows);
+      return {
+        ...current,
+        conversations: [
+          ...current.conversations,
+          {
+            id: `dm-${userId}`,
+            participantIds: [VIEWER_ID, userId],
+            accepted,
+            requestedBy: VIEWER_ID,
+            typingUserIds: [],
+          },
+        ],
+      };
+    });
+
+  const createQuarter = (title: string, description: string) =>
+    update((current) => ({
+      ...current,
+      quarters: [
+        ...current.quarters,
+        {
+          id: `quarter-${Date.now()}`,
+          title,
+          description,
+          ownerId: VIEWER_ID,
+          adminIds: [VIEWER_ID],
+          memberIds: [VIEWER_ID],
+          invitedUserIds: [],
+          declinedUserIds: [],
+          typingUserIds: [],
+        },
+      ],
+    }));
+  const inviteToQuarter = (quarterId: string, userId: string) =>
+    update((current) => ({
+      ...current,
+      quarters: current.quarters.map((q) =>
+        q.id === quarterId
+          ? { ...q, invitedUserIds: Array.from(new Set([...q.invitedUserIds, userId])) }
+          : q,
+      ),
+    }));
+  const acceptQuarterInvite = (quarterId: string) =>
+    update((current) => ({
+      ...current,
+      quarters: current.quarters.map((q) =>
+        q.id === quarterId
+          ? {
+              ...q,
+              memberIds: Array.from(new Set([...q.memberIds, VIEWER_ID])),
+              invitedUserIds: q.invitedUserIds.filter((id) => id !== VIEWER_ID),
+            }
+          : q,
+      ),
+    }));
+  const leaveQuarter = (quarterId: string) =>
+    update((current) => ({
+      ...current,
+      quarters: current.quarters.map((q) =>
+        q.id === quarterId ? { ...q, memberIds: q.memberIds.filter((id) => id !== VIEWER_ID) } : q,
+      ),
+    }));
+  const removeQuarterMember = (quarterId: string, userId: string) =>
+    update((current) => ({
+      ...current,
+      quarters: current.quarters.map((q) =>
+        q.id === quarterId ? { ...q, memberIds: q.memberIds.filter((id) => id !== userId) } : q,
+      ),
+    }));
+
+  const counts = useMemo(() => {
+    const messages = state.conversations
+      .filter((c) => c.accepted && !c.declined)
+      .reduce((sum, c) => sum + unreadConversationCount(c.id), 0);
+    const requests = state.conversations.filter(
+      (c) => !c.accepted && !c.declined && c.requestedBy !== VIEWER_ID,
+    ).length;
+    const quarters =
+      state.quarters.reduce((sum, q) => sum + unreadQuarterCount(q.id), 0) +
+      state.quarters.filter((q) => q.invitedUserIds.includes(VIEWER_ID)).length;
+    return { messages, requests, quarters, total: messages + requests + quarters };
+  }, [state.conversations, state.quarters, unreadConversationCount, unreadQuarterCount]);
 
   return {
-    notifications: MOCK_NOTIFICATIONS,
-    directMessages: MOCK_DIRECT_MESSAGES,
-    quarterUpdates: MOCK_QUARTER_UPDATES,
-    unreadBadgeCount,
-    isUnread,
-    markItemRead,
-    markInboxViewed,
+    ...state,
+    viewerId: VIEWER_ID,
+    counts,
+    getUser,
+    unreadConversationCount,
+    unreadQuarterCount,
+    sendMessage,
+    markConversationRead,
+    markQuarterRead,
+    acceptRequest,
+    declineRequest,
+    react,
+    startConversation,
+    createQuarter,
+    inviteToQuarter,
+    acceptQuarterInvite,
+    leaveQuarter,
+    removeQuarterMember,
   };
 }
