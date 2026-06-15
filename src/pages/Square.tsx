@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Search, Flame, TrendingUp, Clock, MessageSquare, ArrowBigUp, Layers, Plus, Settings2 } from 'lucide-react';
-import { BRANDS, DOMAIN_STRUCTURE, STACKS, SUPPLEMENTS, Domain, Post, getPosts, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS } from '../data/mockData';
+import { useState } from 'react';
+import { Search, Flame, Clock, ArrowBigUp, Layers, Plus, Settings2 } from 'lucide-react';
+import { BRANDS, STACKS, SUPPLEMENTS, Post, getPosts, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS } from '../data/mockData';
 import { cn } from '../lib/utils';
 import PostCard from '../components/PostCard';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -10,6 +10,9 @@ import { useFollowing } from '../hooks/useFollowing';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
+import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
+import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
+import { getPostCommentCount } from '../lib/comments';
 
 export default function Square() {
   const { scope } = useUserScope();
@@ -23,20 +26,16 @@ export default function Square() {
   const { isHidden, hasHiddenTag } = useHiddenItems();
   const [searchParams] = useSearchParams();
   const substanceId = searchParams.get('substance');
-  const filterParam = searchParams.get('filter');
   const bearingParam = searchParams.get('bearing');
 
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
-  const [activeDomain, setActiveDomain] = useState<Domain | 'All'>('All');
-  const [activeCategory, setActiveCategory] = useState<string | 'All'>('All');
+  const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(null);
+  const [activeBearings, setActiveBearings] = useState<string[]>([]);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending'>('Recent');
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
 
-  const domains = ['All', ...DOMAIN_STRUCTURE.map(d => d.domain).filter(d => d !== 'All')];
-  
-  const currentDomainData = DOMAIN_STRUCTURE.find(d => d.domain === activeDomain);
-  const categories = currentDomainData ? currentDomainData.categories.map(c => c.name) : [];
+  const activeCategoryBearings = activeCategoryGroup ? BEARING_CATEGORIES.find(category => category.name === activeCategoryGroup)?.bearings ?? [] : [];
 
   const isPostHiddenByPreferences = (post: Post) => {
     if (isAdminLike) return false;
@@ -96,9 +95,10 @@ export default function Square() {
     if (bearingParam && (!p.bearings || !p.bearings.includes(bearingParam))) return false;
 
     if (substanceId && p.supplementId !== substanceId) return false;
-    if (!substanceId && !bearingParam) {
-      if (activeDomain !== 'All' && p.domain !== activeDomain) return false;
-      if (activeCategory !== 'All' && p.category !== activeCategory) return false;
+    if (!substanceId && !bearingParam && activeCategoryGroup) {
+      const selected = activeBearings.length > 0 ? activeBearings : activeCategoryBearings;
+      const postBearings = getFilterBearings([...(p.bearings ?? []), p.category]);
+      if (!selected.some(bearing => postBearings.includes(bearing))) return false;
     }
     return true;
   };
@@ -117,7 +117,7 @@ export default function Square() {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
     if (sortOption === 'Trending') {
-      return (b.helpfulCount + b.comments) - (a.helpfulCount + a.comments);
+      return (b.helpfulCount + getPostCommentCount(b)) - (a.helpfulCount + getPostCommentCount(a));
     }
     return 0;
   });
@@ -174,51 +174,14 @@ export default function Square() {
         </Link>
       </div>
 
-      {/* Browse Domains */}
       {!substanceId && !bearingParam && (
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-            {domains.map(domain => (
-              <button
-                key={domain}
-                onClick={() => {
-                  setActiveDomain(domain as any);
-                  setActiveCategory('All');
-                }}
-                className={cn(
-                  "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border",
-                  activeDomain === domain 
-                    ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 shadow-sm" 
-                    : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-200"
-                )}
-              >
-                {domain}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Categories (if domain selected) */}
-      {!substanceId && !bearingParam && categories.length > 0 && (
-        <div className="px-4 pb-2">
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={cn(
-                  "whitespace-nowrap px-3 py-1 rounded-lg text-xs font-medium transition-all border",
-                  activeCategory === category 
-                    ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-200 border-slate-300 dark:border-zinc-700 shadow-sm" 
-                    : "bg-white/50 dark:bg-zinc-900/50 text-slate-500 dark:text-zinc-500 border-slate-200 dark:border-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-300"
-                )}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
+        <BearingCategoryFilter
+          selectedCategory={activeCategoryGroup}
+          selectedBearings={activeBearings}
+          onCategoryChange={(category) => { setActiveCategoryGroup(category); setActiveBearings([]); }}
+          onBearingToggle={(bearing) => setActiveBearings((current) => current.includes(bearing) ? current.filter(item => item !== bearing) : [...current, bearing])}
+          onReset={() => { setActiveCategoryGroup(null); setActiveBearings([]); }}
+        />
       )}
 
       {/* Markers Filter */}
@@ -264,7 +227,7 @@ export default function Square() {
           {['Highest Quality', 'Most Detailed', 'Recent', 'Trending'].map((option) => (
             <button
               key={option}
-              onClick={() => setSortOption(option as any)}
+              onClick={() => setSortOption(option as 'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending')}
               className={cn(
                 "flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                 sortOption === option 
@@ -292,6 +255,9 @@ export default function Square() {
         {sortedPosts.map(post => (
           <PostCard key={post.id} post={post} />
         ))}
+        {sortedPosts.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900">No posts match these filters.</div>
+        )}
       </div>
 
       {/* Floating Action Button (Mobile) */}

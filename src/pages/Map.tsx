@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, Activity, ShieldAlert, Star, Settings2, Plus } from 'lucide-react';
-import { DOMAIN_STRUCTURE, SUPPLEMENTS, BRANDS, STACKS, USERS, Domain, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
+import { SUPPLEMENTS, BRANDS, STACKS, USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
@@ -13,6 +13,8 @@ import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
 import { HideItemButton } from '../components/HideItemButton';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
+import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
+import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
 
 type SearchableType = 'substance' | 'brand' | 'stack';
 type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
@@ -62,8 +64,8 @@ export default function Map() {
   
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
   const [activeTab, setActiveTab] = useState<'Substances' | 'Brands' | 'Stacks'>('Substances');
-  const [activeDomain, setActiveDomain] = useState<Domain | 'All'>('All');
-  const [activeCategory, setActiveCategory] = useState<string | 'All'>('All');
+  const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(null);
+  const [activeBearings, setActiveBearings] = useState<string[]>([]);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
   const [openMarkerMenu, setOpenMarkerMenu] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,12 +75,7 @@ export default function Map() {
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [isCreateStackOpen, setIsCreateStackOpen] = useState(false);
 
-  const domains = ['All', ...DOMAIN_STRUCTURE.map(d => d.domain).filter(d => d !== 'All')];
-  const visibleDomains = isAdminLike ? domains : domains.filter(domain => domain === 'All' || !isHidden('tag', `domain:${domain}`));
-  
-  const currentDomainData = DOMAIN_STRUCTURE.find(d => d.domain === activeDomain);
-  const categories = currentDomainData ? currentDomainData.categories.map(c => c.name) : [];
-  const visibleCategories = isAdminLike ? categories : categories.filter(category => category === 'All' || !isHidden('tag', `category:${activeDomain}:${category}`));
+  const activeCategoryBearings = activeCategoryGroup ? BEARING_CATEGORIES.find(category => category.name === activeCategoryGroup)?.bearings ?? [] : [];
   const markerFilters = ['Clinical Use', 'Longevity Protocol', 'Athletic Performance', 'Cognitive Stack Culture', 'East Asian Traditional Medicine', 'Western Herbalism'];
   const visibleMarkerFilters = isAdminLike ? markerFilters : markerFilters.filter(marker => !isHidden('tag', `marker:${marker}`));
 
@@ -169,14 +166,10 @@ export default function Map() {
     // Scope ceiling: classification must be visible at the current research scope
     if (!visibleClassifications.includes(s.classification)) return false;
 
-    // Domain/Category Filtering
-    if (activeDomain !== 'All' || activeCategory !== 'All') {
-      const matchesPath = s.paths.some(p => {
-        if (activeDomain !== 'All' && p.domain !== activeDomain) return false;
-        if (activeCategory !== 'All' && p.category !== activeCategory) return false;
-        return true;
-      });
-      if (!matchesPath) return false;
+    if (activeCategoryGroup) {
+      const selected = activeBearings.length > 0 ? activeBearings : activeCategoryBearings;
+      const entityBearings = getFilterBearings([...s.paths.map(p => p.category), ...(s.markers || [])]);
+      if (!selected.some(bearing => entityBearings.includes(bearing))) return false;
     }
 
     // Marker Filtering
@@ -213,6 +206,11 @@ export default function Map() {
   const filteredBrands = BRANDS.filter(b => {
     if (!isAdminLike && (isHidden('brand', b.id) || hasHiddenTag([...(b.markers || [])]))) return false;
     if (feedType === 'Following' && !isFollowing('brand', b.id)) return false;
+    if (activeCategoryGroup) {
+      const selected = activeBearings.length > 0 ? activeBearings : activeCategoryBearings;
+      const entityBearings = getFilterBearings([...(b.markers || [])]);
+      if (entityBearings.length > 0 && !selected.some(bearing => entityBearings.includes(bearing))) return false;
+    }
     if (searchQuery && !searchMatches(searchQuery, [b.name, b.description || '', ...(b.products || []), ...(b.markers || [])])) return false;
     return true;
   });
@@ -220,6 +218,11 @@ export default function Map() {
   const filteredStacks = STACKS.filter(s => {
     if (!isAdminLike && (isHidden('stack', s.id) || hasHiddenTag([...(s.markers || []), ...s.substances.map(substance => substance.name)]))) return false;
     if (feedType === 'Following' && !isFollowing('stack', s.id)) return false;
+    if (activeCategoryGroup) {
+      const selected = activeBearings.length > 0 ? activeBearings : activeCategoryBearings;
+      const entityBearings = getFilterBearings([...(s.markers || [])]);
+      if (entityBearings.length > 0 && !selected.some(bearing => entityBearings.includes(bearing))) return false;
+    }
     if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, ...(s.markers || []), ...s.substances.map(substance => substance.name)])) return false;
     return true;
   });
@@ -260,7 +263,7 @@ export default function Map() {
           {['Substances', 'Brands', 'Stacks'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab as 'Substances' | 'Brands' | 'Stacks')}
               className={cn(
                 "flex-1 py-3 text-sm font-medium transition-colors relative",
                 activeTab === tab ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
@@ -353,50 +356,13 @@ export default function Map() {
         </div>
       </div>
 
-      {/* Browse Domains */}
-      <div className="px-4 pb-2">
-        <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-          {visibleDomains.map(domain => (
-            <button
-              key={domain}
-              onClick={() => {
-                setActiveDomain(domain as any);
-                setActiveCategory('All');
-              }}
-              className={cn(
-                "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-all border",
-                activeDomain === domain 
-                  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 shadow-sm" 
-                  : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-zinc-200"
-              )}
-            >
-              {domain}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Categories (if domain selected) */}
-      {visibleCategories.length > 0 && (
-        <div className="px-4 pb-2">
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-            {visibleCategories.map(category => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={cn(
-                  "whitespace-nowrap px-3 py-1 rounded-lg text-xs font-medium transition-all border",
-                  activeCategory === category 
-                    ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-200 border-slate-300 dark:border-zinc-700 shadow-sm" 
-                    : "bg-white/50 dark:bg-zinc-900/50 text-slate-500 dark:text-zinc-500 border-slate-200 dark:border-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-300"
-                )}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <BearingCategoryFilter
+        selectedCategory={activeCategoryGroup}
+        selectedBearings={activeBearings}
+        onCategoryChange={(category) => { setActiveCategoryGroup(category); setActiveBearings([]); }}
+        onBearingToggle={(bearing) => setActiveBearings((current) => current.includes(bearing) ? current.filter(item => item !== bearing) : [...current, bearing])}
+        onReset={() => { setActiveCategoryGroup(null); setActiveBearings([]); }}
+      />
 
       {/* Markers Filter */}
       <div className="px-4 pb-2">
@@ -557,6 +523,7 @@ export default function Map() {
                 </Link>
               );
             })}
+            {filteredSupplements.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 md:col-span-2 lg:col-span-3">No substances match these filters.</div>}
           </div>
         )}
 
@@ -594,6 +561,7 @@ export default function Map() {
                 </div>
               </Link>
             ))}
+            {filteredBrands.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 md:col-span-2 lg:col-span-3">No brands match these filters.</div>}
           </div>
         )}
 
@@ -640,6 +608,7 @@ export default function Map() {
                 </Link>
               );
             })}
+            {filteredStacks.filter(s => s.status === 'approved').length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 md:col-span-2 lg:col-span-3">No stacks match these filters.</div>}
           </div>
         )}
       </div>

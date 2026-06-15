@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
 import { SaveButton } from './SaveButton';
 import { getSavedPostMetadata } from '../lib/savedPostMetadata';
+import { getPostCommentCount } from '../lib/comments';
 
 export const POST_CARD_TITLE_MAX_CHARS = 100;
 export const POST_CARD_BODY_PREVIEW_MAX_CHARS = 280;
@@ -45,6 +46,7 @@ function getDispatchLine(post: Post) {
 export default function PostCard({ post }: PostCardProps) {
   const linkedEntity = getLinkedEntity(post);
   const dispatchLine = getDispatchLine(post);
+  const commentCount = getPostCommentCount(post);
 
   return (
     <article className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/80">
@@ -96,7 +98,7 @@ export default function PostCard({ post }: PostCardProps) {
 
       <div className="mt-4 flex items-center gap-5 border-t border-slate-200 pt-3 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
         <span className="inline-flex items-center gap-1.5" aria-label={`${post.helpfulCount} hearts`}><Heart size={17} />{post.helpfulCount}</span>
-        <Link to={`/post/${post.id}#comments`} className="inline-flex items-center gap-1.5 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${post.comments} comments`}><MessageCircle size={17} />{post.comments}</Link>
+        <Link to={`/post/${post.id}#comments`} className="inline-flex items-center gap-1.5 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${commentCount} comments`}><MessageCircle size={17} />{commentCount}</Link>
       </div>
     </article>
   );

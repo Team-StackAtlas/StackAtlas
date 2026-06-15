@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Heart, MessageCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Reply, ShieldCheck, Trash2 } from 'lucide-react';
 import { getPosts, SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
 import { SaveButton } from '../components/SaveButton';
 import { useAuth } from '../context/AuthContext';
 import { getSavedPostMetadata } from '../lib/savedPostMetadata';
+import { countVisibleComments, type CommentNode } from '../lib/comments';
+import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
@@ -17,6 +19,39 @@ function getLinkedEntity(post: Post) {
   if (brand) return { label: brand.name, href: `/brand/${brand.id}` };
   if (stack) return { label: stack.name, href: `/stack/${stack.id}` };
   return null;
+}
+
+
+function readCommentOverrides(postId: string): CommentNode[] | null {
+  try {
+    const stored = localStorage.getItem(`stackatlas_comments_${postId}`);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCommentOverrides(postId: string, comments: CommentNode[]) {
+  localStorage.setItem(`stackatlas_comments_${postId}`, JSON.stringify(comments));
+}
+
+function updateCommentTree(comments: CommentNode[], id: string, update: (comment: CommentNode) => CommentNode | null): CommentNode[] {
+  return comments.flatMap(comment => {
+    if (comment.id === id) {
+      const next = update(comment);
+      return next ? [next] : [];
+    }
+    return [{ ...comment, replies: updateCommentTree(comment.replies ?? [], id, update) }];
+  });
+}
+
+function addReplyToTree(comments: CommentNode[], parentId: string, reply: CommentNode): CommentNode[] {
+  return comments.map(comment => {
+    if (comment.id === parentId) return { ...comment, replies: [...(comment.replies ?? []), reply] };
+    return { ...comment, replies: addReplyToTree(comment.replies ?? [], parentId, reply) };
+  });
 }
 
 function getDispatchRows(post: Post) {
@@ -36,8 +71,46 @@ function getDispatchRows(post: Post) {
 
 export default function PostDetail() {
   const { user } = useAuth();
+  const requireAccount = useRequireAccountAction();
   const { id } = useParams<{ id: string }>();
   const post = getPosts().find(p => p.id === id);
+
+  const [comments, setComments] = useState<CommentNode[]>(() => (post ? readCommentOverrides(post.id) ?? ((post.commentItems ?? []) as CommentNode[]) : []));
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
+  const discussionCount = useMemo(() => countVisibleComments(comments), [comments]);
+
+  const persistComments = (next: CommentNode[]) => {
+    setComments(next);
+    if (post) writeCommentOverrides(post.id, next);
+  };
+
+  function addComment(event: FormEvent<HTMLFormElement>, parentId?: string) {
+    event.preventDefault();
+    if (!requireAccount()) return;
+    const form = new FormData(event.currentTarget);
+    const content = String(form.get('content') ?? '').trim();
+    if (!content) return;
+    const comment: CommentNode = { id: crypto.randomUUID(), author: user?.username ?? 'member', content, createdAt: new Date().toISOString(), likes: 0, likedBy: [], replies: [] };
+    persistComments(parentId ? addReplyToTree(comments, parentId, comment) : [...comments, comment]);
+    event.currentTarget.reset();
+    setReplyingTo(null);
+  }
+
+  function toggleCommentLike(commentId: string) {
+    if (!requireAccount()) return;
+    const userId = user?.id ?? 'local-user';
+    persistComments(updateCommentTree(comments, commentId, comment => {
+      const likedBy = comment.likedBy ?? [];
+      const liked = likedBy.includes(userId);
+      return { ...comment, likedBy: liked ? likedBy.filter(id => id !== userId) : [...likedBy, userId], likes: Math.max(0, (comment.likes ?? likedBy.length) + (liked ? -1 : 1)) };
+    }));
+  }
+
+  function deleteComment(commentId: string) {
+    if (!post) return;
+    persistComments(updateCommentTree(comments, commentId, comment => (comment.replies?.length ? { ...comment, deleted: true, content: 'Comment deleted' } : null)));
+  }
 
   if (!post) {
     return (
@@ -51,7 +124,6 @@ export default function PostDetail() {
 
   const linkedEntity = getLinkedEntity(post);
   const dispatchRows = getDispatchRows(post);
-  const comments = post.commentItems ?? [];
 
   return (
     <div className="mx-auto max-w-3xl pb-12">
@@ -117,23 +189,19 @@ export default function PostDetail() {
 
         <div className="mt-8 flex items-center gap-6 border-t border-slate-200 pt-6 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
           <LikeCount postAuthorId={post.author.id} currentUserId={user?.id ?? null} count={post.helpfulCount} />
-          <a href="#comments" className="inline-flex items-center gap-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${post.comments} comments`}><MessageCircle size={20} />{post.comments}</a>
+          <a href="#comments" className="inline-flex items-center gap-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${discussionCount} comments`}><MessageCircle size={20} />{discussionCount}</a>
         </div>
       </article>
 
       <section id="comments" className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-zinc-50">Comments</h2>
+        <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-zinc-50">Comments ({discussionCount})</h2>
+        <form onSubmit={addComment} className="mb-5 flex gap-2">
+          <input name="content" placeholder="Add a comment" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" />
+          <button className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white">Post</button>
+        </form>
         {comments.length > 0 ? (
-          <div className="space-y-4">
-            {comments.slice(0, 2).map(comment => (
-              <div key={comment.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-950">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="font-semibold text-slate-900 dark:text-zinc-100">{comment.author}</span>
-                  <span className="text-xs text-slate-500 dark:text-zinc-500">{new Date(comment.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                </div>
-                <p className="text-sm leading-relaxed text-slate-700 dark:text-zinc-300">{comment.content}</p>
-              </div>
-            ))}
+          <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+            {comments.map(comment => <CommentThread key={comment.id} comment={comment} depth={0} currentUserId={user?.id ?? null} replyingTo={replyingTo} onReply={setReplyingTo} onSubmitReply={addComment} onLike={toggleCommentLike} onDelete={deleteComment} />)}
           </div>
         ) : (
           <p className="text-sm text-slate-500 dark:text-zinc-400">No comments yet.</p>
@@ -143,6 +211,27 @@ export default function PostDetail() {
   );
 }
 
+
+
+function CommentThread({ comment, depth, currentUserId, replyingTo, onReply, onSubmitReply, onLike, onDelete }: { comment: CommentNode; depth: number; currentUserId: string | null; replyingTo: string | null; onReply: (id: string | null) => void; onSubmitReply: (event: FormEvent<HTMLFormElement>, parentId?: string) => void; onLike: (id: string) => void; onDelete: (id: string) => void }) {
+  const liked = !!currentUserId && (comment.likedBy ?? []).includes(currentUserId);
+  const visibleSelf = !comment.deleted || countVisibleComments(comment.replies ?? []) > 0;
+  if (!visibleSelf) return null;
+  return (
+    <div className="py-3" style={{ marginLeft: `${Math.min(depth, 4) * 18}px` }}>
+      <div className="border-l border-slate-200 pl-3 dark:border-zinc-800">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm"><span className="font-semibold text-slate-900 dark:text-zinc-100">@{comment.author}</span><span className="text-xs text-slate-500 dark:text-zinc-500">{new Date(comment.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          {currentUserId && !comment.deleted && <button onClick={() => onDelete(comment.id)} className="rounded-full p-1 text-slate-400 hover:text-red-600" aria-label="Delete comment"><Trash2 size={14}/></button>}
+        </div>
+        <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-zinc-300">{comment.content}</p>
+        {!comment.deleted && <div className="mt-2 flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-zinc-400"><button onClick={() => onLike(comment.id)} className="inline-flex items-center gap-1 hover:text-rose-600"><Heart size={15} className={liked ? 'fill-current text-rose-600' : ''}/>{comment.likes ?? comment.likedBy?.length ?? 0}</button><button onClick={() => onReply(replyingTo === comment.id ? null : comment.id)} className="inline-flex items-center gap-1 hover:text-blue-600"><Reply size={15}/> Reply</button></div>}
+        {replyingTo === comment.id && <form onSubmit={(event) => onSubmitReply(event, comment.id)} className="mt-3 flex gap-2"><input name="content" placeholder="Write a reply" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" /><button className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">Reply</button></form>}
+        {(comment.replies ?? []).map(reply => <CommentThread key={reply.id} comment={reply} depth={depth + 1} currentUserId={currentUserId} replyingTo={replyingTo} onReply={onReply} onSubmitReply={onSubmitReply} onLike={onLike} onDelete={onDelete} />)}
+      </div>
+    </div>
+  );
+}
 
 function LikeCount({ postAuthorId, currentUserId, count }: { postAuthorId: string; currentUserId: string | null; count: number }) {
   const [open, setOpen] = useState(false);

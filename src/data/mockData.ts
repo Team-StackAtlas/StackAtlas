@@ -174,6 +174,10 @@ export interface PostComment {
   author: string;
   content: string;
   createdAt: string;
+  replies?: PostComment[];
+  likes?: number;
+  likedBy?: string[];
+  deleted?: boolean;
 }
 
 export interface PostDispatchProtocol {
@@ -875,6 +879,16 @@ const withDemoComments = (post: Post, index: number): Post => {
       author: commentIndex === 0 ? 'atlas_member' : 'protocol_notes',
       content: MOCK_COMMENT_COPY[(index + commentIndex) % MOCK_COMMENT_COPY.length],
       createdAt: new Date(Date.now() - (index + commentIndex + 1) * 60 * 60 * 1000).toISOString(),
+      likes: commentIndex,
+      likedBy: [],
+      replies: commentIndex === 0 ? [{
+        id: `${post.id}_comment_${commentIndex + 1}_reply_1`,
+        author: 'stack_reply',
+        content: 'Adding a nested reply so the thread count and layout stay representative.',
+        createdAt: new Date(Date.now() - (index + commentIndex + 1) * 45 * 60 * 1000).toISOString(),
+        likes: 0,
+        likedBy: [],
+      }] : [],
     })),
   };
 };
