@@ -10,7 +10,6 @@ import AccessBadge from '../components/AccessBadge';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
 import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
-import { HideItemButton } from '../components/HideItemButton';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
@@ -66,8 +65,6 @@ export default function Map() {
   const [activeTab, setActiveTab] = useState<'Substances' | 'Brands' | 'Stacks'>('Substances');
   const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(null);
   const [activeBearings, setActiveBearings] = useState<string[]>([]);
-  const [activeMarker, setActiveMarker] = useState<string | null>(null);
-  const [openMarkerMenu, setOpenMarkerMenu] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => readRecentSearches());
@@ -76,8 +73,6 @@ export default function Map() {
   const [isCreateStackOpen, setIsCreateStackOpen] = useState(false);
 
   const activeCategoryBearings = activeCategoryGroup ? BEARING_CATEGORIES.find(category => category.name === activeCategoryGroup)?.bearings ?? [] : [];
-  const markerFilters = ['Clinical Use', 'Longevity Protocol', 'Athletic Performance', 'Cognitive Stack Culture', 'East Asian Traditional Medicine', 'Western Herbalism'];
-  const visibleMarkerFilters = isAdminLike ? markerFilters : markerFilters.filter(marker => !isHidden('tag', `marker:${marker}`));
 
   const handleSearchClick = (item: { id: string; name: string; type: SearchableType }) => {
     const recentItem: RecentSearch = { ...item, timestamp: new Date().toISOString() };
@@ -171,9 +166,6 @@ export default function Map() {
       const entityBearings = getFilterBearings([...s.paths.map(p => p.category), ...(s.markers || [])]);
       if (!selected.some(bearing => entityBearings.includes(bearing))) return false;
     }
-
-    // Marker Filtering
-    if (activeMarker && (!s.markers || !s.markers.includes(activeMarker))) return false;
 
     // Type Filtering
     if (!s.typeTags.some(t => activeTypes.includes(t))) return false;
@@ -363,42 +355,6 @@ export default function Map() {
         onBearingToggle={(bearing) => setActiveBearings((current) => current.includes(bearing) ? current.filter(item => item !== bearing) : [...current, bearing])}
         onReset={() => { setActiveCategoryGroup(null); setActiveBearings([]); }}
       />
-
-      {/* Markers Filter */}
-      <div className="px-4 pb-2">
-        <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-          {visibleMarkerFilters.map(marker => (
-            <div key={marker} className="relative">
-              <button
-                onClick={() => setOpenMarkerMenu(openMarkerMenu === marker ? null : marker)}
-                className={cn(
-                  "whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
-                  activeMarker === marker 
-                    ? "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 shadow-sm" 
-                    : "bg-white/50 dark:bg-zinc-900/50 text-slate-500 dark:text-zinc-500 border-slate-200 dark:border-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-300"
-                )}
-              >
-                {marker}
-              </button>
-              {openMarkerMenu === marker && (
-                <div className="absolute left-0 top-8 z-30 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveMarker(activeMarker === marker ? null : marker);
-                      setOpenMarkerMenu(null);
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    {activeMarker === marker ? 'Clear filter' : 'Filter by marker'}
-                  </button>
-                  <HideItemButton id={`marker:${marker}`} name={marker} type="tag" tagType="Marker" onHidden={() => setOpenMarkerMenu(null)} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-zinc-300 dark:hover:bg-zinc-800" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Type Toggles & Advanced Search */}
       {activeTab === 'Substances' && (

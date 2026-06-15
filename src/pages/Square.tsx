@@ -31,7 +31,6 @@ export default function Square() {
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
   const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(null);
   const [activeBearings, setActiveBearings] = useState<string[]>([]);
-  const [activeMarker, setActiveMarker] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending'>('Recent');
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
 
@@ -87,8 +86,6 @@ export default function Square() {
         if (!activeClassifications.includes(supplement.classification)) return false;
         if (!supplement.administration.some(a => activeAdmins.includes(a))) return false;
         
-        // Marker Filtering
-        if (activeMarker && (!supplement.markers || !supplement.markers.includes(activeMarker))) return false;
       }
     }
 
@@ -182,28 +179,6 @@ export default function Square() {
           onBearingToggle={(bearing) => setActiveBearings((current) => current.includes(bearing) ? current.filter(item => item !== bearing) : [...current, bearing])}
           onReset={() => { setActiveCategoryGroup(null); setActiveBearings([]); }}
         />
-      )}
-
-      {/* Markers Filter */}
-      {!substanceId && !bearingParam && (
-        <div className="px-4 pb-2">
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-            {['Clinical Use', 'Longevity Protocol', 'Athletic Performance', 'Cognitive Stack Culture', 'East Asian Traditional Medicine', 'Western Herbalism'].map(marker => (
-              <button
-                key={marker}
-                onClick={() => setActiveMarker(activeMarker === marker ? null : marker)}
-                className={cn(
-                  "whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border",
-                  activeMarker === marker 
-                    ? "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 shadow-sm" 
-                    : "bg-white/50 dark:bg-zinc-900/50 text-slate-500 dark:text-zinc-500 border-slate-200 dark:border-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-700 dark:hover:text-zinc-300"
-                )}
-              >
-                {marker}
-              </button>
-            ))}
-          </div>
-        </div>
       )}
 
       {/* Bearing Filter Display */}
