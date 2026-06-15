@@ -8,6 +8,7 @@ import type {
   NotificationService,
   ReportService,
   SuggestEditService,
+  ModerationService,
   LibraryService,
   PostLikeService,
 } from '../contracts';
@@ -24,6 +25,8 @@ import type {
   ID,
   ReportInput,
   SuggestEditInput,
+  ModerationStatus,
+  ModerationQueueItem,
 } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -112,6 +115,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
   notifications: NotificationService;
   reports: ReportService;
   suggestEdits: SuggestEditService;
+  moderation: ModerationService;
   library: LibraryService;
   postLikes: PostLikeService;
 } {
@@ -490,14 +494,14 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
 
   const reports: ReportService = {
     async create(userId: ID | null, input: ReportInput) {
-      const { error } = await client.from('reports').insert({
-        reporter_id: userId,
+      const { error } = await client.from('reports').upsert({
+        reporter_user_id: userId,
         target_type: input.targetType,
         target_id: input.targetId,
         target_name: input.targetName ?? null,
-        category: input.category,
-        details: input.details ?? null,
-      });
+        reason: input.reason,
+        note: input.note ?? null,
+      }, { onConflict: 'reporter_user_id,target_type,target_id' });
       if (error) throw error;
     },
   };
@@ -505,15 +509,64 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
   const suggestEdits: SuggestEditService = {
     async create(userId: ID | null, input: SuggestEditInput) {
       const { error } = await client.from('suggest_edits').insert({
-        user_id: userId,
+        submitter_user_id: userId,
         target_type: input.targetType,
         target_id: input.targetId,
-        sources: input.sources ?? null,
-        details: input.details,
+        target_field: input.targetField ?? null,
+        suggestion_text: input.suggestionText,
       });
       if (error) throw error;
     },
   };
 
-  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits, library, postLikes };
+
+  const moderation: ModerationService = {
+    async queue() { return []; },
+    async resolve() { return; },
+    async listQueue() {
+      const { data: reportRows, error: reportError } = await client
+        .from('reports')
+        .select('id,target_type,target_id,target_name,reason,note,status,created_at,profiles:reporter_user_id(username)')
+        .order('created_at', { ascending: false });
+      if (reportError) throw reportError;
+      const { data: editRows, error: editError } = await client
+        .from('suggest_edits')
+        .select('id,target_type,target_id,target_field,suggestion_text,status,created_at,profiles:submitter_user_id(username)')
+        .order('created_at', { ascending: false });
+      if (editError) throw editError;
+
+      const reports = (reportRows ?? []).map((row: any): ModerationQueueItem => ({
+        id: row.id,
+        submissionType: 'report',
+        targetType: row.target_type,
+        targetId: row.target_id,
+        targetLabel: row.target_name ?? row.target_id,
+        username: row.profiles?.username,
+        reason: row.reason,
+        preview: row.note ?? '',
+        status: row.status,
+        createdAt: row.created_at,
+      }));
+      const edits = (editRows ?? []).map((row: any): ModerationQueueItem => ({
+        id: row.id,
+        submissionType: 'suggest_edit',
+        targetType: row.target_type,
+        targetId: row.target_id,
+        targetLabel: row.target_id,
+        username: row.profiles?.username,
+        targetField: row.target_field ?? undefined,
+        preview: row.suggestion_text,
+        status: row.status,
+        createdAt: row.created_at,
+      }));
+      return [...reports, ...edits].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    },
+    async updateStatus(submissionType: ModerationQueueItem['submissionType'], id: ID, status: ModerationStatus) {
+      const table = submissionType === 'report' ? 'reports' : 'suggest_edits';
+      const { error } = await client.from(table).update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+  };
+
+  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits, moderation, library, postLikes };
 }

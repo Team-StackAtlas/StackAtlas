@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit3, Flag } from 'lucide-react';
+import { ArrowLeft, Edit3 } from 'lucide-react';
 import { STACKS, SUBSTANCES, getPosts } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
-import ReportModal from '../components/ReportModal';
 import Sources from '../components/Sources';
 import AccessBadge from '../components/AccessBadge';
 import { CompareModal } from '../components/CompareModal';
@@ -17,7 +16,6 @@ export default function StackPage() {
   const stack = STACKS.find(s => s.id === id);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
 
@@ -50,13 +48,6 @@ export default function StackPage() {
                 Suggest Edit
               </button>
               <HideItemButton id={stack.id} name={stack.name} type="stack" />
-              <button
-                onClick={() => setIsReportOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
-              >
-                <Flag size={14} />
-                Report
-              </button>
             </div>
           </div>
           <div className="flex items-center gap-3 mb-2">
@@ -156,13 +147,6 @@ export default function StackPage() {
         entityType="stack"
         targetId={stack.id}
         entityName={stack.name}
-      />
-      <ReportModal
-        isOpen={isReportOpen}
-        onClose={() => setIsReportOpen(false)}
-        entityName={stack.name}
-        targetType="stack"
-        targetId={stack.id}
       />
       <CompareModal
         isOpen={isCompareOpen}

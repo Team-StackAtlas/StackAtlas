@@ -18,6 +18,7 @@ import Onboarding from './pages/Onboarding';
 import Create from './pages/Create';
 import Compare from './pages/Compare';
 import Library from './pages/Library';
+import ModerationQueue from './pages/ModerationQueue';
 import AlbumDetail from './pages/AlbumDetail';
 import RequireAuth from './components/RequireAuth';
 import { UserScopeProvider } from './context/UserScopeContext';
@@ -47,6 +48,7 @@ export default function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="profile/:username" element={<Profile />} />
               <Route path="library" element={<Library />} />
+              <Route path="moderation" element={<ModerationQueue />} />
               <Route path="library/albums/:id" element={<AlbumDetail />} />
               <Route path="post/:id" element={<PostDetail />} />
               <Route path="substance/:id" element={<SupplementPage />} />

@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit3, Flag, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { BRANDS, getPosts, SUPPLEMENTS } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
-import ReportModal from '../components/ReportModal';
 import Sources from '../components/Sources';
 import StarRating from '../components/StarRating';
 import { CompareModal } from '../components/CompareModal';
@@ -18,7 +17,6 @@ export default function BrandPage() {
   const brand = BRANDS.find(b => b.id === id);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
   const { setRating, getSummary } = useBrandRatings();
@@ -52,13 +50,6 @@ export default function BrandPage() {
                 Suggest Edit
               </button>
               <HideItemButton id={brand.id} name={brand.name} type="brand" />
-              <button
-                onClick={() => setIsReportOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
-              >
-                <Flag size={14} />
-                Report
-              </button>
             </div>
           </div>
           <div className="flex items-center gap-3 mb-2">
@@ -245,13 +236,6 @@ export default function BrandPage() {
         entityType="brand"
         targetId={brand.id}
         entityName={brand.name}
-      />
-      <ReportModal
-        isOpen={isReportOpen}
-        onClose={() => setIsReportOpen(false)}
-        entityName={brand.name}
-        targetType="brand"
-        targetId={brand.id}
       />
       <CompareModal
         isOpen={isCompareOpen}

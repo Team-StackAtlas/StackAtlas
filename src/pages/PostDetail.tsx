@@ -9,6 +9,7 @@ import { countVisibleComments, type CommentNode } from '../lib/comments';
 import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import { useFollowing } from '../hooks/useFollowing';
 import { usePostLike } from '../hooks/usePostLike';
+import { ReportAction } from '../components/ReportAction';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
@@ -152,7 +153,7 @@ export default function PostDetail() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} /></div>
+          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} /><ReportAction targetType="post" targetId={post.id} entityName={post.title} /></div>
         </div>
 
         {linkedEntity && (
@@ -205,7 +206,7 @@ export default function PostDetail() {
         </form>
         {comments.length > 0 ? (
           <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-            {comments.map(comment => <CommentThread key={comment.id} comment={comment} depth={0} currentUserId={user?.id ?? null} replyingTo={replyingTo} onReply={setReplyingTo} onSubmitReply={addComment} onLike={toggleCommentLike} onDelete={deleteComment} />)}
+            {comments.map(comment => <CommentThread key={comment.id} postId={post.id} comment={comment} depth={0} currentUserId={user?.id ?? null} replyingTo={replyingTo} onReply={setReplyingTo} onSubmitReply={addComment} onLike={toggleCommentLike} onDelete={deleteComment} />)}
           </div>
         ) : (
           <p className="text-sm text-slate-500 dark:text-zinc-400">No comments yet.</p>
@@ -217,7 +218,7 @@ export default function PostDetail() {
 
 
 
-function CommentThread({ comment, depth, currentUserId, replyingTo, onReply, onSubmitReply, onLike, onDelete }: { comment: CommentNode; depth: number; currentUserId: string | null; replyingTo: string | null; onReply: (id: string | null) => void; onSubmitReply: (event: FormEvent<HTMLFormElement>, parentId?: string) => void; onLike: (id: string) => void; onDelete: (id: string) => void }) {
+function CommentThread({ postId, comment, depth, currentUserId, replyingTo, onReply, onSubmitReply, onLike, onDelete }: { postId: string; comment: CommentNode; depth: number; currentUserId: string | null; replyingTo: string | null; onReply: (id: string | null) => void; onSubmitReply: (event: FormEvent<HTMLFormElement>, parentId?: string) => void; onLike: (id: string) => void; onDelete: (id: string) => void }) {
   const liked = !!currentUserId && (comment.likedBy ?? []).includes(currentUserId);
   const visibleSelf = !comment.deleted || countVisibleComments(comment.replies ?? []) > 0;
   if (!visibleSelf) return null;
@@ -226,12 +227,12 @@ function CommentThread({ comment, depth, currentUserId, replyingTo, onReply, onS
       <div className="border-l border-slate-200 pl-3 dark:border-zinc-800">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm"><span className="font-semibold text-slate-900 dark:text-zinc-100">@{comment.author}</span><span className="text-xs text-slate-500 dark:text-zinc-500">{new Date(comment.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          {currentUserId && !comment.deleted && <button onClick={() => onDelete(comment.id)} className="rounded-full p-1 text-slate-400 hover:text-red-600" aria-label="Delete comment"><Trash2 size={14}/></button>}
+          {!comment.deleted && <div className="flex items-center gap-1"><ReportAction targetType={depth === 0 ? 'comment' : 'reply'} targetId={`${postId}:${comment.id}`} entityName={comment.content.slice(0, 60) || 'comment'} />{currentUserId && <button onClick={() => onDelete(comment.id)} className="rounded-full p-1 text-slate-400 hover:text-red-600" aria-label="Delete comment"><Trash2 size={14}/></button>}</div>}
         </div>
         <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-zinc-300">{comment.content}</p>
         {!comment.deleted && <div className="mt-2 flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-zinc-400"><button onClick={() => onLike(comment.id)} className="inline-flex items-center gap-1 hover:text-rose-600"><Heart size={15} className={liked ? 'fill-current text-rose-600' : ''}/>{comment.likes ?? comment.likedBy?.length ?? 0}</button><button onClick={() => onReply(replyingTo === comment.id ? null : comment.id)} className="inline-flex items-center gap-1 hover:text-blue-600"><Reply size={15}/> Reply</button></div>}
         {replyingTo === comment.id && <form onSubmit={(event) => onSubmitReply(event, comment.id)} className="mt-3 flex gap-2"><input name="content" placeholder="Write a reply" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" /><button className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">Reply</button></form>}
-        {(comment.replies ?? []).map(reply => <CommentThread key={reply.id} comment={reply} depth={depth + 1} currentUserId={currentUserId} replyingTo={replyingTo} onReply={onReply} onSubmitReply={onSubmitReply} onLike={onLike} onDelete={onDelete} />)}
+        {(comment.replies ?? []).map(reply => <CommentThread key={reply.id} postId={postId} comment={reply} depth={depth + 1} currentUserId={currentUserId} replyingTo={replyingTo} onReply={onReply} onSubmitReply={onSubmitReply} onLike={onLike} onDelete={onDelete} />)}
       </div>
     </div>
   );
