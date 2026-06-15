@@ -4,6 +4,7 @@ import { ArrowLeft, Heart, MessageCircle, ShieldCheck } from 'lucide-react';
 import { getPosts, SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
 import { SaveButton } from '../components/SaveButton';
 import { useAuth } from '../context/AuthContext';
+import { getSavedPostMetadata } from '../lib/savedPostMetadata';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
@@ -75,7 +76,7 @@ export default function PostDetail() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} /></div>
+          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} /></div>
         </div>
 
         {linkedEntity && (
