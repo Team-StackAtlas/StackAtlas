@@ -7,7 +7,6 @@ import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
 import AccessBadge from '../components/AccessBadge';
 import Sources from '../components/Sources';
-import { SaveButton } from '../components/SaveButton';
 import { useFollowing } from '../hooks/useFollowing';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
@@ -109,7 +108,6 @@ export default function SupplementPage() {
         </div>
         <div className="flex flex-col gap-2 shrink-0 mt-8 sm:mt-0 w-full sm:w-auto">
           <div className="flex gap-2 w-full">
-            <SaveButton id={supplement.id} type="substance" className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800" />
             <button
               onClick={() => toggleFollow('substance', supplement.id)}
               className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold transition-colors shadow-sm ${

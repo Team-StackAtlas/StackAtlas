@@ -2,6 +2,7 @@ import { Heart, MessageCircle, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
+import { SaveButton } from './SaveButton';
 
 export const POST_CARD_TITLE_MAX_CHARS = 100;
 export const POST_CARD_BODY_PREVIEW_MAX_CHARS = 280;
@@ -59,6 +60,7 @@ export default function PostCard({ post }: PostCardProps) {
             <p className="truncate text-xs text-slate-500 dark:text-zinc-500">{[post.author.displayName, `${formatDistanceToNow(new Date(post.createdAt))} ago`, post.type].filter(Boolean).join(' · ')}</p>
           </div>
         </div>
+        <SaveButton id={post.id} type={post.type} />
       </div>
 
       <Link to={`/post/${post.id}`} className="block">

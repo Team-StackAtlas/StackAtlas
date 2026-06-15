@@ -11,7 +11,7 @@ import { useToast } from '../components/ui/ToastProvider';
 import type { ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 
-type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'hidden' | 'settings';
+type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'settings';
 
 const hiddenGroups: { key: HiddenGroup; label: string }[] = [
   { key: 'substances', label: 'Substances' },
@@ -278,7 +278,7 @@ export default function Profile() {
         {(['all', 'dispatches', 'signals', 'stacks'] as ProfileTab[]).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
-        {isOwnProfile && ['saved', 'hidden'].map((tab) => (
+        {isOwnProfile && ['saved', 'likes', 'hidden'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab as ProfileTab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
       </div>
@@ -288,6 +288,8 @@ export default function Profile() {
           publishedStacks.length ? publishedStacks.map((stack) => <Link key={stack.id} to={`/stack/${stack.id}`} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h3 className="font-bold">{stack.name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{stack.description}</p></Link>) : <EmptyState message="No published stacks." />
         ) : activeTab === 'saved' && isOwnProfile ? (
           savedItems.length ? <div className="grid gap-3 sm:grid-cols-2">{savedItems.map((item) => <div key={`${item.type}-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><Bookmark size={16} className="text-emerald-500" /><h3 className="mt-2 font-semibold">{item.id}</h3><p className="text-xs text-slate-500">{item.type}</p></div>)}</div> : <EmptyState message="No saved items found. Saved items are private." />
+        ) : activeTab === 'likes' && isOwnProfile ? (
+          <EmptyState message="Liked posts are private. No liked posts found." />
         ) : activeTab === 'hidden' && isOwnProfile ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><EyeOff size={18} /> Hidden Items</h2>

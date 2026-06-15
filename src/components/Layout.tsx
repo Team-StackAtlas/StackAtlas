@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Compass, Users, Wrench, Inbox, User, Moon, Sun, Layers, PenSquare, Shield } from 'lucide-react';
+import { Compass, Users, Wrench, Inbox, User, Moon, Sun, Layers, PenSquare, Shield, Bookmark } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
 import { useState } from 'react';
@@ -17,6 +17,7 @@ export default function Layout() {
     { name: 'Map', path: '/map', icon: Compass },
     { name: 'Square', path: '/square', icon: Users },
     { name: 'Create', path: '/create', icon: PenSquare, Shield },
+    { name: 'Library', path: '/library', icon: Bookmark },
     { name: 'Lab', path: '/lab', icon: Wrench },
     { name: 'Comms', path: '/comms', icon: Inbox },
   ];
@@ -29,6 +30,7 @@ export default function Layout() {
     if (path.startsWith('/lab')) return 'Lab';
     if (path.startsWith('/comms')) return 'Comms';
     if (path.startsWith('/profile')) return 'Profile';
+    if (path.startsWith('/library')) return 'Library';
     return '';
   };
 

@@ -8,6 +8,7 @@ import type {
   NotificationService,
   ReportService,
   SuggestEditService,
+  LibraryService,
 } from '../contracts';
 import { isProfileComplete, normalizeUsername, validateUsername } from '../../lib/account';
 import type {
@@ -109,6 +110,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
   notifications: NotificationService;
   reports: ReportService;
   suggestEdits: SuggestEditService;
+  library: LibraryService;
 } {
   const profiles: ProfileService = {
     async get(userId: ID) {
@@ -238,12 +240,12 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     async list(userId: ID) {
       const { data, error } = await client.from('saved_items').select('*').eq('user_id', userId);
       if (error) throw error;
-      return (data ?? []).map((r: any) => ({ itemType: r.item_type, itemId: r.item_id }) as SavedItem);
+      return (data ?? []).map((r: any) => ({ itemType: r.item_type, itemId: r.item_id, savedAt: r.created_at, title: r.title ?? undefined, url: r.url ?? undefined, description: r.description ?? undefined, siteName: r.site_name ?? undefined, relatedType: r.related_type ?? undefined, relatedId: r.related_id ?? undefined, relatedName: r.related_name ?? undefined }) as SavedItem);
     },
     async add(userId: ID, item: SavedItem) {
       const { error } = await client
         .from('saved_items')
-        .upsert({ user_id: userId, item_type: item.itemType, item_id: item.itemId });
+        .upsert({ user_id: userId, item_type: item.itemType, item_id: item.itemId, title: item.title ?? null, url: item.url ?? null, description: item.description ?? null, site_name: item.siteName ?? null, related_type: item.relatedType ?? null, related_id: item.relatedId ?? null, related_name: item.relatedName ?? null });
       if (error) throw error;
     },
     async remove(userId: ID, item: SavedItem) {
@@ -251,6 +253,48 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         .from('saved_items')
         .delete()
         .match({ user_id: userId, item_type: item.itemType, item_id: item.itemId });
+      if (error) throw error;
+    },
+  };
+
+
+  const library: LibraryService = {
+    async listAlbums(userId: ID) {
+      const { data, error } = await client.from('library_albums').select('*, profiles(username)').eq('owner_id', userId).order('updated_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ id: r.id, ownerId: r.owner_id, title: r.title, description: r.description ?? undefined, privacy: r.privacy, createdAt: r.created_at, updatedAt: r.updated_at, ownerUsername: r.profiles?.username }));
+    },
+    async getAlbum(albumId: ID) {
+      const { data, error } = await client.from('library_albums').select('*, profiles(username)').eq('id', albumId).maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return { id: data.id, ownerId: data.owner_id, title: data.title, description: data.description ?? undefined, privacy: data.privacy, createdAt: data.created_at, updatedAt: data.updated_at, ownerUsername: data.profiles?.username };
+    },
+    async createAlbum(userId: ID, input) {
+      const { data, error } = await client.from('library_albums').insert({ owner_id: userId, title: input.title, description: input.description ?? null, privacy: input.privacy }).select('*, profiles(username)').single();
+      if (error) throw error;
+      return { id: data.id, ownerId: data.owner_id, title: data.title, description: data.description ?? undefined, privacy: data.privacy, createdAt: data.created_at, updatedAt: data.updated_at, ownerUsername: data.profiles?.username };
+    },
+    async updateAlbum(albumId: ID, input) {
+      const { data, error } = await client.from('library_albums').update({ title: input.title, description: input.description ?? null, privacy: input.privacy, updated_at: new Date().toISOString() }).eq('id', albumId).select('*, profiles(username)').single();
+      if (error) throw error;
+      return { id: data.id, ownerId: data.owner_id, title: data.title, description: data.description ?? undefined, privacy: data.privacy, createdAt: data.created_at, updatedAt: data.updated_at, ownerUsername: data.profiles?.username };
+    },
+    async deleteAlbum(albumId: ID) {
+      const { error } = await client.from('library_albums').delete().eq('id', albumId);
+      if (error) throw error;
+    },
+    async listAlbumItems(albumId: ID) {
+      const { data, error } = await client.from('library_album_items').select('*').eq('album_id', albumId).order('added_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ id: r.id, albumId: r.album_id, savedItemType: r.saved_item_type, savedItemId: r.saved_item_id, addedAt: r.added_at }));
+    },
+    async addAlbumItem(albumId: ID, item: SavedItem) {
+      const { error } = await client.from('library_album_items').upsert({ album_id: albumId, saved_item_type: item.itemType, saved_item_id: item.itemId });
+      if (error) throw error;
+    },
+    async removeAlbumItem(albumItemId: ID) {
+      const { error } = await client.from('library_album_items').delete().eq('id', albumItemId);
       if (error) throw error;
     },
   };
@@ -367,5 +411,5 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
   };
 
-  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits };
+  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits, library };
 }

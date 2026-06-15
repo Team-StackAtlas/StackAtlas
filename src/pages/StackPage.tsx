@@ -7,7 +7,6 @@ import SuggestEditModal from '../components/SuggestEditModal';
 import ReportModal from '../components/ReportModal';
 import Sources from '../components/Sources';
 import AccessBadge from '../components/AccessBadge';
-import { SaveButton } from '../components/SaveButton';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
@@ -62,7 +61,6 @@ export default function StackPage() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
               {stack.name}
             </h1>
-            <SaveButton id={stack.id} type="stack" className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800" />
             <button 
               onClick={() => setIsCompareOpen(true)}
               className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm"
