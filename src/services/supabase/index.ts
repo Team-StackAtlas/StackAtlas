@@ -335,9 +335,13 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       return (data ?? []).map((r: any) => ({ targetType: r.target_type, targetId: r.target_id }) as Follow);
     },
     async count(target: Follow) {
-      const { count, error } = await client.from('follows').select('*', { count: 'exact', head: true }).match({ target_type: target.targetType, target_id: target.targetId });
+      const { data, error } = await client
+        .from('follower_counts')
+        .select('followers_count')
+        .match({ target_type: target.targetType, target_id: target.targetId })
+        .maybeSingle();
       if (error) throw error;
-      return count ?? 0;
+      return Number(data?.followers_count ?? 0);
     },
     async follow(userId: ID, target: Follow) {
       if (target.targetType === 'user') {
