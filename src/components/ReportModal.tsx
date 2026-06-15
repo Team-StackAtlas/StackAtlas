@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import type { ReportTargetType } from '../services/types';
 import { Modal } from './ui/Modal';
+import { useToast } from './ui/ToastProvider';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -27,12 +28,22 @@ const REPORT_REASONS = [
 
 export default function ReportModal({ isOpen, onClose, entityName, targetType, targetId }: ReportModalProps) {
   const { isBackendConfigured, services, user } = useAuth();
+  const { toast } = useToast();
   const requireAccount = useRequireAccountAction();
   const [reason, setReason] = useState('');
   const [note, setNote] = useState('');
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !services || !user) return;
+    services.reports.getOwn(user.id, targetType, targetId).then((existing) => {
+      if (!existing) return;
+      setReason(existing.reason);
+      setNote(existing.note ?? '');
+    }).catch((err) => console.warn('Existing report lookup failed', err));
+  }, [isOpen, services, targetId, targetType, user]);
 
   const handleClose = () => {
     setReason('');
@@ -60,8 +71,8 @@ export default function ReportModal({ isOpen, onClose, entityName, targetType, t
         reason,
         note: note.trim(),
       });
-      setMessage('Report submitted');
-      setIsSuccess(true);
+      toast('Report submitted. Admins will review it.', 'success');
+      handleClose();
     } catch (err) {
       console.error('Report submission failed', err);
       setMessage(err instanceof Error ? err.message : 'Failed to submit report.');
@@ -93,7 +104,7 @@ export default function ReportModal({ isOpen, onClose, entityName, targetType, t
             </select>
           </div>
           <div>
-            <label htmlFor="reportNote" className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300">Note (Optional)</label>
+            <label htmlFor="reportNote" className="mb-1 block text-sm font-medium text-slate-700 dark:text-zinc-300">Note {reason === 'Other' ? '(Required for Other)' : '(Optional)'}</label>
             <textarea id="reportNote" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add context for moderators..." className="h-24 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800" />
           </div>
           <div className="flex justify-end gap-3 pt-2">

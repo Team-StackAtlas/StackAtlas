@@ -77,6 +77,9 @@ function mapProfile(row: any, stats?: any): ProfileDTO {
     isVerified: !!row.is_verified,
     joinDate: row.created_at,
     settings: row.settings ?? {},
+    email: row.users?.email ?? row.email ?? null,
+    siteRole: row.site_role ?? (row.username === 'domonic' || row.users?.email === 'matadomonic@gmail.com' || row.email === 'matadomonic@gmail.com' ? 'site_owner' : 'user'),
+    accountStatus: row.account_status ?? 'active',
     stats: stats
       ? {
           followersCount: stats.followers_count ?? 0,
@@ -98,6 +101,8 @@ function mapSessionUser(profile: ProfileDTO, email: string | null): SessionUser 
     researchScope: profile.researchScope,
     isVerified: profile.isVerified,
     isProfileComplete: isProfileComplete(profile),
+    siteRole: profile.siteRole,
+    accountStatus: profile.accountStatus,
   };
 }
 
@@ -121,7 +126,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
 } {
   const profiles: ProfileService = {
     async get(userId: ID) {
-      const { data, error } = await client.from('profiles').select('*').eq('id', userId).maybeSingle();
+      const { data, error } = await client.from('profiles').select('*, users(email)').eq('id', userId).maybeSingle();
       if (error) throw error;
       if (!data) return null;
       const { data: stats } = await client.from('profile_stats').select('*').eq('id', userId).maybeSingle();
@@ -130,7 +135,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     async getByUsername(username: string) {
       const { data, error } = await client
         .from('profiles')
-        .select('*')
+        .select('*, users(email)')
         .eq('username', username)
         .maybeSingle();
       if (error) throw error;
@@ -179,7 +184,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
 
     const { data, error } = await client
       .from('profiles')
-      .insert({ id: authUser.id, username: fallbackUsername(authUser.id), settings: {} })
+      .insert({ id: authUser.id, username: fallbackUsername(authUser.id), settings: {}, site_role: authUser.email === 'matadomonic@gmail.com' ? 'site_owner' : 'user' })
       .select('*')
       .single();
     if (error) throw new Error(readableProfileError(error));
@@ -501,8 +506,19 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         target_name: input.targetName ?? null,
         reason: input.reason,
         note: input.note ?? null,
+        status: 'pending',
       }, { onConflict: 'reporter_user_id,target_type,target_id' });
       if (error) throw error;
+    },
+    async getOwn(userId: ID, targetType, targetId) {
+      const { data, error } = await client.from('reports').select('target_type,target_id,target_name,reason,note').match({ reporter_user_id: userId, target_type: targetType, target_id: targetId }).maybeSingle();
+      if (error) throw error;
+      return data ? { targetType: data.target_type, targetId: data.target_id, targetName: data.target_name ?? undefined, reason: data.reason, note: data.note ?? undefined } : null;
+    },
+    async listOwn(userId: ID) {
+      const { data, error } = await client.from('reports').select('id,target_type,target_id,target_name,reason,note,status,created_at,updated_at').eq('reporter_user_id', userId).order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((row: any) => ({ id: row.id, submissionType: 'report', targetType: row.target_type, targetId: row.target_id, targetLabel: row.target_name ?? row.target_id, reason: row.reason, preview: row.note ?? '', status: row.status, createdAt: row.created_at, updatedAt: row.updated_at }));
     },
   };
 
@@ -526,12 +542,12 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     async listQueue() {
       const { data: reportRows, error: reportError } = await client
         .from('reports')
-        .select('id,target_type,target_id,target_name,reason,note,status,created_at,profiles:reporter_user_id(username)')
+        .select('id,target_type,target_id,target_name,reason,note,status,created_at,updated_at,profiles:reporter_user_id(username),reported:reported_user_id(username)')
         .order('created_at', { ascending: false });
       if (reportError) throw reportError;
       const { data: editRows, error: editError } = await client
         .from('suggest_edits')
-        .select('id,target_type,target_id,target_field,suggestion_text,status,created_at,profiles:submitter_user_id(username)')
+        .select('id,target_type,target_id,target_field,suggestion_text,status,created_at,updated_at,profiles:submitter_user_id(username)')
         .order('created_at', { ascending: false });
       if (editError) throw editError;
 
@@ -546,6 +562,8 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         preview: row.note ?? '',
         status: row.status,
         createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        reportedUsername: row.reported?.username,
       }));
       const edits = (editRows ?? []).map((row: any): ModerationQueueItem => ({
         id: row.id,
@@ -558,6 +576,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         preview: row.suggestion_text,
         status: row.status,
         createdAt: row.created_at,
+        updatedAt: row.updated_at,
       }));
       return [...reports, ...edits].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     },
@@ -565,6 +584,32 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       const table = submissionType === 'report' ? 'reports' : 'suggest_edits';
       const { error } = await client.from(table).update({ status }).eq('id', id);
       if (error) throw error;
+      await client.from('moderation_log').insert({ action_type: submissionType === 'report' ? `report ${status}` : `suggest edit ${status}`, target_type: submissionType, target_id: id, related_report_id: submissionType === 'report' ? id : null, related_suggest_edit_id: submissionType === 'suggest_edit' ? id : null });
+    },
+    async addAdminNote(targetType: string, targetId: ID, note: string) {
+      const { error } = await client.from('admin_notes').insert({ target_type: targetType, target_id: targetId, note });
+      if (error) throw error;
+    },
+    async setUserStatus(userId: ID, status: string, note?: string) {
+      const { error } = await client.from('profiles').update({ account_status: status }).eq('id', userId);
+      if (error) throw error;
+      await client.from('moderation_log').insert({ action_type: `user ${status}`, target_type: 'user', target_id: userId, note: note ?? null });
+    },
+    async setSiteRole(userId: ID, role: string) {
+      const { error } = await client.from('profiles').update({ site_role: role }).eq('id', userId).neq('site_role', 'site_owner');
+      if (error) throw error;
+      await client.from('moderation_log').insert({ action_type: role === 'site_admin' ? 'site admin granted' : 'site admin removed', target_type: 'user', target_id: userId });
+    },
+    async listUsers(query = '') {
+      const q = client.from('profiles').select('*, users(email)').order('username');
+      const { data, error } = query.trim() ? await q.or(`username.ilike.%${query.trim()}%,users.email.ilike.%${query.trim()}%`) : await q.limit(50);
+      if (error) throw error;
+      return (data ?? []).map((row: any) => mapProfile(row));
+    },
+    async listLog() {
+      const { data, error } = await client.from('moderation_log').select('id,action_type,target_type,target_id,note,created_at,profiles:admin_user_id(username)').order('created_at', { ascending: false }).limit(100);
+      if (error) throw error;
+      return (data ?? []).map((row: any) => ({ id: row.id, actionType: row.action_type, targetType: row.target_type, targetId: row.target_id, note: row.note ?? undefined, createdAt: row.created_at, adminUsername: row.profiles?.username }));
     },
   };
 
