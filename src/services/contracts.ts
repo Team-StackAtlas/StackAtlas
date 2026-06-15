@@ -22,6 +22,7 @@ import type {
   Follow,
   FollowRequest,
   ReportInput,
+  ReportTargetType,
   SuggestEditInput,
   ModerationQueueItem,
   ModerationStatus,
@@ -114,6 +115,8 @@ export interface FollowService {
 
 export interface ReportService {
   create(userId: ID | null, input: ReportInput): Promise<void>;
+  getOwn(userId: ID, targetType: ReportTargetType, targetId: ID): Promise<ReportInput | null>;
+  listOwn(userId: ID): Promise<ModerationQueueItem[]>;
 }
 
 export interface SuggestEditService {
@@ -144,6 +147,11 @@ export interface ModerationService {
   resolve(recordId: ID, status: ReviewStatus): Promise<void>;
   listQueue(): Promise<ModerationQueueItem[]>;
   updateStatus(submissionType: ModerationQueueItem['submissionType'], id: ID, status: ModerationStatus): Promise<void>;
+  addAdminNote(targetType: string, targetId: ID, note: string): Promise<void>;
+  setUserStatus(userId: ID, status: string, note?: string): Promise<void>;
+  setSiteRole(userId: ID, role: string): Promise<void>;
+  listUsers(query?: string): Promise<ProfileDTO[]>;
+  listLog(): Promise<{ id: ID; actionType: string; targetType: string; targetId: ID; note?: string; createdAt: string; adminUsername?: string }[]>;
 }
 
 export interface ImportService {

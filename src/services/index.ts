@@ -145,9 +145,9 @@ export function createStubServices(): Services {
       },
     },
     reports: {
-      async create() {
-        return ni('reports.create');
-      },
+      async create() { return ni('reports.create'); },
+      async getOwn() { return ni('reports.getOwn'); },
+      async listOwn() { return ni('reports.listOwn'); },
     },
     suggestEdits: {
       async create() {
@@ -191,9 +191,12 @@ export function createStubServices(): Services {
       async listQueue() {
         return ni('moderation.listQueue');
       },
-      async updateStatus() {
-        return ni('moderation.updateStatus');
-      },
+      async updateStatus() { return ni('moderation.updateStatus'); },
+      async addAdminNote() { return ni('moderation.addAdminNote'); },
+      async setUserStatus() { return ni('moderation.setUserStatus'); },
+      async setSiteRole() { return ni('moderation.setSiteRole'); },
+      async listUsers() { return ni('moderation.listUsers'); },
+      async listLog() { return ni('moderation.listLog'); },
     },
     imports: {
       // Real: dry-run validation works today.

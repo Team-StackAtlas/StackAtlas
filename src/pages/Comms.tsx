@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, MessageSquare, Mic, Paperclip, Plus, Search, Send, Users } from 'lucide-react';
 import { useMockComms, type CommsAttachment, type CommsMessage } from '../hooks/useMockComms';
+import { ReportAction } from '../components/ReportAction';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_SECONDS = 60;
@@ -155,6 +156,8 @@ export default function Comms() {
             </a>
           )}
           <div className="mt-2 flex items-center gap-2 text-xs">
+            {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
+            {message.scope === 'quarter' && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
             <button type="button" onClick={() => comms.react(message.id)}>
               👍
             </button>
@@ -392,21 +395,17 @@ export default function Comms() {
                   Leave
                 </button>
               </div>
+              <div className="mt-4 rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><h3 className="mb-2 text-sm font-bold">Quarter Controls</h3><p className="mb-2 text-xs text-slate-500">Role: {activeQuarter.ownerId === comms.viewerId ? 'quarter_owner' : activeQuarter.adminIds.includes(comms.viewerId) ? 'quarter_moderator' : 'quarter_member'}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 {activeQuarter.memberIds.map((id) => (
                   <span key={id} className="rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-800">
                     @{comms.getUser(id)?.username}{' '}
-                    {activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && (
-                      <button
-                        onClick={() => comms.removeQuarterMember(activeQuarter.id, id)}
-                        className="ml-1 text-red-500"
-                      >
-                        remove
-                      </button>
-                    )}
+                    {(activeQuarter.ownerId === comms.viewerId || activeQuarter.adminIds.includes(comms.viewerId)) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
+                    {activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && !activeQuarter.adminIds.includes(id) && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
+                    {activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && activeQuarter.adminIds.includes(id) && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
                   </span>
                 ))}
-              </div>
+              </div></div>
               <select
                 onChange={(e) =>
                   e.target.value && comms.inviteToQuarter(activeQuarter.id, e.target.value)

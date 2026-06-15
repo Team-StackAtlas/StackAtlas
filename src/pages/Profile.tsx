@@ -12,7 +12,7 @@ import { ReportAction } from '../components/ReportAction';
 import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 
-type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'following' | 'settings';
+type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'following' | 'reports' | 'settings';
 
 const hiddenGroups: { key: HiddenGroup; label: string }[] = [
   { key: 'substances', label: 'Substances' },
@@ -46,6 +46,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<ProfileTab>(() => (searchParams.get('tab') as ProfileTab) || 'all');
   const [saving, setSaving] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
+  const [ownReports, setOwnReports] = useState<{ id: string; targetType: string; targetLabel?: string; status: string; createdAt: string }[]>([]);
 
   const isOwnProfile = !username || (!!authProfile && username.toLowerCase() === authProfile.username.toLowerCase());
   const needsCompletion = isOwnProfile && !isProfileComplete(authProfile);
@@ -69,6 +70,8 @@ export default function Profile() {
                 isVerified: !!mock.isVerified,
                 joinDate: new Date().toISOString(),
                 settings: {},
+                siteRole: 'user',
+                accountStatus: 'active',
                 stats: {
                   followersCount: mock.followersCount,
                   followingCount: mock.followingCount,
@@ -104,6 +107,7 @@ export default function Profile() {
   useEffect(() => {
     if (!isOwnProfile || !services || !user) return;
     services.follows.listRequests(user.id).then(setIncomingRequests).catch(() => setIncomingRequests([]));
+    services.reports.listOwn(user.id).then(setOwnReports).catch(() => setOwnReports([]));
   }, [isOwnProfile, services, user]);
 
   if (isBackendConfigured && !username && status === 'unauthenticated') {
@@ -301,7 +305,7 @@ export default function Profile() {
         {(canViewProtectedProfile ? (['all', 'dispatches', 'signals', 'stacks'] as ProfileTab[]) : ([] as ProfileTab[])).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
-        {isOwnProfile && ['saved', 'likes', 'hidden', 'following'].map((tab) => (
+        {isOwnProfile && ['saved', 'likes', 'hidden', 'following', 'reports'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab as ProfileTab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
       </div>
@@ -325,6 +329,8 @@ export default function Profile() {
           </div>
         ) : activeTab === 'following' && isOwnProfile ? (
           <FollowingManagement followedItems={followedItems} followRequests={followRequests} incomingRequests={incomingRequests} onUnfollow={toggleFollow} onResolveRequest={resolveFollowRequest} />
+        ) : activeTab === 'reports' && isOwnProfile ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">My reports</h2><p className="mb-4 text-sm text-slate-500">Private admin notes and punishment details are not shown.</p>{ownReports.length ? ownReports.map((report) => <div key={report.id} className="mb-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50"><strong>{report.targetType}</strong> {report.targetLabel}<span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs capitalize dark:bg-zinc-800">{report.status.replace('_', ' ')}</span><p className="text-xs text-slate-500">Submitted {new Date(report.createdAt).toLocaleString()}</p></div>) : <EmptyState message="No submitted reports." />}</div>
         ) : filteredPosts.length ? (
           filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (

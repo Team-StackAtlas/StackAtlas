@@ -67,6 +67,8 @@ export interface SourceDTO extends SourceInput {
 }
 
 export type UserRole = 'User' | 'Admin' | 'Developer';
+export type SiteRole = 'user' | 'site_admin' | 'site_owner';
+export type AccountStatus = 'active' | 'warned' | 'suspended' | 'banned';
 
 export interface ProfileSettings {
   /** Saved items are always private; retained for older rows/UI copy. */
@@ -94,6 +96,8 @@ export interface SessionUser {
   researchScope: 'Citizen' | 'Explorer';
   isVerified: boolean;
   isProfileComplete: boolean;
+  siteRole: SiteRole;
+  accountStatus: AccountStatus;
 }
 
 export interface ProfileStats {
@@ -122,6 +126,9 @@ export interface ProfileDTO {
   joinDate: ISODate;
   settings: ProfileSettings;
   stats?: ProfileStats;
+  email?: string | null;
+  siteRole: SiteRole;
+  accountStatus: AccountStatus;
 }
 export type ProfileUpdate = Partial<
   Pick<
@@ -192,8 +199,9 @@ export interface FollowRequest {
   createdAt?: ISODate;
 }
 
-export type ReportTargetType = 'post' | 'comment' | 'reply' | 'profile' | 'album';
-export type ModerationStatus = 'pending' | 'reviewed' | 'rejected' | 'action_staged';
+export type ReportTargetType = 'post' | 'comment' | 'reply' | 'profile' | 'album' | 'quarter_message';
+export type ModerationStatus = 'pending' | 'reviewed' | 'action_taken' | 'rejected';
+export type SuggestEditStatus = 'pending' | 'reviewed' | 'approved' | 'rejected';
 export type SuggestEditTargetType = 'substance' | 'brand' | 'stack';
 
 export interface ReportInput {
@@ -221,8 +229,10 @@ export interface ModerationQueueItem {
   reason?: string;
   targetField?: string;
   preview?: string;
-  status: ModerationStatus;
+  status: ModerationStatus | SuggestEditStatus;
   createdAt: ISODate;
+  updatedAt?: ISODate;
+  reportedUsername?: string;
 }
 
 export interface NotificationDTO {

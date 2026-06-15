@@ -75,7 +75,7 @@ const now = Date.now();
 
 const seed: CommsState = {
   users: [
-    { id: VIEWER_ID, username: 'admin', displayName: 'You', avatarInitial: 'A' },
+    { id: VIEWER_ID, username: 'domonic', displayName: 'Domonic', avatarInitial: 'D' },
     {
       id: 'u-marlow',
       username: 'marlow_notes',
@@ -191,10 +191,10 @@ const seed: CommsState = {
     {
       id: 'q-sleep-1',
       scope: 'quarter',
-      quarterId: 'quarter-sleep',
+      quarterId: 'quarter-peptides',
       senderId: 'u-sable',
       kind: 'text',
-      body: '@admin the Deep Sleep Protocol thread could use your classification note.',
+      body: '@domonic the peptide sourcing thread could use your classification note.',
       createdAt: new Date(now - 1000 * 60 * 38).toISOString(),
       readBy: ['u-sable'],
       reactions: {},
@@ -202,7 +202,7 @@ const seed: CommsState = {
     {
       id: 'q-sleep-2',
       scope: 'quarter',
-      quarterId: 'quarter-sleep',
+      quarterId: 'quarter-peptides',
       senderId: VIEWER_ID,
       kind: 'file',
       body: 'Added the comparison template.',
@@ -221,9 +221,9 @@ const seed: CommsState = {
   ],
   quarters: [
     {
-      id: 'quarter-sleep',
-      title: 'Sleep Optimization',
-      description: 'Small group for sleep stacks, logs, and source checks.',
+      id: 'quarter-peptides',
+      title: 'Peptides',
+      description: 'Seed Quarter for peptide discussions, owner controls, and report testing.',
       ownerId: VIEWER_ID,
       adminIds: [VIEWER_ID],
       memberIds: [VIEWER_ID, 'u-sable', 'u-marlow'],
@@ -444,6 +444,25 @@ export function useMockComms() {
         q.id === quarterId ? { ...q, memberIds: q.memberIds.filter((id) => id !== VIEWER_ID) } : q,
       ),
     }));
+  const promoteQuarterModerator = (quarterId: string, userId: string) =>
+    update((current) => ({
+      ...current,
+      quarters: current.quarters.map((q) =>
+        q.id === quarterId ? { ...q, adminIds: Array.from(new Set([...q.adminIds, userId])) } : q,
+      ),
+    }));
+  const removeQuarterModerator = (quarterId: string, userId: string) =>
+    update((current) => ({
+      ...current,
+      quarters: current.quarters.map((q) =>
+        q.id === quarterId ? { ...q, adminIds: q.adminIds.filter((id) => id !== userId && id !== q.ownerId) } : q,
+      ),
+    }));
+  const deleteQuarterMessage = (messageId: string) =>
+    update((current) => ({
+      ...current,
+      messages: current.messages.map((m) => (m.id === messageId ? { ...m, deleted: true, body: '[deleted]' } : m)),
+    }));
   const removeQuarterMember = (quarterId: string, userId: string) =>
     update((current) => ({
       ...current,
@@ -484,5 +503,8 @@ export function useMockComms() {
     acceptQuarterInvite,
     leaveQuarter,
     removeQuarterMember,
+    promoteQuarterModerator,
+    removeQuarterModerator,
+    deleteQuarterMessage,
   };
 }

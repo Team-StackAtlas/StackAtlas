@@ -20,6 +20,7 @@ import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';
 import { useNotifications } from '../hooks/useNotifications';
 import { useMockComms } from '../hooks/useMockComms';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const location = useLocation();
@@ -27,6 +28,8 @@ export default function Layout() {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const { unreadCount } = useNotifications();
   const { counts: commsCounts } = useMockComms();
+  const { profile, user } = useAuth();
+  const showAdmin = profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner' || profile?.username === 'domonic' || user?.email === 'matadomonic@gmail.com';
 
   const navItems = [
     { name: 'Map', path: '/map', icon: Compass },
@@ -36,7 +39,7 @@ export default function Layout() {
     { name: 'Lab', path: '/lab', icon: Wrench },
     { name: 'Notifications', path: '/notifications', icon: Bell },
     { name: 'Comms', path: '/comms', icon: MessageSquare },
-    { name: 'Moderation', path: '/moderation', icon: Flag },
+    ...(showAdmin ? [{ name: 'Admin', path: '/admin', icon: Flag }] : []),
   ];
 
   const getPageTitle = () => {
@@ -47,7 +50,7 @@ export default function Layout() {
     if (path.startsWith('/lab')) return 'Lab';
     if (path.startsWith('/notifications')) return 'Notifications';
     if (path.startsWith('/comms')) return 'Comms';
-    if (path.startsWith('/moderation')) return 'Moderation';
+    if (path.startsWith('/admin')) return 'Admin';
     if (path.startsWith('/profile')) return 'Profile';
     if (path.startsWith('/library')) return 'Library';
     return '';
