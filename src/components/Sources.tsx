@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { SaveButton } from './SaveButton';
-import { getSources, type SourceSection, type SourceTargetType } from '../data/mockData';
+import { BRANDS, getSources, STACKS, SUPPLEMENTS, type SourceSection, type SourceTargetType } from '../data/mockData';
 
 interface SourcesProps {
   targetType: SourceTargetType;
@@ -16,6 +16,11 @@ interface SourcesProps {
  */
 export default function Sources({ targetType, targetId, section, label = 'Sources' }: SourcesProps) {
   const sources = getSources(targetType, targetId, section);
+  const relatedName = targetType === 'substance'
+    ? SUPPLEMENTS.find((item) => item.id === targetId)?.name
+    : targetType === 'brand'
+      ? BRANDS.find((item) => item.id === targetId)?.name
+      : STACKS.find((item) => item.id === targetId)?.name;
   if (sources.length === 0) return null;
 
   return (
@@ -43,7 +48,7 @@ export default function Sources({ targetType, targetId, section, label = 'Source
                 </span>
               </span>
             </a>
-            <SaveButton id={source.id} type="source" className="h-7 w-7 shrink-0 p-1" metadata={{ title: source.title, url: source.url, siteName: source.publisher, relatedType: source.targetType, relatedId: source.targetId }} />
+            <SaveButton id={source.id} type="source" className="h-7 w-7 shrink-0 p-1" metadata={{ title: source.title, url: source.url, siteName: source.publisher, relatedType: source.targetType, relatedId: source.targetId, relatedName }} />
           </li>
         ))}
       </ul>

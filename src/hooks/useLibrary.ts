@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRequireAccountAction } from './useRequireAccountAction';
 import type { AlbumItem, LibraryAlbum, SavedItem } from '../services/types';
@@ -16,6 +16,7 @@ function write<T>(key: string, value: T[]) { localStorage.setItem(key, JSON.stri
 
 export function useLibrary() {
   const { isBackendConfigured, services, user } = useAuth();
+  const localUser = useMemo(() => user ?? (!isBackendConfigured ? { id: 'local-library-user', username: 'local' } : null), [isBackendConfigured, user]);
   const requireAccount = useRequireAccountAction();
   const backed = !!(isBackendConfigured && services && user);
   const [albums, setAlbums] = useState<LibraryAlbum[]>([]);
@@ -26,7 +27,7 @@ export function useLibrary() {
       const loadedAlbums = await services.library.listAlbums(user.id);
       setAlbums(loadedAlbums);
       setAlbumItems((await Promise.all(loadedAlbums.map((album) => services.library.listAlbumItems(album.id)))).flat());
-    } else if (!isBackendConfigured && user) {
+    } else if (!isBackendConfigured) {
       setAlbums(read<LibraryAlbum>(ALBUMS_KEY));
       setAlbumItems(read<AlbumItem>(ITEMS_KEY));
     }
@@ -35,17 +36,17 @@ export function useLibrary() {
   useEffect(() => { refresh().catch(() => {}); }, [refresh]);
 
   const createAlbum = useCallback(async (input: { title: string; description?: string; privacy: 'private' | 'public' }) => {
-    if (!requireAccount() || !user) return null;
+    if (!requireAccount() || !localUser) return null;
     if (backed && services) {
       const album = await services.library.createAlbum(user.id, input);
       await refresh();
       return album;
     }
-    const album: LibraryAlbum = { id: crypto.randomUUID(), ownerId: user.id, ...input, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ownerUsername: user.username };
+    const album: LibraryAlbum = { id: crypto.randomUUID(), ownerId: localUser.id, ...input, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ownerUsername: localUser.username };
     const next = [album, ...albums];
     setAlbums(next); write(ALBUMS_KEY, next);
     return album;
-  }, [albums, backed, refresh, requireAccount, services, user]);
+  }, [albums, backed, localUser, refresh, requireAccount, services, user]);
 
   const updateAlbum = useCallback(async (albumId: string, input: { title: string; description?: string; privacy: 'private' | 'public' }) => {
     if (!requireAccount()) return;

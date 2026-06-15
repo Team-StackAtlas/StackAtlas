@@ -16,7 +16,11 @@ export interface SavedItem {
   relatedType?: string;
   relatedId?: string;
   relatedName?: string;
+  originalCreatedAt?: string;
+  bearings?: string[];
 }
+
+const CHANGE_EVENT = 'stackatlas:savedChanged';
 
 const STORAGE_KEY = 'stackatlas_saved';
 
@@ -41,6 +45,17 @@ function readLocal(): SavedItem[] {
 
 function writeLocal(items: SavedItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+function mergeSaved(primary: SavedItem[], secondary: SavedItem[]) {
+  const seen = new Set<string>();
+  return [...primary, ...secondary].filter((item) => {
+    const key = `${toBackendType(item.type)}:${item.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function useSaved() {
@@ -55,7 +70,7 @@ export function useSaved() {
         .list(user.id)
         .then((items) =>
           setSavedItems(
-            items.map((item) => ({
+            mergeSaved(items.map((item) => ({
               id: item.itemId,
               type: item.itemType,
               savedAt: item.savedAt ?? new Date().toISOString(),
@@ -66,14 +81,24 @@ export function useSaved() {
               relatedType: item.relatedType,
               relatedId: item.relatedId,
               relatedName: item.relatedName,
-            })),
+            })), readLocal()),
           ),
         )
-        .catch(() => {});
+        .catch((error) => { console.error('Failed to load saved items', error); setSavedItems(readLocal()); });
       return;
     }
     if (!isBackendConfigured) setSavedItems(readLocal());
   }, [backed, isBackendConfigured, services, user]);
+
+  useEffect(() => {
+    const sync = () => setSavedItems((prev) => mergeSaved(readLocal(), prev));
+    window.addEventListener(CHANGE_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(CHANGE_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   const saveItem = useCallback(
     (id: string, type: SavedItemType, metadata: Omit<SavedItem, 'id' | 'type' | 'savedAt'> = {}) => {
@@ -83,12 +108,17 @@ export function useSaved() {
       setSavedItems((prev) => {
         if (prev.some((item) => item.id === id && sameType(item.type, type))) return prev;
         const next = [nextItem, ...prev];
-        if (!backed) writeLocal(next);
+        writeLocal(next);
         return next;
       });
       if (backed && services && user) {
-        services.saved.add(user.id, { itemId: id, itemType: toBackendType(type), ...metadata }).catch(() => {
-          setSavedItems((prev) => prev.filter((item) => !(item.id === id && sameType(item.type, type))));
+        services.saved.add(user.id, { itemId: id, itemType: toBackendType(type), ...metadata }).catch((error) => {
+          console.error('Failed to save item; keeping the local saved copy.', error);
+          setSavedItems((prev) => {
+            const next = prev.some((item) => item.id === id && sameType(item.type, type)) ? prev : [nextItem, ...prev];
+            writeLocal(next);
+            return next;
+          });
         });
       }
       return true;
@@ -99,20 +129,19 @@ export function useSaved() {
   const unsaveItem = useCallback(
     (id: string, type: SavedItemType) => {
       if (!requireAccount()) return false;
-      const previous = savedItems.find((item) => item.id === id && sameType(item.type, type));
       setSavedItems((prev) => {
         const next = prev.filter((item) => !(item.id === id && sameType(item.type, type)));
-        if (!backed) writeLocal(next);
+        writeLocal(next);
         return next;
       });
       if (backed && services && user) {
-        services.saved.remove(user.id, { itemId: id, itemType: toBackendType(type) }).catch(() => {
-          if (previous) setSavedItems((prev) => [previous, ...prev]);
+        services.saved.remove(user.id, { itemId: id, itemType: toBackendType(type) }).catch((error) => {
+          console.error('Failed to remove saved item from the backend; it was removed locally.', error);
         });
       }
       return true;
     },
-    [backed, requireAccount, savedItems, services, user],
+    [backed, requireAccount, services, user],
   );
 
   const isSaved = useCallback(
