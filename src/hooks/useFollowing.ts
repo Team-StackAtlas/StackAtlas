@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useToast } from '../components/ui/ToastProvider';
 import { useAuth } from '../context/AuthContext';
 import { useRequireAccountAction } from './useRequireAccountAction';
 
@@ -25,6 +26,7 @@ function readLocal(): FollowEntry[] {
 export function useFollowing() {
   const { services, user, isBackendConfigured } = useAuth();
   const requireAccount = useRequireAccountAction();
+  const { toast } = useToast();
   const backed = !!(isBackendConfigured && services && user);
   const [following, setFollowing] = useState<FollowEntry[]>(() => readLocal());
   const [requests, setRequests] = useState<FollowEntry[]>(() => {
@@ -75,7 +77,7 @@ export function useFollowing() {
   const requestStatus = (targetType: FollowTarget, targetId: string) =>
     requests.some((f) => f.targetType === targetType && f.targetId === targetId) ? 'pending' : null;
 
-  const toggleFollow = (targetType: FollowTarget, targetId: string) => {
+  const toggleFollow = async (targetType: FollowTarget, targetId: string) => {
     if (!requireAccount()) return;
     const currentlyFollowing = isFollowing(targetType, targetId);
     const currentlyRequested = requestStatus(targetType, targetId) === 'pending';
@@ -84,21 +86,28 @@ export function useFollowing() {
       if (currentlyFollowing || currentlyRequested) {
         setFollowing((prev) => prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
         setRequests((prev) => prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
-        services.follows.unfollow(user.id, { targetType, targetId }).catch((error) => {
+        try {
+          await services.follows.unfollow(user.id, { targetType, targetId });
+        } catch (error) {
           console.error('Failed to unfollow', error);
+          toast('Could not unfollow. Please try again.', 'error');
           if (currentlyFollowing) setFollowing((prev) => [...prev, { targetType, targetId }]);
           if (currentlyRequested) setRequests((prev) => [...prev, { targetType, targetId }]);
-        });
+        }
         return;
       }
 
-      services.follows.follow(user.id, { targetType, targetId }).then((status) => {
+      try {
+        const status = await services.follows.follow(user.id, { targetType, targetId });
         if (status === 'requested') {
           setRequests((prev) => prev.some((f) => f.targetType === targetType && f.targetId === targetId) ? prev : [...prev, { targetType, targetId }]);
           return;
         }
         setFollowing((prev) => prev.some((f) => f.targetType === targetType && f.targetId === targetId) ? prev : [...prev, { targetType, targetId }]);
-      }).catch((error) => console.error('Failed to follow', error));
+      } catch (error) {
+        console.error('Failed to follow', error);
+        toast('Could not follow. Please try again.', 'error');
+      }
       return;
     }
 

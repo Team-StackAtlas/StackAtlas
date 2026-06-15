@@ -209,6 +209,11 @@ export interface NotificationDTO {
   title: string;
   body?: string;
   link?: string;
+  actorId?: ID;
+  targetType?: string;
+  targetId?: ID;
+  category?: string;
+  metadata?: Record<string, unknown>;
   readAt?: ISODate | null;
   createdAt: ISODate;
 }

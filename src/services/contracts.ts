@@ -95,6 +95,7 @@ export interface HiddenService {
 export interface FollowService {
   list(userId: ID): Promise<Follow[]>;
   follow(userId: ID, target: Follow): Promise<'following' | 'requested'>;
+  count(target: Follow): Promise<number>;
   unfollow(userId: ID, target: Follow): Promise<void>;
   listRequests(userId: ID): Promise<FollowRequest[]>;
   listOutgoingRequests(userId: ID): Promise<FollowRequest[]>;
@@ -114,6 +115,9 @@ export interface NotificationService {
   list(userId: ID): Promise<NotificationDTO[]>;
   markRead(userId: ID, notificationId: ID): Promise<void>;
   markAllRead(userId: ID): Promise<void>;
+  create?(userId: ID, input: Omit<NotificationDTO, 'id' | 'createdAt' | 'readAt'> & { recipientId: ID; actorId?: ID; category?: string; metadata?: Record<string, unknown> }): Promise<void>;
+  getSettings?(userId: ID): Promise<Record<string, boolean>>;
+  updateSettings?(userId: ID, settings: Record<string, boolean>): Promise<void>;
 }
 
 export interface BrandRatingService {

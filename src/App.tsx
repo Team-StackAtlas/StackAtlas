@@ -4,6 +4,7 @@ import Map from './pages/Map';
 import Square from './pages/Square';
 import Lab from './pages/Lab';
 import Comms from './pages/Comms';
+import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import SupplementPage from './pages/SupplementPage';
 import StackPage from './pages/StackPage';
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="square" element={<Square />} />
               <Route path="lab" element={<Lab />} />
               <Route path="comms" element={<Comms />} />
+              <Route path="notifications" element={<Notifications />} />
               <Route path="profile" element={<Profile />} />
               <Route path="profile/:username" element={<Profile />} />
               <Route path="library" element={<Library />} />

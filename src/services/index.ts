@@ -125,6 +125,9 @@ export function createStubServices(): Services {
       async follow() {
         return ni('follows.follow');
       },
+      async count() {
+        return ni('follows.count');
+      },
       async unfollow() {
         return ni('follows.unfollow');
       },
