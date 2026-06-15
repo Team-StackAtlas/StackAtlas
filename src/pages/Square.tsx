@@ -10,6 +10,7 @@ import { useFollowing } from '../hooks/useFollowing';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
+import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
 import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
 import { getPostCommentCount } from '../lib/comments';
@@ -22,6 +23,7 @@ export default function Square() {
     : CLASSIFICATIONS;
   const { following, isFollowing } = useFollowing();
   const { user } = useAuth();
+  const requireAccount = useRequireAccountAction();
   const isAdminLike = user?.role === 'Admin' || user?.role === 'Developer';
   const { isHidden, hasHiddenTag } = useHiddenItems();
   const [searchParams] = useSearchParams();
@@ -144,7 +146,7 @@ export default function Square() {
             For You
           </button>
           <button
-            onClick={() => user ? setFeedType('Following') : setFeedType('Following')}
+            onClick={() => { if (user || requireAccount()) setFeedType('Following'); }}
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
               feedType === 'Following' 

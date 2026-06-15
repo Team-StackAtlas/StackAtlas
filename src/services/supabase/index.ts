@@ -339,13 +339,14 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         if (targetProfile?.settings?.accountPrivacy === 'private') {
           const { error } = await client.from('follow_requests').upsert({ requester_id: userId, target_user_id: target.targetId });
           if (error) throw error;
-          return;
+          return 'requested';
         }
       }
       const { error } = await client
         .from('follows')
         .upsert({ follower_id: userId, target_type: target.targetType, target_id: target.targetId });
       if (error) throw error;
+      return 'following';
     },
     async unfollow(userId: ID, target: Follow) {
       const { error } = await client
@@ -360,6 +361,11 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
     async listRequests(userId: ID) {
       const { data, error } = await client.from('follow_requests').select('requester_id,target_user_id,created_at,profiles!follow_requests_requester_id_fkey(username,avatar_url)').eq('target_user_id', userId).eq('status', 'pending').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ requesterId: r.requester_id, targetUserId: r.target_user_id, username: r.profiles?.username, avatarUrl: r.profiles?.avatar_url, createdAt: r.created_at }) as FollowRequest);
+    },
+    async listOutgoingRequests(userId: ID) {
+      const { data, error } = await client.from('follow_requests').select('requester_id,target_user_id,created_at,profiles!follow_requests_target_user_id_fkey(username,avatar_url)').eq('requester_id', userId).eq('status', 'pending').order('created_at', { ascending: false });
       if (error) throw error;
       return (data ?? []).map((r: any) => ({ requesterId: r.requester_id, targetUserId: r.target_user_id, username: r.profiles?.username, avatarUrl: r.profiles?.avatar_url, createdAt: r.created_at }) as FollowRequest);
     },

@@ -11,15 +11,6 @@ export interface FollowEntry {
 const STORAGE_KEY = 'stackatlas_following';
 const REQUESTS_KEY = 'stackatlas_follow_requests';
 
-/**
- * Following is PUBLIC/social and drives the Following feed — distinct from Saved
- * (private/research). Users can save privately without following.
- *
- * Dual-mode: when the backend is configured AND the user is authenticated, this
- * reads/writes through the Supabase `FollowService`. Otherwise it falls back to
- * localStorage (offline/dev). The hook's API stays synchronous so callers don't
- * change.
- */
 function readLocal(): FollowEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -44,15 +35,19 @@ export function useFollowing() {
     if (backed && services && user) {
       services.follows
         .list(user.id)
-        .then((rows) =>
-          setFollowing(rows.map((r) => ({ targetType: r.targetType as FollowTarget, targetId: r.targetId }))),
-        )
-        .catch(() => {});
-      services.follows.listRequests(user.id).then((rows) => setRequests(rows.map((r) => ({ targetType: 'user', targetId: r.targetUserId })))).catch(() => {});
+        .then((rows) => setFollowing(rows.map((r) => ({ targetType: r.targetType as FollowTarget, targetId: r.targetId }))))
+        .catch((error) => console.error('Failed to load follows', error));
+      services.follows
+        .listOutgoingRequests(user.id)
+        .then((rows) => setRequests(rows.map((r) => ({ targetType: 'user', targetId: r.targetUserId }))))
+        .catch((error) => console.error('Failed to load follow requests', error));
     } else if (!isBackendConfigured) {
-      setFollowing(readLocal());
+      queueMicrotask(() => setFollowing(readLocal()));
     } else {
-      setFollowing([]);
+      queueMicrotask(() => {
+        setFollowing([]);
+        setRequests([]);
+      });
     }
   }, [backed, isBackendConfigured, services, user]);
 
@@ -60,6 +55,15 @@ export function useFollowing() {
     setFollowing(next);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore write failures
+    }
+  };
+
+  const persistLocalRequests = (next: FollowEntry[]) => {
+    setRequests(next);
+    try {
+      localStorage.setItem(REQUESTS_KEY, JSON.stringify(next));
     } catch {
       // ignore write failures
     }
@@ -75,28 +79,33 @@ export function useFollowing() {
     if (!requireAccount()) return;
     const currentlyFollowing = isFollowing(targetType, targetId);
     const currentlyRequested = requestStatus(targetType, targetId) === 'pending';
+
     if (backed && services && user) {
-      const op = currentlyFollowing || currentlyRequested
-        ? services.follows.unfollow(user.id, { targetType, targetId })
-        : services.follows.follow(user.id, { targetType, targetId });
-      // optimistic update
-      setFollowing((prev) =>
-        currentlyFollowing
-          ? prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId))
-          : currentlyRequested ? prev : [...prev, { targetType, targetId }],
-      );
-      if (currentlyRequested) setRequests((prev) => prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
-      op.catch(() => {
-        // revert on failure
-        setFollowing((prev) =>
-          currentlyFollowing
-            ? [...prev, { targetType, targetId }]
-            : prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)),
-        );
-      });
+      if (currentlyFollowing || currentlyRequested) {
+        setFollowing((prev) => prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
+        setRequests((prev) => prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
+        services.follows.unfollow(user.id, { targetType, targetId }).catch((error) => {
+          console.error('Failed to unfollow', error);
+          if (currentlyFollowing) setFollowing((prev) => [...prev, { targetType, targetId }]);
+          if (currentlyRequested) setRequests((prev) => [...prev, { targetType, targetId }]);
+        });
+        return;
+      }
+
+      services.follows.follow(user.id, { targetType, targetId }).then((status) => {
+        if (status === 'requested') {
+          setRequests((prev) => prev.some((f) => f.targetType === targetType && f.targetId === targetId) ? prev : [...prev, { targetType, targetId }]);
+          return;
+        }
+        setFollowing((prev) => prev.some((f) => f.targetType === targetType && f.targetId === targetId) ? prev : [...prev, { targetType, targetId }]);
+      }).catch((error) => console.error('Failed to follow', error));
       return;
     }
-    if (currentlyRequested) { const next = requests.filter((f) => !(f.targetType === targetType && f.targetId === targetId)); setRequests(next); localStorage.setItem(REQUESTS_KEY, JSON.stringify(next)); return; }
+
+    if (currentlyRequested) {
+      persistLocalRequests(requests.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
+      return;
+    }
     persistLocal(
       currentlyFollowing
         ? following.filter((f) => !(f.targetType === targetType && f.targetId === targetId))
