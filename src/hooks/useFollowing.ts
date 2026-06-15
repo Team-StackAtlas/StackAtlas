@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRequireAccountAction } from './useRequireAccountAction';
 
-export type FollowTarget = 'user' | 'substance' | 'stack' | 'brand';
+export type FollowTarget = 'user' | 'substance' | 'stack' | 'brand' | 'album';
 export interface FollowEntry {
   targetType: FollowTarget;
   targetId: string;
 }
 
 const STORAGE_KEY = 'stackatlas_following';
+const REQUESTS_KEY = 'stackatlas_follow_requests';
 
 /**
  * Following is PUBLIC/social and drives the Following feed — distinct from Saved
@@ -35,6 +36,9 @@ export function useFollowing() {
   const requireAccount = useRequireAccountAction();
   const backed = !!(isBackendConfigured && services && user);
   const [following, setFollowing] = useState<FollowEntry[]>(() => readLocal());
+  const [requests, setRequests] = useState<FollowEntry[]>(() => {
+    try { return JSON.parse(localStorage.getItem(REQUESTS_KEY) || '[]'); } catch { return []; }
+  });
 
   useEffect(() => {
     if (backed && services && user) {
@@ -44,6 +48,7 @@ export function useFollowing() {
           setFollowing(rows.map((r) => ({ targetType: r.targetType as FollowTarget, targetId: r.targetId }))),
         )
         .catch(() => {});
+      services.follows.listRequests(user.id).then((rows) => setRequests(rows.map((r) => ({ targetType: 'user', targetId: r.targetUserId })))).catch(() => {});
     } else if (!isBackendConfigured) {
       setFollowing(readLocal());
     } else {
@@ -63,19 +68,24 @@ export function useFollowing() {
   const isFollowing = (targetType: FollowTarget, targetId: string) =>
     following.some((f) => f.targetType === targetType && f.targetId === targetId);
 
+  const requestStatus = (targetType: FollowTarget, targetId: string) =>
+    requests.some((f) => f.targetType === targetType && f.targetId === targetId) ? 'pending' : null;
+
   const toggleFollow = (targetType: FollowTarget, targetId: string) => {
     if (!requireAccount()) return;
     const currentlyFollowing = isFollowing(targetType, targetId);
+    const currentlyRequested = requestStatus(targetType, targetId) === 'pending';
     if (backed && services && user) {
-      const op = currentlyFollowing
+      const op = currentlyFollowing || currentlyRequested
         ? services.follows.unfollow(user.id, { targetType, targetId })
         : services.follows.follow(user.id, { targetType, targetId });
       // optimistic update
       setFollowing((prev) =>
         currentlyFollowing
           ? prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId))
-          : [...prev, { targetType, targetId }],
+          : currentlyRequested ? prev : [...prev, { targetType, targetId }],
       );
+      if (currentlyRequested) setRequests((prev) => prev.filter((f) => !(f.targetType === targetType && f.targetId === targetId)));
       op.catch(() => {
         // revert on failure
         setFollowing((prev) =>
@@ -86,6 +96,7 @@ export function useFollowing() {
       });
       return;
     }
+    if (currentlyRequested) { const next = requests.filter((f) => !(f.targetType === targetType && f.targetId === targetId)); setRequests(next); localStorage.setItem(REQUESTS_KEY, JSON.stringify(next)); return; }
     persistLocal(
       currentlyFollowing
         ? following.filter((f) => !(f.targetType === targetType && f.targetId === targetId))
@@ -93,5 +104,5 @@ export function useFollowing() {
     );
   };
 
-  return { following, isFollowing, toggleFollow };
+  return { following, requests, isFollowing, requestStatus, toggleFollow };
 }

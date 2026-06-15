@@ -1,17 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck } from 'lucide-react';
-import { getPosts, STACKS, USERS } from '../data/mockData';
+import { BRANDS, getPosts, STACKS, SUPPLEMENTS, USERS } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
 import { useSaved } from '../hooks/useSaved';
 import { useFollowing } from '../hooks/useFollowing';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
-import type { ProfileDTO, ProfileSettings } from '../services/types';
+import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 
-type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'settings';
+type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'following' | 'settings';
 
 const hiddenGroups: { key: HiddenGroup; label: string }[] = [
   { key: 'substances', label: 'Substances' },
@@ -38,12 +38,13 @@ export default function Profile() {
   const { toast } = useToast();
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
-  const { isFollowing, toggleFollow } = useFollowing();
+  const { following: followedItems, requests: followRequests, isFollowing, toggleFollow } = useFollowing();
   const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
   const [activeTab, setActiveTab] = useState<ProfileTab>('all');
   const [saving, setSaving] = useState(false);
+  const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
 
   const isOwnProfile = !username || (!!authProfile && username.toLowerCase() === authProfile.username.toLowerCase());
   const needsCompletion = isOwnProfile && !isProfileComplete(authProfile);
@@ -98,6 +99,12 @@ export default function Profile() {
     };
   }, [authProfile, isBackendConfigured, services, toast, username]);
 
+
+  useEffect(() => {
+    if (!isOwnProfile || !services || !user) return;
+    services.follows.listRequests(user.id).then(setIncomingRequests).catch(() => setIncomingRequests([]));
+  }, [isOwnProfile, services, user]);
+
   if (isBackendConfigured && !username && status === 'unauthenticated') {
     return <Navigate to={`/login?returnTo=${encodeURIComponent('/profile')}`} replace />;
   }
@@ -133,7 +140,8 @@ export default function Profile() {
     setSaving(true);
     try {
       const nextSettings = withDefaultProfileSettings(shownProfile.settings);
-      (Object.keys(nextSettings) as (keyof Required<ProfileSettings>)[]).forEach((key) => {
+      nextSettings.accountPrivacy = form.get('accountPrivacy') === 'private' ? 'private' : 'public';
+      (['showActivity', 'showAvatar', 'showAge', 'showWeight', 'showHeight', 'showSex', 'showBodyFat', 'showFollowers', 'showFollowing', 'showBodyStats'] as const).forEach((key) => {
         nextSettings[key] = form.get(key) === 'on';
       });
       nextSettings.savedPrivate = true;
@@ -159,6 +167,18 @@ export default function Profile() {
       toast(err instanceof Error ? err.message : 'Failed to save profile.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const resolveFollowRequest = async (requesterId: string, approved: boolean) => {
+    if (!services || !user) return;
+    try {
+      if (approved) await services.follows.approveRequest(user.id, requesterId);
+      else await services.follows.rejectRequest(user.id, requesterId);
+      setIncomingRequests((current) => current.filter((request) => request.requesterId !== requesterId));
+      toast(approved ? 'Follow request approved.' : 'Follow request rejected.', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to update follow request.', 'error');
     }
   };
 
@@ -208,8 +228,7 @@ export default function Profile() {
                 <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>
                 <span className="flex items-center gap-1"><Activity size={13} /> {shownProfile.stats?.dispatchCount ?? 0} Dispatches</span>
                 <span>{shownProfile.stats?.signalCount ?? 0} Signals</span>
-                {settings.showFollowers && <span>{shownProfile.stats?.followersCount ?? 0} followers</span>}
-                {settings.showFollowing && <span>{shownProfile.stats?.followingCount ?? 0} following</span>}
+                <span>{shownProfile.stats?.followersCount ?? 0} followers</span>
               </div>
             </div>
           </div>
@@ -258,13 +277,13 @@ export default function Profile() {
             <label className="text-sm font-medium">Body fat %<input name="bodyFatPercentage" type="number" step="0.1" defaultValue={shownProfile.bodyFatPercentage ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
           </div>
           <div className="rounded-xl border border-slate-200 p-4 dark:border-zinc-800">
-            <h3 className="mb-3 text-sm font-bold">Public visibility toggles</h3>
+            <h3 className="mb-3 text-sm font-bold">Account privacy</h3><div className="mb-4 flex gap-3 text-sm"><label><input type="radio" name="accountPrivacy" value="public" defaultChecked={settings.accountPrivacy !== 'private'} className="mr-1 accent-emerald-500" /> Public</label><label><input type="radio" name="accountPrivacy" value="private" defaultChecked={settings.accountPrivacy === 'private'} className="mr-1 accent-emerald-500" /> Private</label></div><h3 className="mb-3 text-sm font-bold">Public visibility toggles</h3>
             <div className="grid gap-2 sm:grid-cols-2">
               {[
                 ['showAvatar', 'Avatar/profile image'], ['showAge', 'Age'], ['showWeight', 'Weight'], ['showHeight', 'Height'], ['showSex', 'Sex'], ['showBodyFat', 'Body fat percentage'], ['showFollowers', 'Followers list/count'], ['showFollowing', 'Following list/count'], ['showBodyStats', 'Public body-stats section'],
               ].map(([key, label]) => (
                 <label key={key} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-zinc-950/50">
-                  <span>{label}</span><input name={key} type="checkbox" defaultChecked={settings[key as keyof Required<ProfileSettings>]} className="accent-emerald-500" />
+                  <span>{label}</span><input name={key} type="checkbox" defaultChecked={!!settings[key as keyof Pick<Required<ProfileSettings>, 'showAvatar' | 'showAge' | 'showWeight' | 'showHeight' | 'showSex' | 'showBodyFat' | 'showFollowers' | 'showFollowing' | 'showBodyStats'>]} className="accent-emerald-500" />
                 </label>
               ))}
             </div>
@@ -278,7 +297,7 @@ export default function Profile() {
         {(['all', 'dispatches', 'signals', 'stacks'] as ProfileTab[]).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
-        {isOwnProfile && ['saved', 'likes', 'hidden'].map((tab) => (
+        {isOwnProfile && ['saved', 'likes', 'hidden', 'following'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab as ProfileTab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
       </div>
@@ -298,6 +317,8 @@ export default function Profile() {
               return <section key={group.key} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</h3>{groupItems.length ? groupItems.map((item) => <div key={`${item.type}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{item.name}</span><button onClick={() => unhideItem(item.type, item.id)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Unhide</button></div>) : <p className="text-sm text-slate-500">None hidden.</p>}</section>;
             })}
           </div>
+        ) : activeTab === 'following' && isOwnProfile ? (
+          <FollowingManagement followedItems={followedItems} followRequests={followRequests} incomingRequests={incomingRequests} onUnfollow={toggleFollow} onResolveRequest={resolveFollowRequest} />
         ) : filteredPosts.length ? (
           filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
@@ -310,4 +331,15 @@ export default function Profile() {
 
 function EmptyState({ message }: { message: string }) {
   return <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800 dark:text-zinc-500">{message}</div>;
+}
+
+function FollowingManagement({ followedItems, followRequests, incomingRequests, onUnfollow, onResolveRequest }: { followedItems: { targetType: string; targetId: string }[]; followRequests: { targetId: string }[]; incomingRequests: FollowRequest[]; onUnfollow: (type: any, id: string) => void; onResolveRequest: (requesterId: string, approved: boolean) => void }) {
+  const sections = [
+    ['Users', 'user', (id: string) => USERS.find((item) => item.id === id)?.username ?? id],
+    ['Substances', 'substance', (id: string) => SUPPLEMENTS.find((item) => item.id === id)?.name ?? id],
+    ['Brands', 'brand', (id: string) => BRANDS.find((item) => item.id === id)?.name ?? id],
+    ['Stacks', 'stack', (id: string) => STACKS.find((item) => item.id === id)?.name ?? id],
+    ['Public Albums', 'album', (id: string) => id],
+  ] as const;
+  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">Following</h2><p className="mb-4 text-sm text-slate-500">Only you can see and manage these lists.</p>{incomingRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Follow requests</h3>{incomingRequests.map((request) => <div key={request.requesterId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{request.username ?? request.requesterId}</span><span className="flex gap-2"><button onClick={() => onResolveRequest(request.requesterId, true)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Approve</button><button onClick={() => onResolveRequest(request.requesterId, false)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Reject</button></span></div>)}</section>}{followRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Pending requests</h3>{followRequests.map((request) => <div key={request.targetId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{USERS.find((item) => item.id === request.targetId)?.username ?? request.targetId}</span><button onClick={() => onUnfollow('user', request.targetId)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Cancel request</button></div>)}</section>}{sections.map(([label, type, nameFor]) => { const items = followedItems.filter((item) => item.targetType === type); return <section key={type} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>{items.length ? items.map((item) => <div key={`${item.targetType}-${item.targetId}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{nameFor(item.targetId)}</span><button onClick={() => onUnfollow(item.targetType, item.targetId)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Unfollow</button></div>) : <p className="text-sm text-slate-500">None followed.</p>}</section>; })}</div>;
 }

@@ -28,6 +28,7 @@ export const DEFAULT_PROFILE_SETTINGS: Required<ProfileSettings> = {
   showHeight: false,
   showSex: false,
   showBodyFat: false,
+  accountPrivacy: 'public',
   showFollowers: false,
   showFollowing: false,
   showBodyStats: false,

@@ -20,6 +20,7 @@ import type {
   AlbumItem,
   HiddenItem,
   Follow,
+  FollowRequest,
   ReportInput,
   SuggestEditInput,
   NotificationDTO,
@@ -95,6 +96,9 @@ export interface FollowService {
   list(userId: ID): Promise<Follow[]>;
   follow(userId: ID, target: Follow): Promise<void>;
   unfollow(userId: ID, target: Follow): Promise<void>;
+  listRequests(userId: ID): Promise<FollowRequest[]>;
+  approveRequest(userId: ID, requesterId: ID): Promise<void>;
+  rejectRequest(userId: ID, requesterId: ID): Promise<void>;
 }
 
 export interface ReportService {

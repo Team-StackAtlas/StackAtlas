@@ -20,7 +20,7 @@ export default function Square() {
   const visibleClassifications = scope.accessLevel
     ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
     : CLASSIFICATIONS;
-  const { isFollowing } = useFollowing();
+  const { following, isFollowing } = useFollowing();
   const { user } = useAuth();
   const isAdminLike = user?.role === 'Admin' || user?.role === 'Developer';
   const { isHidden, hasHiddenTag } = useHiddenItems();
@@ -28,7 +28,12 @@ export default function Square() {
   const substanceId = searchParams.get('substance');
   const bearingParam = searchParams.get('bearing');
 
-  const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
+  const [feedType, setFeedTypeState] = useState<'For You' | 'Following'>(() => user ? (localStorage.getItem('stackatlas_square_tab') as 'For You' | 'Following') || 'For You' : 'For You');
+  const [followingFilter, setFollowingFilter] = useState<'All' | 'Users' | 'Substances' | 'Brands' | 'Stacks' | 'Albums'>('All');
+  const setFeedType = (next: 'For You' | 'Following') => {
+    setFeedTypeState(next);
+    if (user) localStorage.setItem('stackatlas_square_tab', next);
+  };
   const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(null);
   const [activeBearings, setActiveBearings] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending'>('Recent');
@@ -66,12 +71,15 @@ export default function Square() {
     // Feed Type Filtering — Following is public/social: posts by a followed
     // author or linked to a followed substance/stack/brand.
     if (feedType === 'Following') {
-      const isLinkedToFollowed =
-        isFollowing('user', p.author.id) ||
-        (!!p.supplementId && isFollowing('substance', p.supplementId)) ||
-        (!!p.stackId && isFollowing('stack', p.stackId)) ||
-        (!!p.brandId && isFollowing('brand', p.brandId));
-      if (!isLinkedToFollowed) return false;
+      if (!user) return false;
+      const matches = [
+        isFollowing('user', p.author.id) && 'Users',
+        !!p.supplementId && isFollowing('substance', p.supplementId) && 'Substances',
+        !!p.stackId && isFollowing('stack', p.stackId) && 'Stacks',
+        !!p.brandId && isFollowing('brand', p.brandId) && 'Brands',
+      ].filter(Boolean);
+      if (matches.length === 0) return false;
+      if (followingFilter !== 'All' && !matches.includes(followingFilter)) return false;
     }
 
     // Access Level Filtering and Advanced Search Filtering for Dispatch posts
@@ -136,7 +144,7 @@ export default function Square() {
             For You
           </button>
           <button
-            onClick={() => setFeedType('Following')}
+            onClick={() => user ? setFeedType('Following') : setFeedType('Following')}
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
               feedType === 'Following' 
@@ -220,6 +228,17 @@ export default function Square() {
         </div>
       </div>
 
+
+      {feedType === 'Following' && (
+        <div className="px-4 pb-4">
+          <div className="flex gap-2 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+            {(['All', 'Users', 'Substances', 'Brands', 'Stacks', 'Albums'] as const).map((filter) => (
+              <button key={filter} onClick={() => setFollowingFilter(filter)} className={cn("whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium", followingFilter === filter ? "bg-slate-100 text-slate-900 dark:bg-zinc-800 dark:text-zinc-100" : "text-slate-500 dark:text-zinc-400")}>{filter}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Content Area */}
       <div className="flex-1 px-4 space-y-4 max-w-2xl mx-auto w-full">
         {hiddenPostsCount > 0 && (
@@ -231,7 +250,7 @@ export default function Square() {
           <PostCard key={post.id} post={post} />
         ))}
         {sortedPosts.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900">No posts match these filters.</div>
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900">{feedType === 'Following' ? (following.length === 0 ? 'Follow users, substances, brands, stacks, or public albums to build your Following feed.' : 'No followed items match this filter yet.') : 'No posts match these filters.'}</div>
         )}
       </div>
 

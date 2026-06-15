@@ -18,6 +18,7 @@ import type {
   SavedItem,
   HiddenItem,
   Follow,
+  FollowRequest,
   NotificationDTO,
   ID,
   ReportInput,
@@ -332,6 +333,15 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       return (data ?? []).map((r: any) => ({ targetType: r.target_type, targetId: r.target_id }) as Follow);
     },
     async follow(userId: ID, target: Follow) {
+      if (target.targetType === 'user') {
+        const { data: targetProfile, error: profileError } = await client.from('profiles').select('settings').eq('id', target.targetId).maybeSingle();
+        if (profileError) throw profileError;
+        if (targetProfile?.settings?.accountPrivacy === 'private') {
+          const { error } = await client.from('follow_requests').upsert({ requester_id: userId, target_user_id: target.targetId });
+          if (error) throw error;
+          return;
+        }
+      }
       const { error } = await client
         .from('follows')
         .upsert({ follower_id: userId, target_type: target.targetType, target_id: target.targetId });
@@ -342,6 +352,23 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         .from('follows')
         .delete()
         .match({ follower_id: userId, target_type: target.targetType, target_id: target.targetId });
+      if (error) throw error;
+      if (target.targetType === 'user') {
+        const { error: requestError } = await client.from('follow_requests').delete().match({ requester_id: userId, target_user_id: target.targetId });
+        if (requestError) throw requestError;
+      }
+    },
+    async listRequests(userId: ID) {
+      const { data, error } = await client.from('follow_requests').select('requester_id,target_user_id,created_at,profiles!follow_requests_requester_id_fkey(username,avatar_url)').eq('target_user_id', userId).eq('status', 'pending').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((r: any) => ({ requesterId: r.requester_id, targetUserId: r.target_user_id, username: r.profiles?.username, avatarUrl: r.profiles?.avatar_url, createdAt: r.created_at }) as FollowRequest);
+    },
+    async approveRequest(userId: ID, requesterId: ID) {
+      const { error } = await client.rpc('approve_follow_request', { p_target_user_id: userId, p_requester_id: requesterId });
+      if (error) throw error;
+    },
+    async rejectRequest(userId: ID, requesterId: ID) {
+      const { error } = await client.from('follow_requests').delete().match({ requester_id: requesterId, target_user_id: userId });
       if (error) throw error;
     },
   };
