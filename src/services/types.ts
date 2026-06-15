@@ -136,10 +136,37 @@ export type ProfileUpdate = Partial<
   >
 >;
 
-export type SavedItemType = 'substance' | 'brand' | 'stack' | 'dispatch' | 'signal';
+export type SavedItemType = 'dispatch' | 'signal' | 'source' | 'external_link';
 export interface SavedItem {
   itemType: SavedItemType;
   itemId: ID;
+  savedAt?: ISODate;
+  title?: string;
+  url?: string;
+  description?: string;
+  siteName?: string;
+  relatedType?: string;
+  relatedId?: string;
+  relatedName?: string;
+  authorName?: string;
+  itemCreatedAt?: ISODate;
+}
+export interface LibraryAlbum {
+  id: ID;
+  ownerId: ID;
+  title: string;
+  description?: string;
+  privacy: 'private' | 'public';
+  createdAt: ISODate;
+  updatedAt: ISODate;
+  ownerUsername?: string;
+}
+export interface AlbumItem {
+  id: ID;
+  albumId: ID;
+  savedItemType: SavedItemType;
+  savedItemId: ID;
+  addedAt: ISODate;
 }
 
 export type HideableType = 'substance' | 'brand' | 'stack' | 'tag';

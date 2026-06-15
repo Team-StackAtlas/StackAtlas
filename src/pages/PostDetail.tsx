@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageCircle, ShieldCheck } from 'lucide-react';
-import { getPosts, SUPPLEMENTS, BRANDS, STACKS, Post } from '../data/mockData';
+import { getPosts, SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
+import { SaveButton } from '../components/SaveButton';
+import { useAuth } from '../context/AuthContext';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
@@ -13,6 +16,20 @@ function getLinkedEntity(post: Post) {
   if (brand) return { label: brand.name, href: `/brand/${brand.id}` };
   if (stack) return { label: stack.name, href: `/stack/${stack.id}` };
   return null;
+}
+
+
+function getPostSaveMetadata(post: Post) {
+  const linkedEntity = getLinkedEntity(post);
+  return {
+    title: post.title,
+    description: post.content,
+    relatedType: post.supplementId ? 'substance' : post.brandId ? 'brand' : post.stackId ? 'stack' : undefined,
+    relatedId: post.supplementId ?? post.brandId ?? post.stackId,
+    relatedName: linkedEntity?.label,
+    authorName: post.author.displayName ?? post.author.username,
+    itemCreatedAt: post.createdAt,
+  };
 }
 
 function getDispatchRows(post: Post) {
@@ -31,6 +48,7 @@ function getDispatchRows(post: Post) {
 }
 
 export default function PostDetail() {
+  const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
   const post = getPosts().find(p => p.id === id);
 
@@ -71,7 +89,7 @@ export default function PostDetail() {
               </p>
             </div>
           </div>
-          <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span>
+          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} metadata={getPostSaveMetadata(post)} /></div>
         </div>
 
         {linkedEntity && (
@@ -111,7 +129,7 @@ export default function PostDetail() {
         )}
 
         <div className="mt-8 flex items-center gap-6 border-t border-slate-200 pt-6 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
-          <span className="inline-flex items-center gap-2" aria-label={`${post.helpfulCount} hearts`}><Heart size={20} />{post.helpfulCount}</span>
+          <LikeCount postAuthorId={post.author.id} currentUserId={user?.id ?? null} count={post.helpfulCount} />
           <a href="#comments" className="inline-flex items-center gap-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${post.comments} comments`}><MessageCircle size={20} />{post.comments}</a>
         </div>
       </article>
@@ -135,5 +153,19 @@ export default function PostDetail() {
         )}
       </section>
     </div>
+  );
+}
+
+
+function LikeCount({ postAuthorId, currentUserId, count }: { postAuthorId: string; currentUserId: string | null; count: number }) {
+  const [open, setOpen] = useState(false);
+  const isAuthor = currentUserId === postAuthorId;
+  const likers = USERS.slice(0, Math.min(5, count)).map((u) => u.username);
+  if (!isAuthor) return <span className="inline-flex items-center gap-2" aria-label={`${count} hearts`}><Heart size={20} />{count}</span>;
+  return (
+    <span className="relative inline-flex items-center gap-2">
+      <button onClick={() => setOpen((value) => !value)} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} />{count}</button>
+      {open && <span className="absolute left-0 top-8 z-10 w-48 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg dark:border-zinc-800 dark:bg-zinc-900"><strong className="mb-2 block text-slate-900 dark:text-zinc-100">Liked by</strong>{likers.map((name) => <span key={name} className="block py-0.5">@{name}</span>)}</span>}
+    </span>
   );
 }

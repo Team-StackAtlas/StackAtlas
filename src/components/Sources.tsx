@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
-import { getSources, type SourceSection, type SourceTargetType } from '../data/mockData';
+import SourceSaveControls from './SourceSaveControls';
+import { BRANDS, getSources, STACKS, SUPPLEMENTS, type SourceSection, type SourceTargetType } from '../data/mockData';
 
 interface SourcesProps {
   targetType: SourceTargetType;
@@ -16,6 +17,7 @@ interface SourcesProps {
 export default function Sources({ targetType, targetId, section, label = 'Sources' }: SourcesProps) {
   const sources = getSources(targetType, targetId, section);
   if (sources.length === 0) return null;
+  const relatedName = SUPPLEMENTS.find((item) => item.id === targetId)?.name ?? BRANDS.find((item) => item.id === targetId)?.name ?? STACKS.find((item) => item.id === targetId)?.name;
 
   return (
     <div className="mt-3 border-t border-slate-100 pt-3 dark:border-zinc-800/50">
@@ -24,7 +26,7 @@ export default function Sources({ targetType, targetId, section, label = 'Source
       </p>
       <ul className="space-y-1.5">
         {sources.map((source) => (
-          <li key={source.id}>
+          <li key={source.id} className="flex items-start justify-between gap-2">
             <a
               href={source.url}
               target="_blank"
@@ -42,6 +44,7 @@ export default function Sources({ targetType, targetId, section, label = 'Source
                 </span>
               </span>
             </a>
+            <SourceSaveControls source={source} relatedName={relatedName} />
           </li>
         ))}
       </ul>

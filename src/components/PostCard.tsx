@@ -2,6 +2,7 @@ import { Heart, MessageCircle, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
+import { SaveButton } from './SaveButton';
 
 export const POST_CARD_TITLE_MAX_CHARS = 100;
 export const POST_CARD_BODY_PREVIEW_MAX_CHARS = 280;
@@ -26,6 +27,20 @@ function getLinkedEntity(post: Post) {
   if (brand) return { label: brand.name, typeLabel: 'Brand', href: `/brand/${brand.id}` };
   if (stack) return { label: stack.name, typeLabel: 'Stack', href: `/stack/${stack.id}` };
   return null;
+}
+
+
+function getPostSaveMetadata(post: Post) {
+  const linkedEntity = getLinkedEntity(post);
+  return {
+    title: post.title,
+    description: post.content,
+    relatedType: post.supplementId ? 'substance' : post.brandId ? 'brand' : post.stackId ? 'stack' : undefined,
+    relatedId: post.supplementId ?? post.brandId ?? post.stackId,
+    relatedName: linkedEntity?.label,
+    authorName: post.author.displayName ?? post.author.username,
+    itemCreatedAt: post.createdAt,
+  };
 }
 
 function getDispatchLine(post: Post) {
@@ -59,6 +74,7 @@ export default function PostCard({ post }: PostCardProps) {
             <p className="truncate text-xs text-slate-500 dark:text-zinc-500">{[post.author.displayName, `${formatDistanceToNow(new Date(post.createdAt))} ago`, post.type].filter(Boolean).join(' · ')}</p>
           </div>
         </div>
+        <SaveButton id={post.id} type={post.type} metadata={getPostSaveMetadata(post)} />
       </div>
 
       <Link to={`/post/${post.id}`} className="block">

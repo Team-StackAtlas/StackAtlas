@@ -1,14 +1,16 @@
 import { Bookmark } from 'lucide-react';
-import { useSaved, SavedItemType } from '../hooks/useSaved';
+import { useSaved, SavedItemType, type SavedItem } from '../hooks/useSaved';
 import { cn } from '../lib/utils';
 
 interface SaveButtonProps {
   id: string;
   type: SavedItemType;
   className?: string;
+  metadata?: Omit<SavedItem, 'id' | 'type' | 'savedAt'>;
+  onSaveChange?: (saved: boolean) => void;
 }
 
-export function SaveButton({ id, type, className }: SaveButtonProps) {
+export function SaveButton({ id, type, className, metadata, onSaveChange }: SaveButtonProps) {
   const { isSaved, saveItem, unsaveItem } = useSaved();
   const saved = isSaved(id, type);
 
@@ -16,9 +18,9 @@ export function SaveButton({ id, type, className }: SaveButtonProps) {
     e.preventDefault();
     e.stopPropagation();
     if (saved) {
-      unsaveItem(id, type);
+      if (unsaveItem(id, type)) onSaveChange?.(false);
     } else {
-      saveItem(id, type);
+      if (saveItem(id, type, metadata)) onSaveChange?.(true);
     }
   };
 
