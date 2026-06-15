@@ -12,6 +12,26 @@ export interface FollowEntry {
 const STORAGE_KEY = 'stackatlas_following';
 const REQUESTS_KEY = 'stackatlas_follow_requests';
 
+
+function followErrorMessage(action: 'follow' | 'unfollow', error: unknown) {
+  const fallback = action === 'follow' ? 'Could not follow.' : 'Could not unfollow.';
+  if (error instanceof Error && error.message) return `${fallback} ${error.message}`;
+  if (typeof error === 'object' && error !== null) {
+    const detail = 'details' in error && typeof (error as { details?: unknown }).details === 'string' ? (error as { details: string }).details : '';
+    const message = 'message' in error && typeof (error as { message?: unknown }).message === 'string' ? (error as { message: string }).message : '';
+    const code = 'code' in error && typeof (error as { code?: unknown }).code === 'string' ? (error as { code: string }).code : '';
+    const reason = [message, detail, code && `code ${code}`].filter(Boolean).join(' · ');
+    if (reason) return `${fallback} ${reason}`;
+  }
+  return `${fallback} Please try again.`;
+}
+
+function validateFollowTarget(targetType: FollowTarget, targetId: string) {
+  const validTypes: FollowTarget[] = ['user', 'substance', 'stack', 'brand', 'album'];
+  if (!validTypes.includes(targetType)) throw new Error(`Invalid follow target type: ${targetType}.`);
+  if (!targetId?.trim()) throw new Error(`Missing ${targetType} ID.`);
+}
+
 function readLocal(): FollowEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -79,6 +99,13 @@ export function useFollowing() {
 
   const toggleFollow = async (targetType: FollowTarget, targetId: string) => {
     if (!requireAccount()) return;
+    try {
+      validateFollowTarget(targetType, targetId);
+    } catch (error) {
+      console.error('Invalid follow target', { targetType, targetId, error });
+      toast(followErrorMessage('follow', error), 'error');
+      return;
+    }
     const currentlyFollowing = isFollowing(targetType, targetId);
     const currentlyRequested = requestStatus(targetType, targetId) === 'pending';
 
@@ -89,8 +116,8 @@ export function useFollowing() {
         try {
           await services.follows.unfollow(user.id, { targetType, targetId });
         } catch (error) {
-          console.error('Failed to unfollow', error);
-          toast('Could not unfollow. Please try again.', 'error');
+          console.error('Failed to unfollow', { targetType, targetId, userId: user.id, error });
+          toast(followErrorMessage('unfollow', error), 'error');
           if (currentlyFollowing) setFollowing((prev) => [...prev, { targetType, targetId }]);
           if (currentlyRequested) setRequests((prev) => [...prev, { targetType, targetId }]);
         }
@@ -105,8 +132,8 @@ export function useFollowing() {
         }
         setFollowing((prev) => prev.some((f) => f.targetType === targetType && f.targetId === targetId) ? prev : [...prev, { targetType, targetId }]);
       } catch (error) {
-        console.error('Failed to follow', error);
-        toast('Could not follow. Please try again.', 'error');
+        console.error('Failed to follow', { targetType, targetId, userId: user.id, error });
+        toast(followErrorMessage('follow', error), 'error');
       }
       return;
     }
