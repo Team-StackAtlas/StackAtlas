@@ -8,6 +8,7 @@ import { getSavedPostMetadata } from '../lib/savedPostMetadata';
 import { countVisibleComments, type CommentNode } from '../lib/comments';
 import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import { useFollowing } from '../hooks/useFollowing';
+import { usePostLike } from '../hooks/usePostLike';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
@@ -77,6 +78,7 @@ export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const post = getPosts().find(p => p.id === id);
 
+  const postLike = usePostLike(post?.id ?? '', post?.helpfulCount ?? 0, post?.author.id);
   const [comments, setComments] = useState<CommentNode[]>(() => (post ? readCommentOverrides(post.id) ?? ((post.commentItems ?? []) as CommentNode[]) : []));
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
@@ -190,7 +192,7 @@ export default function PostDetail() {
         )}
 
         <div className="mt-8 flex items-center gap-6 border-t border-slate-200 pt-6 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
-          <LikeCount postAuthorId={post.author.id} currentUserId={user?.id ?? null} count={post.helpfulCount} />
+          <LikeCount postAuthorId={post.author.id} currentUserId={user?.id ?? null} count={postLike.count} liked={postLike.liked} onToggle={postLike.toggleLike} />
           <a href="#comments" className="inline-flex items-center gap-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${discussionCount} comments`}><MessageCircle size={20} />{discussionCount}</a>
         </div>
       </article>
@@ -235,14 +237,14 @@ function CommentThread({ comment, depth, currentUserId, replyingTo, onReply, onS
   );
 }
 
-function LikeCount({ postAuthorId, currentUserId, count }: { postAuthorId: string; currentUserId: string | null; count: number }) {
+function LikeCount({ postAuthorId, currentUserId, count, liked, onToggle }: { postAuthorId: string; currentUserId: string | null; count: number; liked: boolean; onToggle: () => void }) {
   const [open, setOpen] = useState(false);
   const isAuthor = currentUserId === postAuthorId;
   const likers = USERS.slice(0, Math.min(5, count)).map((u) => u.username);
-  if (!isAuthor) return <span className="inline-flex items-center gap-2" aria-label={`${count} hearts`}><Heart size={20} />{count}</span>;
+  if (!isAuthor) return <button type="button" onClick={onToggle} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} className={liked ? 'fill-current text-rose-600' : undefined} />{count}</button>;
   return (
     <span className="relative inline-flex items-center gap-2">
-      <button onClick={() => setOpen((value) => !value)} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} />{count}</button>
+      <button onClick={onToggle} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} className={liked ? 'fill-current text-rose-600' : undefined} />{count}</button><button type="button" onClick={() => setOpen((value) => !value)} className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200">View</button>
       {open && <span className="absolute left-0 top-8 z-10 w-48 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg dark:border-zinc-800 dark:bg-zinc-900"><strong className="mb-2 block text-slate-900 dark:text-zinc-100">Liked by</strong>{likers.map((name) => <span key={name} className="block py-0.5">@{name}</span>)}</span>}
     </span>
   );
