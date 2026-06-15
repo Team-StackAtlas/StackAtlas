@@ -12,6 +12,7 @@ import {
   PenSquare,
   Shield,
   Bookmark,
+  Flag,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
@@ -35,6 +36,7 @@ export default function Layout() {
     { name: 'Lab', path: '/lab', icon: Wrench },
     { name: 'Notifications', path: '/notifications', icon: Bell },
     { name: 'Comms', path: '/comms', icon: MessageSquare },
+    { name: 'Moderation', path: '/moderation', icon: Flag },
   ];
 
   const getPageTitle = () => {
@@ -45,6 +47,7 @@ export default function Layout() {
     if (path.startsWith('/lab')) return 'Lab';
     if (path.startsWith('/notifications')) return 'Notifications';
     if (path.startsWith('/comms')) return 'Comms';
+    if (path.startsWith('/moderation')) return 'Moderation';
     if (path.startsWith('/profile')) return 'Profile';
     if (path.startsWith('/library')) return 'Library';
     return '';

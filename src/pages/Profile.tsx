@@ -8,6 +8,7 @@ import { useSaved } from '../hooks/useSaved';
 import { useFollowing } from '../hooks/useFollowing';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
+import { ReportAction } from '../components/ReportAction';
 import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 
@@ -225,7 +226,7 @@ export default function Profile() {
                   <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{shownProfile.role}</span>
                 )}
               </div>
-              <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">@{shownProfile.username}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2"><p className="text-sm font-medium text-slate-500 dark:text-zinc-400">@{shownProfile.username}</p>{!isOwnProfile && <ReportAction targetType="profile" targetId={shownProfile.id} entityName={`@${shownProfile.username}`} />}</div>
               {shownProfile.bio && <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-zinc-300">{shownProfile.bio}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-zinc-500">
                 <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>

@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Heart, MessageCircle, MoreHorizontal, ShieldCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
@@ -6,6 +6,7 @@ import { SaveButton } from './SaveButton';
 import { getSavedPostMetadata } from '../lib/savedPostMetadata';
 import { getPostCommentCount } from '../lib/comments';
 import { usePostLike } from '../hooks/usePostLike';
+import { ReportAction } from './ReportAction';
 
 export const POST_CARD_TITLE_MAX_CHARS = 100;
 export const POST_CARD_BODY_PREVIEW_MAX_CHARS = 280;
@@ -65,7 +66,7 @@ export default function PostCard({ post }: PostCardProps) {
             <p className="truncate text-xs text-slate-500 dark:text-zinc-500">{[post.author.displayName, `${formatDistanceToNow(new Date(post.createdAt))} ago`, post.type].filter(Boolean).join(' · ')}</p>
           </div>
         </div>
-        <SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} />
+        <div className="flex items-center gap-1"><SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} /><div className="group/actions relative"><button type="button" aria-label="Post actions" className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"><MoreHorizontal size={16} /></button><div className="invisible absolute right-0 top-8 z-20 w-36 rounded-xl border border-slate-200 bg-white p-1 opacity-0 shadow-lg transition group-hover/actions:visible group-hover/actions:opacity-100 dark:border-zinc-800 dark:bg-zinc-900"><ReportAction targetType="post" targetId={post.id} entityName={post.title} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 dark:text-zinc-300 dark:hover:bg-red-500/10 dark:hover:text-red-300" /></div></div></div>
       </div>
 
       <Link to={`/post/${post.id}`} className="block">

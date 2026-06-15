@@ -188,6 +188,12 @@ export function createStubServices(): Services {
       async resolve() {
         return ni('moderation.resolve');
       },
+      async listQueue() {
+        return ni('moderation.listQueue');
+      },
+      async updateStatus() {
+        return ni('moderation.updateStatus');
+      },
     },
     imports: {
       // Real: dry-run validation works today.

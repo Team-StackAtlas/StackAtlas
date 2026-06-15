@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { SUPPLEMENTS, BRANDS, getPosts, TYPE_TAGS } from '../data/mockData';
-import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Flag } from 'lucide-react';
+import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3 } from 'lucide-react';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
-import ReportModal from '../components/ReportModal';
 import AccessBadge from '../components/AccessBadge';
 import Sources from '../components/Sources';
 import { useFollowing } from '../hooks/useFollowing';
@@ -19,7 +18,6 @@ export default function SupplementPage() {
   const supplement = SUPPLEMENTS.find(s => s.id === id);
   
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
-  const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
   const { services, isBackendConfigured } = useAuth();
@@ -82,13 +80,6 @@ export default function SupplementPage() {
                 Suggest Edit
               </button>
               <HideItemButton id={supplement.id} name={supplement.name} type="substance" />
-              <button 
-                onClick={() => setIsReportOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
-              >
-                <Flag size={14} />
-                Report
-              </button>
             </div>
           </div>
           <div className="mb-2 text-xs font-medium text-slate-400 dark:text-zinc-600" title={supplement.paths.map(path => `${path.domain} > ${path.category}`).join(' • ')}>
@@ -397,13 +388,6 @@ export default function SupplementPage() {
         entityType="substance" 
         targetId={supplement.id}
         entityName={supplement.name} 
-      />
-      <ReportModal 
-        isOpen={isReportOpen} 
-        onClose={() => setIsReportOpen(false)} 
-        entityName={supplement.name}
-        targetType="substance"
-        targetId={supplement.id}
       />
       <CompareModal
         isOpen={isCompareOpen}

@@ -33,6 +33,10 @@ export type ObjectType =
   | 'brand'
   | 'stack'
   | 'post'
+  | 'comment'
+  | 'reply'
+  | 'profile'
+  | 'album'
   | 'ingredient'
   | 'brand_product';
 
@@ -188,19 +192,37 @@ export interface FollowRequest {
   createdAt?: ISODate;
 }
 
+export type ReportTargetType = 'post' | 'comment' | 'reply' | 'profile' | 'album';
+export type ModerationStatus = 'pending' | 'reviewed' | 'rejected' | 'action_staged';
+export type SuggestEditTargetType = 'substance' | 'brand' | 'stack';
+
 export interface ReportInput {
-  targetType: ObjectType;
+  targetType: ReportTargetType;
   targetId: ID;
   targetName?: string;
-  category: string;
-  details?: string;
+  reason: string;
+  note?: string;
 }
 
 export interface SuggestEditInput {
-  targetType: ObjectType;
+  targetType: SuggestEditTargetType;
   targetId: ID;
-  sources?: string;
-  details: string;
+  targetField?: string;
+  suggestionText: string;
+}
+
+export interface ModerationQueueItem {
+  id: ID;
+  submissionType: 'report' | 'suggest_edit';
+  targetType: ReportTargetType | SuggestEditTargetType;
+  targetId: ID;
+  targetLabel?: string;
+  username?: string;
+  reason?: string;
+  targetField?: string;
+  preview?: string;
+  status: ModerationStatus;
+  createdAt: ISODate;
 }
 
 export interface NotificationDTO {

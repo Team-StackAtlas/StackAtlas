@@ -23,6 +23,8 @@ import type {
   FollowRequest,
   ReportInput,
   SuggestEditInput,
+  ModerationQueueItem,
+  ModerationStatus,
   NotificationDTO,
   ModerationRecord,
   ReviewStatus,
@@ -140,6 +142,8 @@ export interface SourceService {
 export interface ModerationService {
   queue(opts?: { status?: ReviewStatus }): Promise<ModerationRecord[]>;
   resolve(recordId: ID, status: ReviewStatus): Promise<void>;
+  listQueue(): Promise<ModerationQueueItem[]>;
+  updateStatus(submissionType: ModerationQueueItem['submissionType'], id: ID, status: ModerationStatus): Promise<void>;
 }
 
 export interface ImportService {
