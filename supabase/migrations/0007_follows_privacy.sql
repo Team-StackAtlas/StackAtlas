@@ -46,3 +46,35 @@ group by target_type, target_id;
 
 drop policy if exists follows_read_own_or_counts on follows;
 -- Keep relationship lists private. Public follower counts are exposed via follower_counts only.
+
+-- Preserve private relationship lists: users can only read/write their own follows.
+drop policy if exists follows_owner on follows;
+create policy follows_owner on follows for all
+  using (auth.uid() = follower_id)
+  with check (auth.uid() = follower_id);
+
+grant select on follower_counts to anon, authenticated;
+grant select, insert, delete on follow_requests to authenticated;
+grant execute on function approve_follow_request(uuid, uuid) to authenticated;
+
+-- Include account privacy in normalized profile settings; default remains public.
+create or replace function normalize_profile_settings() returns trigger
+language plpgsql as $$
+begin
+  new.settings := jsonb_build_object(
+    'savedPrivate', true,
+    'showActivity', coalesce((new.settings->>'showActivity')::boolean, false),
+    'showAvatar', coalesce((new.settings->>'showAvatar')::boolean, false),
+    'showAge', coalesce((new.settings->>'showAge')::boolean, false),
+    'showWeight', coalesce((new.settings->>'showWeight')::boolean, false),
+    'showHeight', coalesce((new.settings->>'showHeight')::boolean, false),
+    'showSex', coalesce((new.settings->>'showSex')::boolean, false),
+    'showBodyFat', coalesce((new.settings->>'showBodyFat')::boolean, false),
+    'accountPrivacy', case when new.settings->>'accountPrivacy' = 'private' then 'private' else 'public' end,
+    'showFollowers', false,
+    'showFollowing', false,
+    'showBodyStats', coalesce((new.settings->>'showBodyStats')::boolean, false)
+  );
+  return new;
+end;
+$$;

@@ -38,7 +38,7 @@ export default function Profile() {
   const { toast } = useToast();
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
-  const { following: followedItems, requests: followRequests, isFollowing, toggleFollow } = useFollowing();
+  const { following: followedItems, requests: followRequests, isFollowing, requestStatus, toggleFollow } = useFollowing();
   const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
@@ -120,6 +120,9 @@ export default function Profile() {
   const publishedStacks = STACKS.filter((stack) => stack.creatorId === shownProfile?.id && stack.status === 'approved');
   const hiddenItemsCount = hiddenGroups.reduce((total, group) => total + hiddenItems[group.key].length, 0);
   const following = shownProfile ? isFollowing('user', shownProfile.id) : false;
+  const followRequested = shownProfile ? requestStatus('user', shownProfile.id) === 'pending' : false;
+  const isPrivateProfile = settings.accountPrivacy === 'private';
+  const canViewProtectedProfile = isOwnProfile || !isPrivateProfile || following;
 
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -246,7 +249,7 @@ export default function Profile() {
             </div>
           ) : (
             <button onClick={() => shownProfile && toggleFollow('user', shownProfile.id)} className="rounded-full bg-slate-900 px-6 py-1.5 text-sm font-medium text-white hover:bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white">
-              {following ? 'Following' : 'Follow'}
+              {followRequested ? 'Requested' : following ? 'Following' : 'Follow'}
             </button>
           )}
         </div>
@@ -294,7 +297,7 @@ export default function Profile() {
       )}
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {(['all', 'dispatches', 'signals', 'stacks'] as ProfileTab[]).map((tab) => (
+        {(canViewProtectedProfile ? (['all', 'dispatches', 'signals', 'stacks'] as ProfileTab[]) : ([] as ProfileTab[])).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-sm font-medium capitalize ${activeTab === tab ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-white text-slate-600 dark:bg-zinc-900 dark:text-zinc-400'}`}>{tab}</button>
         ))}
         {isOwnProfile && ['saved', 'likes', 'hidden', 'following'].map((tab) => (
@@ -303,7 +306,9 @@ export default function Profile() {
       </div>
 
       <div className="space-y-4">
-        {activeTab === 'stacks' ? (
+        {!canViewProtectedProfile ? (
+          <EmptyState message="This account is private. Follow this user and wait for approval to view their posts and stacks." />
+        ) : activeTab === 'stacks' ? (
           publishedStacks.length ? publishedStacks.map((stack) => <Link key={stack.id} to={`/stack/${stack.id}`} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h3 className="font-bold">{stack.name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{stack.description}</p></Link>) : <EmptyState message="No published stacks." />
         ) : activeTab === 'saved' && isOwnProfile ? (
           savedItems.length ? <div className="grid gap-3 sm:grid-cols-2">{savedItems.map((item) => <div key={`${item.type}-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><Bookmark size={16} className="text-emerald-500" /><h3 className="mt-2 font-semibold">{item.id}</h3><p className="text-xs text-slate-500">{item.type}</p></div>)}</div> : <EmptyState message="No saved items found. Saved items are private." />

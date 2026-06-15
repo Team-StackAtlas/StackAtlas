@@ -94,9 +94,10 @@ export interface HiddenService {
 
 export interface FollowService {
   list(userId: ID): Promise<Follow[]>;
-  follow(userId: ID, target: Follow): Promise<void>;
+  follow(userId: ID, target: Follow): Promise<'following' | 'requested'>;
   unfollow(userId: ID, target: Follow): Promise<void>;
   listRequests(userId: ID): Promise<FollowRequest[]>;
+  listOutgoingRequests(userId: ID): Promise<FollowRequest[]>;
   approveRequest(userId: ID, requesterId: ID): Promise<void>;
   rejectRequest(userId: ID, requesterId: ID): Promise<void>;
 }

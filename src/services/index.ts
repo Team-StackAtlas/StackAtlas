@@ -131,6 +131,9 @@ export function createStubServices(): Services {
       async listRequests() {
         return ni('follows.listRequests');
       },
+      async listOutgoingRequests() {
+        return ni('follows.listOutgoingRequests');
+      },
       async approveRequest() {
         return ni('follows.approveRequest');
       },
