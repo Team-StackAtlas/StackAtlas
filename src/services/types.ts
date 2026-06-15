@@ -75,6 +75,7 @@ export interface ProfileSettings {
   showHeight?: boolean;
   showSex?: boolean;
   showBodyFat?: boolean;
+  accountPrivacy?: 'public' | 'private';
   showFollowers?: boolean;
   showFollowing?: boolean;
   showBodyStats?: boolean;
@@ -174,10 +175,17 @@ export interface HiddenItem {
   tagType?: string;
 }
 
-export type FollowTarget = 'user' | 'substance' | 'brand' | 'stack';
+export type FollowTarget = 'user' | 'substance' | 'brand' | 'stack' | 'album';
 export interface Follow {
   targetType: FollowTarget;
   targetId: ID;
+}
+export interface FollowRequest {
+  requesterId: ID;
+  targetUserId: ID;
+  username?: string;
+  avatarUrl?: string;
+  createdAt?: ISODate;
 }
 
 export interface ReportInput {

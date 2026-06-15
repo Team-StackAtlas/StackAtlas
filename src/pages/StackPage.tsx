@@ -10,14 +10,16 @@ import AccessBadge from '../components/AccessBadge';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
+import { useFollowing } from '../hooks/useFollowing';
 
 export default function StackPage() {
   const { id } = useParams<{ id: string }>();
   const stack = STACKS.find(s => s.id === id);
-  
+
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const { isFollowing, toggleFollow } = useFollowing();
 
   if (!stack) {
     return <div className="text-center py-20 text-zinc-400">Stack not found.</div>;
@@ -32,7 +34,7 @@ export default function StackPage() {
       <div className="flex flex-col gap-4 border-b border-slate-200 dark:border-zinc-800 pb-8">
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <Link 
+            <Link
               to="/square"
               className="flex items-center gap-1 text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 transition-colors"
             >
@@ -40,7 +42,7 @@ export default function StackPage() {
               Back to Square
             </Link>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setIsSuggestEditOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
               >
@@ -48,7 +50,7 @@ export default function StackPage() {
                 Suggest Edit
               </button>
               <HideItemButton id={stack.id} name={stack.name} type="stack" />
-              <button 
+              <button
                 onClick={() => setIsReportOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
               >
@@ -61,14 +63,22 @@ export default function StackPage() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
               {stack.name}
             </h1>
-            <button 
+            <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">{isFollowing('stack', stack.id) ? 1 : 0} followers</span>
+
+            <button
+              onClick={() => toggleFollow('stack', stack.id)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg ${isFollowing('stack', stack.id) ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-200' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+            >
+              {isFollowing('stack', stack.id) ? 'Following' : 'Follow Stack'}
+            </button>
+            <button
               onClick={() => setIsCompareOpen(true)}
               className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm"
             >
               Compare
             </button>
           </div>
-          
+
           <div className="max-w-2xl mb-6">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-1">Purpose</h3>
             <p className="text-lg text-slate-600 dark:text-zinc-400">{stack.description}</p>
@@ -140,16 +150,16 @@ export default function StackPage() {
         </div>
       )}
 
-      <SuggestEditModal 
-        isOpen={isSuggestEditOpen} 
-        onClose={() => setIsSuggestEditOpen(false)} 
-        entityType="stack" 
+      <SuggestEditModal
+        isOpen={isSuggestEditOpen}
+        onClose={() => setIsSuggestEditOpen(false)}
+        entityType="stack"
         targetId={stack.id}
-        entityName={stack.name} 
+        entityName={stack.name}
       />
-      <ReportModal 
-        isOpen={isReportOpen} 
-        onClose={() => setIsReportOpen(false)} 
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
         entityName={stack.name}
         targetType="stack"
         targetId={stack.id}

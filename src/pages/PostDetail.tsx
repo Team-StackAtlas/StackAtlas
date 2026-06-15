@@ -7,17 +7,18 @@ import { useAuth } from '../context/AuthContext';
 import { getSavedPostMetadata } from '../lib/savedPostMetadata';
 import { countVisibleComments, type CommentNode } from '../lib/comments';
 import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
+import { useFollowing } from '../hooks/useFollowing';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
   const brand = BRANDS.find(b => b.id === post.brandId);
   const stack = STACKS.find(s => s.id === post.stackId);
   if (post.dispatchProtocol && post.dispatchProtocol.entries.length > 1) {
-    return { label: post.dispatchProtocol.entries.map(entry => entry.substanceName).join(' + '), href: `/post/${post.id}` };
+    return { label: post.dispatchProtocol.entries.map(entry => entry.substanceName).join(' + '), href: `/post/${post.id}`, targetType: undefined, targetId: undefined };
   }
-  if (supplement) return { label: supplement.name, href: `/substance/${supplement.id}` };
-  if (brand) return { label: brand.name, href: `/brand/${brand.id}` };
-  if (stack) return { label: stack.name, href: `/stack/${stack.id}` };
+  if (supplement) return { label: supplement.name, href: `/substance/${supplement.id}`, targetType: 'substance' as const, targetId: supplement.id };
+  if (brand) return { label: brand.name, href: `/brand/${brand.id}`, targetType: 'brand' as const, targetId: brand.id };
+  if (stack) return { label: stack.name, href: `/stack/${stack.id}`, targetType: 'stack' as const, targetId: stack.id };
   return null;
 }
 
@@ -72,6 +73,7 @@ function getDispatchRows(post: Post) {
 export default function PostDetail() {
   const { user } = useAuth();
   const requireAccount = useRequireAccountAction();
+  const { isFollowing, toggleFollow } = useFollowing();
   const { id } = useParams<{ id: string }>();
   const post = getPosts().find(p => p.id === id);
 
@@ -140,7 +142,7 @@ export default function PostDetail() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <Link to={`/profile/${post.author.username}`} className="font-semibold text-slate-900 hover:underline dark:text-zinc-100">{post.author.username}</Link>
+                <Link to={`/profile/${post.author.username}`} className="font-semibold text-slate-900 hover:underline dark:text-zinc-100">{post.author.username}</Link><button onClick={() => toggleFollow('user', post.author.id)} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-200">{isFollowing('user', post.author.id) ? 'Following' : 'Follow'}</button>
                 {post.author.isVerified && <ShieldCheck size={16} className="text-emerald-500" />}
               </div>
               <p className="text-sm text-slate-500 dark:text-zinc-400">
@@ -152,9 +154,9 @@ export default function PostDetail() {
         </div>
 
         {linkedEntity && (
-          <Link to={linkedEntity.href} className="mb-5 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20">
+          <div className="mb-5 flex flex-wrap items-center gap-2"><Link to={linkedEntity.href} className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500/20">
             {linkedEntity.label}
-          </Link>
+          </Link>{linkedEntity.targetType && <button onClick={() => toggleFollow(linkedEntity.targetType, linkedEntity.targetId)} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-200">{isFollowing(linkedEntity.targetType, linkedEntity.targetId) ? 'Following' : 'Follow'}</button>}</div>
         )}
 
         <h1 className="mb-5 text-3xl font-bold leading-tight text-slate-950 dark:text-zinc-50 md:text-4xl">{post.title}</h1>

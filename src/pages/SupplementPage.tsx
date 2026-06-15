@@ -75,6 +75,7 @@ export default function SupplementPage() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">{supplement.name}</h1>
+            <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">{isFollowing('substance', supplement.id) ? 1 : 0} followers</span>
             <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400" title="Classification">
               <AccessBadge classification={supplement.classification} />
               {supplement.classification}
