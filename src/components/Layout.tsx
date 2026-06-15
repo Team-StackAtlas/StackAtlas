@@ -20,7 +20,7 @@ export default function Layout() {
     { name: 'Create', path: '/create', icon: PenSquare, Shield },
     { name: 'Library', path: '/library', icon: Bookmark },
     { name: 'Lab', path: '/lab', icon: Wrench },
-    { name: 'Notifications', path: '/notifications', icon: Bell },
+    { name: 'Comms', path: '/comms', icon: Bell },
   ];
 
   const getPageTitle = () => {
@@ -64,7 +64,7 @@ export default function Layout() {
               >
                 <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
                 <span className="font-medium">{item.name}</span>
-                {item.name === 'Notifications' && unreadCount > 0 && (
+                {item.name === 'Comms' && unreadCount > 0 && (
                   <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
                     {unreadCount}
                   </span>
@@ -157,7 +157,7 @@ export default function Layout() {
               >
                 <span className="relative">
                   <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
-                  {item.name === 'Notifications' && unreadCount > 0 && (
+                  {item.name === 'Comms' && unreadCount > 0 && (
                     <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white">
                       {unreadCount}
                     </span>

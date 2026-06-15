@@ -61,6 +61,13 @@ export interface CatalogService {
   getStack(id: ID): Promise<StackDTO | null>;
 }
 
+export interface PostLikeService {
+  isLiked(userId: ID, postId: ID): Promise<boolean>;
+  count(postId: ID): Promise<number>;
+  like(userId: ID, postId: ID, postAuthorId?: ID): Promise<void>;
+  unlike(userId: ID, postId: ID): Promise<void>;
+}
+
 export interface PostService {
   list(opts?: { kind?: 'dispatch' | 'signal'; substanceId?: ID; page?: number }): Promise<Paginated<PostDTO>>;
   get(id: ID): Promise<PostDTO | null>;
@@ -152,6 +159,7 @@ export interface Services {
   search: SearchService;
   catalog: CatalogService;
   posts: PostService;
+  postLikes?: PostLikeService;
   saved: SavedService;
   hidden: HiddenService;
   follows: FollowService;

@@ -30,6 +30,24 @@ function readLocal(userId?: string): NotificationDTO[] {
 
 function writeLocal(rows: NotificationDTO[]) { localStorage.setItem(LOCAL_KEY, JSON.stringify(rows)); }
 
+const MOCK_NOTIFICATIONS: NotificationDTO[] = [
+  { id: 'mock-notif-post-like', kind: 'post_like', category: 'likes', title: '@atlas_member liked your Dispatch', link: '/post/p1', targetType: 'post', targetId: 'p1', metadata: { actorUsername: 'atlas_member' }, readAt: null, createdAt: '2026-06-15T10:00:00.000Z' },
+  { id: 'mock-notif-comment-reply', kind: 'comment_reply', category: 'comments', title: '@protocol_notes replied to your comment', link: '/post/p2#comments', targetType: 'comment', targetId: 'p2-c1', metadata: { actorUsername: 'protocol_notes' }, readAt: null, createdAt: '2026-06-15T09:30:00.000Z' },
+  { id: 'mock-notif-signal-comment', kind: 'comment', category: 'comments', title: '@hkim commented on your Signal', link: '/post/p3#comments', targetType: 'post', targetId: 'p3', metadata: { actorUsername: 'hkim' }, readAt: '2026-06-15T09:15:00.000Z', createdAt: '2026-06-15T09:00:00.000Z' },
+  { id: 'mock-notif-new-follower', kind: 'follow', category: 'follows', title: '@evan_cross followed you', link: '/profile/biohacker99', targetType: 'user', targetId: 'u2', metadata: { actorUsername: 'evan_cross' }, readAt: null, createdAt: '2026-06-14T18:00:00.000Z' },
+  { id: 'mock-notif-follow-request', kind: 'follow_request', category: 'follows', title: '@domonic requested to follow you', link: '/profile?tab=following', targetType: 'follow_request', targetId: 'u3', metadata: { actorUsername: 'domonic' }, readAt: null, createdAt: '2026-06-14T16:00:00.000Z' },
+  { id: 'mock-notif-approved-request', kind: 'follow_approved', category: 'follows', title: '@domonic approved your follow request', link: '/profile/longevity_seeker', targetType: 'user', targetId: 'u3', metadata: { actorUsername: 'domonic' }, readAt: '2026-06-14T15:30:00.000Z', createdAt: '2026-06-14T15:00:00.000Z' },
+  { id: 'mock-notif-mention', kind: 'mention', category: 'mentions', title: '@hkim mentioned you', link: '/post/p4#comments', targetType: 'post', targetId: 'p4', metadata: { actorUsername: 'hkim' }, readAt: null, createdAt: '2026-06-14T12:00:00.000Z' },
+  { id: 'mock-notif-public-album', kind: 'album_published', category: 'albums', title: '@atlas_member published a public album', link: '/library', targetType: 'album', targetId: 'mock-album-peptide-research', metadata: { actorUsername: 'atlas_member' }, readAt: '2026-06-14T11:00:00.000Z', createdAt: '2026-06-14T10:30:00.000Z' },
+  { id: 'mock-notif-album-updated', kind: 'album_updated', category: 'albums', title: '@protocol_notes added 3 items to Peptide Research', link: '/library', targetType: 'album', targetId: 'mock-album-peptide-research', metadata: { actorUsername: 'protocol_notes' }, readAt: null, createdAt: '2026-06-13T20:00:00.000Z' },
+];
+
+function mergeMockNotifications(rows: NotificationDTO[]) {
+  const seen = new Set(rows.map((row) => row.id));
+  return [...rows, ...MOCK_NOTIFICATIONS.filter((row) => !seen.has(row.id))]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
 export function useNotifications() {
   const { services, user, isBackendConfigured } = useAuth();
   const navigate = useNavigate();
@@ -39,10 +57,10 @@ export function useNotifications() {
 
   const refresh = useCallback(async () => {
     if (backed && services && user) {
-      setNotifications(await services.notifications.list(user.id));
+      setNotifications(mergeMockNotifications(await services.notifications.list(user.id)));
       const remoteSettings = await services.notifications.getSettings?.(user.id);
       if (remoteSettings) setSettingsState({ ...DEFAULT_NOTIFICATION_SETTINGS, ...remoteSettings });
-    } else setNotifications(readLocal(user?.id));
+    } else setNotifications(mergeMockNotifications(readLocal(user?.id)));
   }, [backed, services, user]);
 
   useEffect(() => { refresh().catch(console.error); }, [refresh]);
@@ -58,19 +76,19 @@ export function useNotifications() {
   const markRead = async (id: string) => {
     setNotifications((rows) => rows.map((n) => n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n));
     if (backed && services && user) await services.notifications.markRead(user.id, id);
-    else writeLocal(readLocal(user?.id).map((n) => n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n));
+    writeLocal(mergeMockNotifications(readLocal(user?.id)).map((n) => n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n));
   };
 
   const markAllRead = async () => {
     const now = new Date().toISOString();
     setNotifications((rows) => rows.map((n) => ({ ...n, readAt: n.readAt ?? now })));
     if (backed && services && user) await services.notifications.markAllRead(user.id);
-    else writeLocal(readLocal(user?.id).map((n) => ({ ...n, readAt: n.readAt ?? now })));
+    writeLocal(mergeMockNotifications(readLocal(user?.id)).map((n) => ({ ...n, readAt: n.readAt ?? now }))); 
   };
 
   const openNotification = async (notification: NotificationDTO) => {
     await markRead(notification.id);
-    navigate(notification.link || '/notifications');
+    navigate(notification.link || '/notifications', { state: notification.link ? undefined : { unavailable: true } });
   };
 
   return { notifications: notifications.filter((n) => settings[(n.category as NotificationCategory) || 'likes'] ?? true), unreadCount, settings, setSettings, refresh, markRead, markAllRead, openNotification };

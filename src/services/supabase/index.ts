@@ -9,6 +9,7 @@ import type {
   ReportService,
   SuggestEditService,
   LibraryService,
+  PostLikeService,
 } from '../contracts';
 import { isProfileComplete, normalizeUsername, validateUsername } from '../../lib/account';
 import type {
@@ -112,6 +113,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
   reports: ReportService;
   suggestEdits: SuggestEditService;
   library: LibraryService;
+  postLikes: PostLikeService;
 } {
   const profiles: ProfileService = {
     async get(userId: ID) {
@@ -457,6 +459,31 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
   };
 
+
+  const postLikes: PostLikeService = {
+    async isLiked(userId: ID, postId: ID) {
+      const { data, error } = await client.from('post_votes').select('post_id').match({ user_id: userId, post_id: postId }).maybeSingle();
+      if (error) throw error;
+      return !!data;
+    },
+    async count(postId: ID) {
+      const { count, error } = await client.from('post_votes').select('*', { count: 'exact', head: true }).match({ post_id: postId, value: 1 });
+      if (error) throw error;
+      return count ?? 0;
+    },
+    async like(userId: ID, postId: ID, postAuthorId?: ID) {
+      const { error } = await client.from('post_votes').upsert({ user_id: userId, post_id: postId, value: 1 });
+      if (error) throw error;
+      if (postAuthorId && postAuthorId !== userId) {
+        await notifications.create?.(userId, { recipientId: postAuthorId, actorId: userId, kind: 'post_like', category: 'likes', title: 'liked your post', link: `/post/${postId}`, targetType: 'post', targetId: postId });
+      }
+    },
+    async unlike(userId: ID, postId: ID) {
+      const { error } = await client.from('post_votes').delete().match({ user_id: userId, post_id: postId });
+      if (error) throw error;
+    },
+  };
+
   const reports: ReportService = {
     async create(userId: ID | null, input: ReportInput) {
       const { error } = await client.from('reports').insert({
@@ -484,5 +511,5 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
   };
 
-  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits, library };
+  return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits, library, postLikes };
 }
