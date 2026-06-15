@@ -42,7 +42,7 @@ export default function Profile() {
   const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
-  const [activeTab, setActiveTab] = useState<ProfileTab>('all');
+  const [activeTab, setActiveTab] = useState<ProfileTab>(() => (searchParams.get('tab') as ProfileTab) || 'all');
   const [saving, setSaving] = useState(false);
   const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
 

@@ -332,6 +332,11 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       if (error) throw error;
       return (data ?? []).map((r: any) => ({ targetType: r.target_type, targetId: r.target_id }) as Follow);
     },
+    async count(target: Follow) {
+      const { count, error } = await client.from('follows').select('*', { count: 'exact', head: true }).match({ target_type: target.targetType, target_id: target.targetId });
+      if (error) throw error;
+      return count ?? 0;
+    },
     async follow(userId: ID, target: Follow) {
       if (target.targetType === 'user') {
         const { data: targetProfile, error: profileError } = await client.from('profiles').select('settings').eq('id', target.targetId).maybeSingle();
@@ -339,6 +344,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         if (targetProfile?.settings?.accountPrivacy === 'private') {
           const { error } = await client.from('follow_requests').upsert({ requester_id: userId, target_user_id: target.targetId });
           if (error) throw error;
+          await notifications.create?.(userId, { recipientId: target.targetId, actorId: userId, kind: 'follow_request', category: 'follows', title: 'requested to follow you', link: '/profile?tab=following', targetType: 'follow_request', targetId: userId });
           return 'requested';
         }
       }
@@ -346,6 +352,9 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         .from('follows')
         .upsert({ follower_id: userId, target_type: target.targetType, target_id: target.targetId });
       if (error) throw error;
+      if (target.targetType === 'user' && userId !== target.targetId) {
+        await notifications.create?.(userId, { recipientId: target.targetId, actorId: userId, kind: 'follow', category: 'follows', title: 'followed you', link: `/profile/${userId}`, targetType: 'user', targetId: userId });
+      }
       return 'following';
     },
     async unfollow(userId: ID, target: Follow) {
@@ -372,6 +381,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     async approveRequest(userId: ID, requesterId: ID) {
       const { error } = await client.rpc('approve_follow_request', { p_target_user_id: userId, p_requester_id: requesterId });
       if (error) throw error;
+      await notifications.create?.(userId, { recipientId: requesterId, actorId: userId, kind: 'follow_approved', category: 'follows', title: 'approved your follow request', link: `/profile/${userId}`, targetType: 'user', targetId: userId });
     },
     async rejectRequest(userId: ID, requesterId: ID) {
       const { error } = await client.from('follow_requests').delete().match({ requester_id: requesterId, target_user_id: userId });
@@ -395,6 +405,11 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
             title: r.title,
             body: r.body ?? undefined,
             link: r.link ?? undefined,
+            actorId: r.actor_id ?? undefined,
+            targetType: r.target_type ?? undefined,
+            targetId: r.target_id ?? undefined,
+            category: r.category ?? undefined,
+            metadata: r.metadata ?? undefined,
             readAt: r.read_at,
             createdAt: r.created_at,
           }) as NotificationDTO,
@@ -405,6 +420,31 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
         .from('notifications')
         .update({ read_at: new Date().toISOString() })
         .match({ id: notificationId, user_id: userId });
+      if (error) throw error;
+    },
+    async getSettings(userId: ID) {
+      const { data, error } = await client.from('notification_settings').select('*').eq('user_id', userId).maybeSingle();
+      if (error) throw error;
+      return data ?? {};
+    },
+    async updateSettings(userId: ID, settings) {
+      const { error } = await client.from('notification_settings').upsert({ user_id: userId, ...settings, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    },
+    async create(userId: ID, input) {
+      if (input.recipientId === userId) return;
+      const { error } = await client.rpc('create_notification', {
+        p_recipient_id: input.recipientId,
+        p_actor_id: input.actorId ?? userId,
+        p_kind: input.kind,
+        p_category: input.category ?? input.kind,
+        p_title: input.title,
+        p_body: input.body ?? null,
+        p_link: input.link ?? null,
+        p_target_type: input.targetType ?? null,
+        p_target_id: input.targetId ?? null,
+        p_metadata: input.metadata ?? {},
+      });
       if (error) throw error;
     },
     async markAllRead(userId: ID) {

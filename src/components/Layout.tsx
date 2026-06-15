@@ -1,16 +1,17 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Compass, Users, Wrench, Inbox, User, Moon, Sun, Layers, PenSquare, Shield, Bookmark } from 'lucide-react';
+import { Bell, Compass, Users, Wrench, User, Moon, Sun, Layers, PenSquare, Shield, Bookmark } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
 import { useState } from 'react';
 import PrivacyModal from './PrivacyModal';
-import { useMockComms } from '../hooks/useMockComms';
+import NotificationBell from './NotificationBell';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function Layout() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
-  const { unreadBadgeCount } = useMockComms();
+  const { unreadCount } = useNotifications();
 
 
   const navItems = [
@@ -19,7 +20,7 @@ export default function Layout() {
     { name: 'Create', path: '/create', icon: PenSquare, Shield },
     { name: 'Library', path: '/library', icon: Bookmark },
     { name: 'Lab', path: '/lab', icon: Wrench },
-    { name: 'Comms', path: '/comms', icon: Inbox },
+    { name: 'Notifications', path: '/notifications', icon: Bell },
   ];
 
   const getPageTitle = () => {
@@ -63,9 +64,9 @@ export default function Layout() {
               >
                 <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
                 <span className="font-medium">{item.name}</span>
-                {item.name === 'Comms' && unreadBadgeCount > 0 && (
+                {item.name === 'Notifications' && unreadCount > 0 && (
                   <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
-                    {unreadBadgeCount}
+                    {unreadCount}
                   </span>
                 )}
               </Link>
@@ -115,9 +116,10 @@ export default function Layout() {
               {getPageTitle()}
             </h1>
 
+            <div className="flex items-center gap-2"><NotificationBell />
             <button onClick={toggleTheme} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors">
               {theme === 'dark' ? <Sun size={16} className="text-zinc-300" /> : <Moon size={16} className="text-slate-600" />}
-            </button>
+            </button></div>
           </div>
         </header>
 
@@ -126,6 +128,7 @@ export default function Layout() {
            <h1 className="text-2xl font-bold tracking-tight">
               {getPageTitle()}
             </h1>
+            <NotificationBell />
         </header>
 
         <div className="md:hidden p-4 pb-0">
@@ -154,9 +157,9 @@ export default function Layout() {
               >
                 <span className="relative">
                   <item.icon size={20} className={cn(isActive && "fill-emerald-500/20")} />
-                  {item.name === 'Comms' && unreadBadgeCount > 0 && (
+                  {item.name === 'Notifications' && unreadCount > 0 && (
                     <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white">
-                      {unreadBadgeCount}
+                      {unreadCount}
                     </span>
                   )}
                 </span>

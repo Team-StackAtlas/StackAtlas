@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { SUPPLEMENTS, BRANDS, getPosts, TYPE_TAGS } from '../data/mockData';
 import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Flag } from 'lucide-react';
@@ -8,6 +8,7 @@ import ReportModal from '../components/ReportModal';
 import AccessBadge from '../components/AccessBadge';
 import Sources from '../components/Sources';
 import { useFollowing } from '../hooks/useFollowing';
+import { useAuth } from '../context/AuthContext';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
@@ -21,6 +22,27 @@ export default function SupplementPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
+  const { services, isBackendConfigured } = useAuth();
+  const [followerCount, setFollowerCount] = useState(0);
+
+  useEffect(() => {
+    if (!supplement) return;
+    if (isBackendConfigured && services) {
+      services.follows.count({ targetType: 'substance', targetId: supplement.id }).then(setFollowerCount).catch(() => setFollowerCount(isFollowing('substance', supplement.id) ? 1 : 0));
+    } else {
+      setFollowerCount(isFollowing('substance', supplement.id) ? 1 : 0);
+    }
+  }, [isBackendConfigured, isFollowing, services, supplement]);
+
+  const handleSubstanceFollow = async () => {
+    if (!supplement) return;
+    await toggleFollow('substance', supplement.id);
+    if (isBackendConfigured && services) {
+      services.follows.count({ targetType: 'substance', targetId: supplement.id }).then(setFollowerCount).catch(() => undefined);
+    } else {
+      setFollowerCount(isFollowing('substance', supplement.id) ? 0 : 1);
+    }
+  };
 
   if (!supplement) {
     return <div className="text-center py-20 text-zinc-400">Substance not found.</div>;
@@ -75,7 +97,7 @@ export default function SupplementPage() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">{supplement.name}</h1>
-            <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">{isFollowing('substance', supplement.id) ? 1 : 0} followers</span>
+            <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">{followerCount} followers</span>
             <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-100 px-2.5 py-1 text-sm font-medium text-slate-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400" title="Classification">
               <AccessBadge classification={supplement.classification} />
               {supplement.classification}
@@ -110,7 +132,7 @@ export default function SupplementPage() {
         <div className="flex flex-col gap-2 shrink-0 mt-8 sm:mt-0 w-full sm:w-auto">
           <div className="flex gap-2 w-full">
             <button
-              onClick={() => toggleFollow('substance', supplement.id)}
+              onClick={handleSubstanceFollow}
               className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold transition-colors shadow-sm ${
                 isFollowing('substance', supplement.id)
                   ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
