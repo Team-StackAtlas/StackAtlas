@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import AdminResearch from './AdminResearch';
 import { useAuth } from '../context/AuthContext';
 import type { ModerationQueueItem, ProfileDTO } from '../services/types';
 
-type Tab = 'review' | 'suggest' | 'users' | 'deleted' | 'quarters' | 'log';
-const tabs: [Tab, string][] = [['review', 'Review'], ['suggest', 'Suggest Edits'], ['users', 'Users'], ['deleted', 'Deleted'], ['quarters', 'Quarters'], ['log', 'Log']];
+type Tab = 'review' | 'suggest' | 'users' | 'deleted' | 'quarters' | 'research' | 'log';
+const tabs: [Tab, string][] = [['review', 'Review'], ['suggest', 'Suggest Edits'], ['users', 'Users'], ['deleted', 'Deleted'], ['quarters', 'Quarters'], ['research', 'Research'], ['log', 'Log']];
 
 function isAdmin(profile: ProfileDTO | null, userEmail?: string | null) {
   return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner' || profile?.username === 'domonic' || userEmail === 'matadomonic@gmail.com';
@@ -67,7 +68,7 @@ export default function Admin() {
   };
 
   return <div className="mx-auto max-w-6xl space-y-5 px-4 pb-12 pt-6">
-    <div><h1 className="text-3xl font-black">Admin</h1><p className="text-sm text-slate-500">Site-wide reports, suggest edits, users, deleted content, Quarters, and moderation log.</p></div>
+    <div><h1 className="text-3xl font-black">Admin</h1><p className="text-sm text-slate-500">Site-wide reports, suggest edits, users, deleted content, Quarters, Research, and moderation log.</p></div>
     <div className="flex flex-wrap gap-2">{tabs.map(([value, label]) => <button key={value} onClick={() => setTab(value)} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === value ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}>{label}</button>)}</div>
     {message && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{message}</div>}
     {tab === 'review' && <QueueTable items={reports} onAct={act} actions={['reviewed', 'rejected', 'action_taken']} />}
@@ -75,6 +76,7 @@ export default function Admin() {
     {tab === 'users' && <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="mb-3 flex gap-2"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search username or email" className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950" /><button onClick={async () => services && setUsers(await services.moderation.listUsers(query))} className="rounded-xl bg-emerald-600 px-4 py-2 text-white">Search</button></div><div className="space-y-2">{users.map((target) => <div key={target.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-zinc-800"><strong>@{target.username}</strong> <span className="text-slate-500">{target.email}</span><p>Status: {target.accountStatus} · Role: {target.siteRole}</p><div className="mt-2 flex flex-wrap gap-2">{['warned','suspended','banned','active'].map((status) => <button key={status} onClick={() => userAction(target, status)} className="rounded-lg bg-slate-100 px-2 py-1 text-xs dark:bg-zinc-800">{status}</button>)}{isOwner && target.siteRole !== 'site_owner' && <><button onClick={() => userAction(target, 'site_admin')} className="rounded-lg bg-emerald-100 px-2 py-1 text-xs text-emerald-700">Grant admin</button><button onClick={() => userAction(target, 'user')} className="rounded-lg bg-red-100 px-2 py-1 text-xs text-red-700">Remove admin</button></>}</div></div>)}</div></section>}
     {tab === 'deleted' && <Empty title="Deleted content" text="Soft-deleted content restored by admins appears here when backed by Supabase rows with deleted_at/restored_at fields." />}
     {tab === 'quarters' && <Empty title="Quarters" text="Site admins can moderate Quarter messages and members through the Quarter Controls in Comms; private DM bodies are not shown here." />}
+    {tab === 'research' && <AdminResearch profile={profile} user={user} />}
     {tab === 'log' && <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="space-y-2">{log.map((entry) => <div key={entry.id} className="rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950"><strong>{entry.actionType}</strong> on {entry.targetType}:{entry.targetId}<p className="text-xs text-slate-500">{entry.adminUsername ? `@${entry.adminUsername} · ` : ''}{new Date(entry.createdAt).toLocaleString()}</p>{entry.note && <p>{entry.note}</p>}</div>)}</div></section>}
   </div>;
 }
