@@ -7,8 +7,8 @@ import type { ModerationQueueItem, ProfileDTO } from '../services/types';
 type Tab = 'review' | 'suggest' | 'users' | 'deleted' | 'quarters' | 'research' | 'log';
 const tabs: [Tab, string][] = [['review', 'Review'], ['suggest', 'Suggest Edits'], ['users', 'Users'], ['deleted', 'Deleted'], ['quarters', 'Quarters'], ['research', 'Research'], ['log', 'Log']];
 
-function isAdmin(profile: ProfileDTO | null, userEmail?: string | null) {
-  return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner' || profile?.username === 'domonic' || userEmail === 'matadomonic@gmail.com';
+function isAdmin(profile: ProfileDTO | null) {
+  return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner';
 }
 
 export default function Admin() {
@@ -20,8 +20,8 @@ export default function Admin() {
   const [log, setLog] = useState<{ id: string; actionType: string; targetType: string; targetId: string; note?: string; createdAt: string; adminUsername?: string }[]>([]);
   const [message, setMessage] = useState('');
 
-  const allowed = isAdmin(profile, user?.email);
-  const isOwner = profile?.siteRole === 'site_owner' || profile?.username === 'domonic' || user?.email === 'matadomonic@gmail.com';
+  const allowed = isAdmin(profile);
+  const isOwner = profile?.siteRole === 'site_owner';
 
   const load = async () => {
     if (!services) return;

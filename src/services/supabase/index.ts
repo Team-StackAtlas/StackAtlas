@@ -58,7 +58,7 @@ function readableProfileError(error: { message?: string; code?: string }) {
   return message;
 }
 
-function mapProfile(row: any, stats?: any): ProfileDTO {
+function mapProfile(row: any, stats?: any, email?: string | null): ProfileDTO {
   return {
     id: row.id,
     username: row.username,
@@ -77,8 +77,8 @@ function mapProfile(row: any, stats?: any): ProfileDTO {
     isVerified: !!row.is_verified,
     joinDate: row.created_at,
     settings: row.settings ?? {},
-    email: row.users?.email ?? row.email ?? null,
-    siteRole: row.site_role ?? (row.username === 'domonic' || row.users?.email === 'matadomonic@gmail.com' || row.email === 'matadomonic@gmail.com' ? 'site_owner' : 'user'),
+    email: email ?? row.email ?? null,
+    siteRole: row.site_role ?? (row.username === 'domonic' || email?.toLowerCase() === 'matadomonic@gmail.com' || row.email?.toLowerCase() === 'matadomonic@gmail.com' ? 'site_owner' : 'user'),
     accountStatus: row.account_status ?? 'active',
     stats: stats
       ? {
@@ -124,24 +124,36 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
   library: LibraryService;
   postLikes: PostLikeService;
 } {
+  async function getUserEmail(userId: ID) {
+    const { data, error } = await client.from('users').select('email').eq('id', userId).maybeSingle();
+    if (error) throw error;
+    return data?.email ?? null;
+  }
+
   const profiles: ProfileService = {
     async get(userId: ID) {
-      const { data, error } = await client.from('profiles').select('*, users(email)').eq('id', userId).maybeSingle();
+      const { data, error } = await client.from('profiles').select('*').eq('id', userId).maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      const { data: stats } = await client.from('profile_stats').select('*').eq('id', userId).maybeSingle();
-      return mapProfile(data, stats);
+      const [email, { data: stats }] = await Promise.all([
+        getUserEmail(userId),
+        client.from('profile_stats').select('*').eq('id', userId).maybeSingle(),
+      ]);
+      return mapProfile(data, stats, email);
     },
     async getByUsername(username: string) {
       const { data, error } = await client
         .from('profiles')
-        .select('*, users(email)')
+        .select('*')
         .eq('username', username)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      const { data: stats } = await client.from('profile_stats').select('*').eq('id', data.id).maybeSingle();
-      return mapProfile(data, stats);
+      const [email, { data: stats }] = await Promise.all([
+        getUserEmail(data.id),
+        client.from('profile_stats').select('*').eq('id', data.id).maybeSingle(),
+      ]);
+      return mapProfile(data, stats, email);
     },
     async update(userId: ID, patch: ProfileUpdate) {
       const payload: Record<string, unknown> = {};
@@ -184,7 +196,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
 
     const { data, error } = await client
       .from('profiles')
-      .insert({ id: authUser.id, username: fallbackUsername(authUser.id), settings: {}, site_role: authUser.email === 'matadomonic@gmail.com' ? 'site_owner' : 'user' })
+      .insert({ id: authUser.id, username: authUser.email === 'matadomonic@gmail.com' ? 'domonic' : fallbackUsername(authUser.id), settings: {}, site_role: authUser.email === 'matadomonic@gmail.com' ? 'site_owner' : 'user' })
       .select('*')
       .single();
     if (error) throw new Error(readableProfileError(error));
@@ -601,10 +613,26 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       await client.from('moderation_log').insert({ action_type: role === 'site_admin' ? 'site admin granted' : 'site admin removed', target_type: 'user', target_id: userId });
     },
     async listUsers(query = '') {
-      const q = client.from('profiles').select('*, users(email)').order('username');
-      const { data, error } = query.trim() ? await q.or(`username.ilike.%${query.trim()}%,users.email.ilike.%${query.trim()}%`) : await q.limit(50);
+      const search = query.trim();
+      const { data: matchingUsers, error: matchingUsersError } = search
+        ? await client.from('users').select('id,email').ilike('email', `%${search}%`)
+        : { data: [], error: null };
+      if (matchingUsersError) throw matchingUsersError;
+      const matchingUserIds = (matchingUsers ?? []).map((row: any) => row.id);
+
+      const profileQuery = client.from('profiles').select('*').order('username');
+      const { data: rows, error } = search
+        ? await profileQuery.or(`username.ilike.%${search}%,id.in.(${matchingUserIds.join(',') || '00000000-0000-0000-0000-000000000000'})`)
+        : await profileQuery.limit(50);
       if (error) throw error;
-      return (data ?? []).map((row: any) => mapProfile(row));
+
+      const userIds = Array.from(new Set([...(rows ?? []).map((row: any) => row.id), ...matchingUserIds]));
+      const { data: users, error: usersError } = userIds.length
+        ? await client.from('users').select('id,email').in('id', userIds)
+        : { data: [], error: null };
+      if (usersError) throw usersError;
+      const emailById = new Map((users ?? []).map((row: any) => [row.id, row.email ?? null]));
+      return (rows ?? []).map((row: any) => mapProfile(row, undefined, emailById.get(row.id) ?? null));
     },
     async listLog() {
       const { data, error } = await client.from('moderation_log').select('id,action_type,target_type,target_id,note,created_at,profiles:admin_user_id(username)').order('created_at', { ascending: false }).limit(100);

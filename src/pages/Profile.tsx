@@ -42,6 +42,7 @@ export default function Profile() {
   const { following: followedItems, requests: followRequests, isFollowing, requestStatus, toggleFollow } = useFollowing();
   const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
+  const [profileError, setProfileError] = useState('');
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
   const [activeTab, setActiveTab] = useState<ProfileTab>(() => (searchParams.get('tab') as ProfileTab) || 'all');
   const [saving, setSaving] = useState(false);
@@ -86,6 +87,7 @@ export default function Profile() {
       }
 
       setLoadingProfile(true);
+      setProfileError('');
       const loaded = username ? await services.profiles.getByUsername(normalizeUsername(username)) : authProfile;
       if (active) {
         setProfile(loaded ?? null);
@@ -94,7 +96,9 @@ export default function Profile() {
     }
     loadProfile().catch((err) => {
       if (active) {
-        toast(err instanceof Error ? err.message : 'Failed to load profile.', 'error');
+        const message = err instanceof Error ? err.message : 'Failed to load profile.';
+        setProfileError(message);
+        toast(message, 'error');
         setLoadingProfile(false);
       }
     });
@@ -192,6 +196,10 @@ export default function Profile() {
 
   if (loadingProfile || status === 'loading') {
     return <div className="mx-auto max-w-3xl p-6 text-sm text-slate-500 dark:text-zinc-400">Loading profile…</div>;
+  }
+
+  if (profileError) {
+    return <div className="mx-auto max-w-3xl p-6"><div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{profileError}</div></div>;
   }
 
   if (!shownProfile) {

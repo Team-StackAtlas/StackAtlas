@@ -14,7 +14,7 @@ const studyTypes = ['human_rct','human_observational','review','meta_analysis','
 const noteReview = ['pending_review','approved','approved_with_edits','rejected','irrelevant','needs_review','archived'];
 const flags = ['animal_only','in_vitro_only','no_dose_found','weak_entity_match','abbreviation_conflict','review_not_original_trial','endpoint_too_broad','unclear_population','possible_duplicate','possible_safety_note','conflicting_result','needs_manual_check'];
 
-function admin(profile: ProfileDTO | null, user: SessionUser | null) { return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner' || profile?.username === 'domonic' || user?.email === 'matadomonic@gmail.com'; }
+function admin(profile: ProfileDTO | null) { return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner'; }
 function err(prefix: string, e: unknown) { const x = e as { code?: string; message?: string }; return `${prefix} Supabase returned ${x.code ?? 'unknown_code'}: ${x.message ?? 'No Supabase message returned.'}`; }
 function val(v: unknown) { return typeof v === 'string' || typeof v === 'number' ? String(v) : ''; }
 
@@ -23,7 +23,7 @@ export default function AdminResearch({ profile, user }: { profile: ProfileDTO |
   const [substances, setSubstances] = useState<Row[]>([]), [runs, setRuns] = useState<Row[]>([]), [sources, setSources] = useState<Row[]>([]), [notes, setNotes] = useState<Row[]>([]);
   const [form, setForm] = useState<Row | null>(null), [kind, setKind] = useState<'run'|'source'|'note'|null>(null), [message, setMessage] = useState(''), [dupe, setDupe] = useState<Row | null>(null);
   const [filters, setFilters] = useState<Record<string,string>>({});
-  const allowed = admin(profile, user);
+  const allowed = admin(profile);
   const load = async () => {
     if (!supabase || !allowed) return;
     setMessage('');

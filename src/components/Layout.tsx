@@ -28,8 +28,8 @@ export default function Layout() {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const { unreadCount } = useNotifications();
   const { counts: commsCounts } = useMockComms();
-  const { profile, user } = useAuth();
-  const showAdmin = profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner' || profile?.username === 'domonic' || user?.email === 'matadomonic@gmail.com';
+  const { profile } = useAuth();
+  const showAdmin = profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner';
 
   const navItems = [
     { name: 'Map', path: '/map', icon: Compass },
