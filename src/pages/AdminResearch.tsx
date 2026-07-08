@@ -2,62 +2,675 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../services/supabase/client';
 import type { ProfileDTO, SessionUser } from '../services/types';
 
-type Section = 'Runs' | 'Sources' | 'Extracted Notes' | 'Review';
-type Row = Record<string, unknown>;
-const runStatuses = ['draft','collecting_sources','extracting_notes','needs_review','completed','failed'];
-const sourceTypes = ['human_study','review_or_meta_analysis','animal_study','in_vitro_or_mechanistic','official_label_or_document','brand_or_vendor_document','coa_or_testing_document','practitioner_source','community_or_influencer_mention','other'];
-const sourceTiers = ['formal_scientific','official_document','medical_explainer','practitioner_context','community_context','unknown'];
-const matchStatuses = ['strong_match','possible_match','weak_match','abbreviation_conflict','rejected_match'];
-const sourceReview = ['unreviewed','needs_review','approved','rejected','archived'];
-const directions = ['increased','decreased','no_clear_change','mixed','not_extractable'];
-const studyTypes = ['human_rct','human_observational','review','meta_analysis','animal','in_vitro','mechanistic','official_document','other'];
-const noteReview = ['pending_review','approved','approved_with_edits','rejected','irrelevant','needs_review','archived'];
-const flags = ['animal_only','in_vitro_only','no_dose_found','weak_entity_match','abbreviation_conflict','review_not_original_trial','endpoint_too_broad','unclear_population','possible_duplicate','possible_safety_note','conflicting_result','needs_manual_check'];
+type SourceType =
+  | 'human_study'
+  | 'review_or_meta_analysis'
+  | 'animal_study'
+  | 'in_vitro_or_mechanistic'
+  | 'official_label_or_document'
+  | 'brand_or_vendor_document'
+  | 'coa_or_testing_document'
+  | 'practitioner_source'
+  | 'community_or_influencer_mention'
+  | 'other';
+type Substance = { id: string; name: string };
+type Source = {
+  id: string;
+  title: string;
+  url: string | null;
+  pmid: string | null;
+  doi: string | null;
+  year: number | null;
+  journal_or_site: string | null;
+  authors?: string | null;
+  abstract?: string | null;
+  source_type: SourceType;
+  created_at: string;
+  research_source_substances?: { notes: string | null; substances: Substance | null }[];
+};
+type Form = {
+  substanceId: string;
+  title: string;
+  sourceType: string;
+  url: string;
+  pmid: string;
+  doi: string;
+  year: string;
+  journalOrSite: string;
+  authors: string;
+  abstract: string;
+  notes: string;
+};
+type PreviewRow = Form & {
+  rowNumber: number;
+  status:
+    | 'Ready'
+    | 'Possible Duplicate'
+    | 'Missing Substance'
+    | 'Unknown Substance'
+    | 'Missing Title'
+    | 'Invalid Source Type';
+  normalizedType?: SourceType;
+  duplicateReason?: string;
+};
 
-function admin(profile: ProfileDTO | null) { return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner'; }
-function err(prefix: string, e: unknown) { const x = e as { code?: string; message?: string }; return `${prefix} Supabase returned ${x.code ?? 'unknown_code'}: ${x.message ?? 'No Supabase message returned.'}`; }
-function val(v: unknown) { return typeof v === 'string' || typeof v === 'number' ? String(v) : ''; }
+const sourceTypeOptions: { value: SourceType; label: string }[] = [
+  { value: 'human_study', label: 'Human Study' },
+  { value: 'review_or_meta_analysis', label: 'Review or Meta-analysis' },
+  { value: 'animal_study', label: 'Animal Study' },
+  { value: 'in_vitro_or_mechanistic', label: 'In vitro or Mechanistic' },
+  { value: 'official_label_or_document', label: 'Official Label or Document' },
+  { value: 'brand_or_vendor_document', label: 'Brand or Vendor Document' },
+  { value: 'coa_or_testing_document', label: 'COA or Testing Document' },
+  { value: 'practitioner_source', label: 'Practitioner Source' },
+  { value: 'community_or_influencer_mention', label: 'Community or Influencer Mention' },
+  { value: 'other', label: 'Other' },
+];
 
-export default function AdminResearch({ profile, user }: { profile: ProfileDTO | null; user: SessionUser | null }) {
-  const [section, setSection] = useState<Section>('Runs');
-  const [substances, setSubstances] = useState<Row[]>([]), [runs, setRuns] = useState<Row[]>([]), [sources, setSources] = useState<Row[]>([]), [notes, setNotes] = useState<Row[]>([]);
-  const [form, setForm] = useState<Row | null>(null), [kind, setKind] = useState<'run'|'source'|'note'|null>(null), [message, setMessage] = useState(''), [dupe, setDupe] = useState<Row | null>(null);
-  const [filters, setFilters] = useState<Record<string,string>>({});
-  const allowed = admin(profile);
+const blankForm: Form = {
+  substanceId: '',
+  title: '',
+  sourceType: '',
+  url: '',
+  pmid: '',
+  doi: '',
+  year: '',
+  journalOrSite: '',
+  authors: '',
+  abstract: '',
+  notes: '',
+};
+
+function isAdmin(profile: ProfileDTO | null) {
+  return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner';
+}
+function isOwner(profile: ProfileDTO | null) {
+  return profile?.siteRole === 'site_owner';
+}
+function clean(value: unknown) {
+  return String(value ?? '').trim();
+}
+function normalizeTitle(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+function typeLabel(value?: string | null) {
+  return sourceTypeOptions.find((option) => option.value === value)?.label ?? 'Other';
+}
+function normalizeSourceType(value: string): SourceType | null {
+  const key = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  const map: Record<string, SourceType> = {
+    human_study: 'human_study',
+    human_rct: 'human_study',
+    review: 'review_or_meta_analysis',
+    meta_analysis: 'review_or_meta_analysis',
+    animal_study: 'animal_study',
+    in_vitro: 'in_vitro_or_mechanistic',
+    mechanistic: 'in_vitro_or_mechanistic',
+    official_label: 'official_label_or_document',
+    government_document: 'official_label_or_document',
+    vendor_document: 'brand_or_vendor_document',
+    coa: 'coa_or_testing_document',
+    testing_document: 'coa_or_testing_document',
+    practitioner_source: 'practitioner_source',
+    influencer_mention: 'community_or_influencer_mention',
+    other: 'other',
+  };
+  return (
+    map[key] ??
+    (sourceTypeOptions.some((option) => option.value === key) ? (key as SourceType) : null)
+  );
+}
+function parseCsv(text: string) {
+  const rows: string[][] = [];
+  let cell = '',
+    row: string[] = [],
+    quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i],
+      next = text[i + 1];
+    if (char === '"' && quoted && next === '"') {
+      cell += '"';
+      i += 1;
+    } else if (char === '"') quoted = !quoted;
+    else if (char === ',' && !quoted) {
+      row.push(cell.trim());
+      cell = '';
+    } else if ((char === '\n' || char === '\r') && !quoted) {
+      if (char === '\r' && next === '\n') i += 1;
+      row.push(cell.trim());
+      if (row.some(Boolean)) rows.push(row);
+      row = [];
+      cell = '';
+    } else cell += char;
+  }
+  row.push(cell.trim());
+  if (row.some(Boolean)) rows.push(row);
+  return rows;
+}
+
+export default function AdminResearch({
+  profile,
+  user,
+}: {
+  profile: ProfileDTO | null;
+  user: SessionUser | null;
+}) {
+  const [substances, setSubstances] = useState<Substance[]>([]),
+    [sources, setSources] = useState<Source[]>([]);
+  const [message, setMessage] = useState(''),
+    [csv, setCsv] = useState(''),
+    [preview, setPreview] = useState<PreviewRow[]>([]),
+    [summary, setSummary] = useState('');
+  const [form, setForm] = useState<Form>(blankForm),
+    [filters, setFilters] = useState({ substanceId: '', sourceType: '', search: '' });
+  const allowed = isAdmin(profile),
+    owner = isOwner(profile);
+
   const load = async () => {
     if (!supabase || !allowed) return;
     setMessage('');
-    const [subs, runRows, sourceRows, noteRows] = await Promise.all([
+    const [subs, sourceRows] = await Promise.all([
       supabase.from('substances').select('id,name').order('name'),
-      supabase.from('research_runs').select('*, substances(name), research_sources(count), research_extracted_notes(count)').order('updated_at', { ascending: false }),
-      supabase.from('research_sources').select('*, substances(name), research_runs(title)').order('created_at', { ascending: false }),
-      supabase.from('research_extracted_notes').select('*, substances(name), research_sources(title,doi,pmid,url,abstract)').order('created_at', { ascending: false }),
+      supabase
+        .from('research_sources')
+        .select(
+          'id,title,url,pmid,doi,year,journal_or_site,authors,abstract,source_type,created_at,research_source_substances(notes,substances(id,name))',
+        )
+        .order('created_at', { ascending: false }),
     ]);
-    if (subs.error) throw subs.error; if (runRows.error) throw runRows.error; if (sourceRows.error) throw sourceRows.error; if (noteRows.error) throw noteRows.error;
-    setSubstances(subs.data ?? []); setRuns(runRows.data ?? []); setSources(sourceRows.data ?? []); setNotes(noteRows.data ?? []);
+    if (subs.error) throw subs.error;
+    if (sourceRows.error) throw sourceRows.error;
+    setSubstances((subs.data ?? []) as Substance[]);
+    setSources((sourceRows.data ?? []) as unknown as Source[]);
   };
-  useEffect(() => { load().catch((e) => setMessage(e instanceof Error ? e.message : 'Failed to load research data.')); }, [allowed]);
-  const filtered = useMemo(() => ({
-    runs: runs.filter(r => (!filters.substance || r.substance_id === filters.substance) && (!filters.status || r.status === filters.status)),
-    sources: sources.filter(r => (!filters.substance || r.substance_id === filters.substance) && (!filters.source_type || r.source_type === filters.source_type) && (!filters.source_tier || r.source_tier === filters.source_tier) && (!filters.match_status || r.match_status === filters.match_status) && (!filters.review_status || r.review_status === filters.review_status)),
-    notes: notes.filter(r => (!filters.substance || r.substance_id === filters.substance) && (!filters.endpoint || val(r.endpoint).toLowerCase().includes(filters.endpoint.toLowerCase())) && (!filters.direction || r.direction === filters.direction) && (!filters.study_type || r.study_type === filters.study_type) && (!filters.review_status || r.review_status === filters.review_status) && (!filters.extraction_flag || (r.extraction_flags as string[] | undefined)?.includes(filters.extraction_flag))),
-  }), [runs, sources, notes, filters]);
-  if (!allowed) return <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">You do not have access to Admin Research.</div>;
-  const saveRun = async () => { if (!supabase || !form) return; if (!form.substance_id) return setMessage('Choose a substance before saving this run.'); if (!val(form.title).trim()) return setMessage('Add a title before saving this run.'); const payload = { substance_id: form.substance_id, title: form.title, status: form.status ?? 'draft', notes: form.notes ?? null, updated_at: new Date().toISOString() }; const q = form.id ? supabase.from('research_runs').update(payload).eq('id', form.id) : supabase.from('research_runs').insert(payload); const { error } = await q; if (error) return setMessage(err(form.id ? 'Run was not updated.' : 'Run was not saved.', error)); setForm(null); await load(); };
-  const duplicate = () => sources.find(s => s.id !== form?.id && ((form?.pmid && s.pmid === form.pmid) || (form?.doi && s.doi === form.doi) || (form?.url && s.url === form.url) || (val(form?.title).trim().toLowerCase() && val(s.title).trim().toLowerCase() === val(form?.title).trim().toLowerCase())));
-  const saveSource = async (force = false) => { if (!supabase || !form) return; if (!form.substance_id) return setMessage('Choose a substance before saving this source.'); if (!val(form.title).trim()) return setMessage('Add a title before saving this source.'); if (!form.source_type) return setMessage('Choose a source type before saving this source.'); if (!form.match_status) return setMessage('Choose a match status before saving this source.'); if (!form.review_status) return setMessage('Choose a review status before saving this source.'); const d = duplicate(); if (d && !force) return setDupe(d); let raw = {}; try { raw = form.raw_metadata ? JSON.parse(val(form.raw_metadata)) : {}; } catch { raw = {}; } const payload = { research_run_id: form.research_run_id || null, substance_id: form.substance_id, title: form.title, authors: form.authors || null, year: form.year ? Number(form.year) : null, journal_or_site: form.journal_or_site || null, url: form.url || null, doi: form.doi || null, pmid: form.pmid || null, source_type: form.source_type, source_tier: form.source_tier || 'unknown', abstract: form.abstract || null, raw_metadata: raw, match_status: form.match_status, review_status: form.review_status, updated_at: new Date().toISOString() }; const q = form.id ? supabase.from('research_sources').update(payload).eq('id', form.id) : supabase.from('research_sources').insert(payload); const { error } = await q; if (error) return setMessage(err(form.id ? 'Source was not updated.' : 'Source was not saved.', error)); setForm(null); setDupe(null); await load(); };
-  const saveNote = async (review?: string) => { if (!supabase || !form) return; if (!form.research_source_id) return setMessage('Choose a source before saving this extracted note.'); if (!form.substance_id) return setMessage('Choose a substance before saving this extracted note.'); if (!val(form.endpoint).trim()) return setMessage('Add an endpoint before saving this extracted note.'); if (!form.direction) return setMessage('Choose a direction before saving this extracted note.'); if (!form.study_type) return setMessage('Choose a study type before saving this extracted note.'); if (!form.review_status && !review) return setMessage('Choose a review status before saving this extracted note.'); const status = review ?? form.review_status; const payload: Row = { research_run_id: form.research_run_id || null, research_source_id: form.research_source_id, substance_id: form.substance_id, intervention: form.intervention || null, endpoint: form.endpoint, direction: form.direction, population: form.population || null, dose_amount: form.dose_amount ? Number(form.dose_amount) : null, dose_unit: form.dose_unit || null, route: form.route || null, frequency: form.frequency || null, duration: form.duration || null, study_type: form.study_type, short_result_summary: form.short_result_summary || null, adverse_event_note: form.adverse_event_note || null, extraction_notes: form.extraction_notes || null, extraction_flags: form.extraction_flags ?? [], review_status: status, updated_at: new Date().toISOString() }; if (review) { payload.reviewed_by = user?.id; payload.reviewed_at = new Date().toISOString(); } const q = form.id ? supabase.from('research_extracted_notes').update(payload).eq('id', form.id) : supabase.from('research_extracted_notes').insert(payload); const { error } = await q; if (error) return setMessage(err(form.id ? 'Extracted note was not updated.' : 'Extracted note was not saved.', error)); setForm(null); await load(); };
-  const review = async (n: Row, status: string) => { if (status === 'approved_with_edits') { setKind('note'); setForm({ ...n, review_status: 'approved_with_edits' }); return; } const { error } = await supabase!.from('research_extracted_notes').update({ review_status: status, reviewed_by: status === 'needs_review' ? null : user?.id, reviewed_at: status === 'needs_review' ? null : new Date().toISOString() }).eq('id', n.id); if (error) return setMessage(err('Review status was not updated.', error)); await load(); };
-  return <section className="space-y-4"><h1 className="text-3xl font-black">Substance Research</h1><div className="flex flex-wrap gap-2">{(['Runs','Sources','Extracted Notes','Review'] as Section[]).map(s => <button className={`rounded-full px-4 py-2 text-sm font-semibold ${section===s?'bg-emerald-600 text-white':'bg-slate-100 dark:bg-zinc-800'}`} onClick={() => { setSection(s); setFilters({}); }} key={s}>{s}</button>)}</div>{message && <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{message}</div>}<Filters section={section} substances={substances} filters={filters} setFilters={setFilters} />
-  {section==='Runs' && <Panel button="New Run" onNew={() => {setKind('run');setForm({status:'draft'});}}><Table rows={filtered.runs} cols={['title','substances.name','status','research_sources.count','research_extracted_notes.count','created_at','updated_at']} edit={(r)=>{setKind('run');setForm(r);}} /></Panel>}
-  {section==='Sources' && <Panel button="Add Source" onNew={() => {setKind('source');setForm({source_tier:'unknown',match_status:'strong_match',review_status:'unreviewed'});}}><Table rows={filtered.sources} cols={['title','substances.name','source_type','source_tier','match_status','review_status','year','doi/pmid','created_at']} edit={(r)=>{setKind('source');setForm({...r, raw_metadata: JSON.stringify(r.raw_metadata ?? {}, null, 2)});}} /></Panel>}
-  {section==='Extracted Notes' && <Panel button="Add Extracted Note" onNew={() => {setKind('note');setForm({review_status:'pending_review',extraction_flags:[]});}}><Table rows={filtered.notes} cols={['substances.name','research_sources.title','endpoint','direction','population','dose','route','duration','study_type','extraction_flags','review_status','created_at']} edit={(r)=>{setKind('note');setForm(r);}} /></Panel>}
-  {section==='Review' && <div className="space-y-3">{filtered.notes.filter(n => ['pending_review','needs_review'].includes(val(n.review_status))).map(n => <div key={val(n.id)} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900"><h3 className="font-bold">{val((n.substances as Row)?.name)} · {val((n.research_sources as Row)?.title)}</h3><p className="text-slate-500">{val((n.research_sources as Row)?.doi) || val((n.research_sources as Row)?.pmid) || val((n.research_sources as Row)?.url)}</p><p>{val((n.research_sources as Row)?.abstract).slice(0, 220)}</p><p>{['intervention','endpoint','direction','population','route','frequency','duration','study_type','short_result_summary','adverse_event_note','extraction_notes'].map(k => `${k}: ${val(n[k]) || '—'}`).join(' · ')}</p><p>dose: {[val(n.dose_amount), val(n.dose_unit)].filter(Boolean).join(' ') || '—'} · extraction flags: {((n.extraction_flags as string[]) ?? []).join(', ') || '—'}</p><div className="mt-3 flex flex-wrap gap-2">{[['Approve','approved'],['Approve with Edits','approved_with_edits'],['Reject','rejected'],['Mark Irrelevant','irrelevant'],['Archive','archived'],['Needs Review','needs_review']].map(([label,status]) => <button key={label} onClick={() => review(n,status)} className="rounded-lg bg-slate-100 px-3 py-1 font-semibold dark:bg-zinc-800">{label}</button>)}</div></div>)}</div>}
-  {form && <Form kind={kind} form={form} setForm={setForm} substances={substances} runs={runs} sources={sources} onSave={() => kind==='run'?saveRun():kind==='source'?saveSource():saveNote(form.review_status === 'approved_with_edits' ? 'approved_with_edits' : undefined)} onCancel={() => setForm(null)} />}
-  {dupe && <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"><p>Possible duplicate source found: {val(dupe.title)}. Match: {dupe.pmid===form?.pmid?'pmid':dupe.doi===form?.doi?'doi':dupe.url===form?.url?'url':'normalized title'}.</p><button className="mr-2 rounded bg-emerald-600 px-3 py-1 text-white" onClick={() => saveSource(true)}>Save Anyway</button><button className="rounded bg-slate-200 px-3 py-1" onClick={() => setDupe(null)}>Cancel</button></div>}</section>;
+  useEffect(() => {
+    load().catch((e) =>
+      setMessage(e instanceof Error ? e.message : 'Failed to load research sources.'),
+    );
+  }, [allowed]);
+
+  const substanceByName = useMemo(
+    () => new Map(substances.map((s) => [s.name.toLowerCase(), s])),
+    [substances],
+  );
+  const isDuplicate = (row: Form) => {
+    const title = normalizeTitle(row.title);
+    return sources.find(
+      (source) =>
+        (row.pmid && source.pmid === row.pmid) ||
+        (row.doi && source.doi === row.doi) ||
+        (row.url && source.url === row.url) ||
+        (title &&
+          normalizeTitle(source.title) === title &&
+          source.research_source_substances?.some(
+            (link) => link.substances?.id === row.substanceId,
+          )),
+    );
+  };
+  const buildPreview = () => {
+    const rows = parseCsv(csv);
+    const header = rows.shift()?.map((h) => h.trim().toLowerCase()) ?? [];
+    const seen = {
+      pmids: new Set<string>(),
+      dois: new Set<string>(),
+      urls: new Set<string>(),
+      titleSubstances: new Set<string>(),
+    };
+    const next = rows.map((values, index) => {
+      const get = (name: string) => clean(values[header.indexOf(name)]);
+      const substanceName = get('substance');
+      const type = normalizeSourceType(get('source_type'));
+      const substance = substanceName ? substanceByName.get(substanceName.toLowerCase()) : null;
+      const row: PreviewRow = {
+        ...blankForm,
+        rowNumber: index + 2,
+        substanceId: substance?.id ?? '',
+        title: get('title'),
+        sourceType: get('source_type'),
+        normalizedType: type ?? undefined,
+        url: get('url'),
+        pmid: get('pmid'),
+        doi: get('doi'),
+        year: get('year'),
+        journalOrSite: get('journal_or_site'),
+        authors: get('authors'),
+        abstract: get('abstract'),
+        notes: get('notes'),
+        status: 'Ready',
+      };
+      if (!substanceName) row.status = 'Missing Substance';
+      else if (!substance) row.status = 'Unknown Substance';
+      else if (!row.title) row.status = 'Missing Title';
+      else if (!type) row.status = 'Invalid Source Type';
+      else {
+        const titleSubstance = `${normalizeTitle(row.title)}:${row.substanceId}`;
+        const repeatsImportRow =
+          (row.pmid && seen.pmids.has(row.pmid)) ||
+          (row.doi && seen.dois.has(row.doi)) ||
+          (row.url && seen.urls.has(row.url)) ||
+          seen.titleSubstances.has(titleSubstance);
+        if (isDuplicate(row) || repeatsImportRow) {
+          row.status = 'Possible Duplicate';
+          row.duplicateReason = 'PMID, DOI, URL, or title/substance match';
+        }
+        if (row.pmid) seen.pmids.add(row.pmid);
+        if (row.doi) seen.dois.add(row.doi);
+        if (row.url) seen.urls.add(row.url);
+        seen.titleSubstances.add(titleSubstance);
+      }
+      return row;
+    });
+    setPreview(next);
+    setSummary(`Parsed ${next.length} row${next.length === 1 ? '' : 's'}.`);
+  };
+  const saveRows = async (rows: PreviewRow[]) => {
+    if (!supabase || !user) return;
+    const valid = rows.filter((row) => row.status === 'Ready' && row.normalizedType);
+    const batch = await supabase
+      .from('research_import_batches')
+      .insert({
+        imported_by: user.id,
+        row_count: rows.length,
+        imported_count: valid.length,
+        skipped_count: rows.length - valid.length,
+        error_count: rows.filter((row) => !['Ready', 'Possible Duplicate'].includes(row.status))
+          .length,
+      })
+      .select('id')
+      .single();
+    if (batch.error) {
+      setMessage(batch.error.message);
+      return;
+    }
+    for (const row of valid) {
+      const source = await supabase
+        .from('research_sources')
+        .insert(toSourcePayload(row, user.id, row.normalizedType!))
+        .select('id')
+        .single();
+      if (!source.error)
+        await supabase
+          .from('research_source_substances')
+          .insert({
+            source_id: source.data.id,
+            substance_id: row.substanceId,
+            notes: row.notes || null,
+            created_by: user.id,
+          });
+    }
+    setSummary(`Imported ${valid.length}; skipped ${rows.length - valid.length}.`);
+    setPreview([]);
+    await load();
+  };
+  const saveSingle = async () => {
+    if (!supabase || !user) return;
+    const normalizedType = normalizeSourceType(form.sourceType);
+    if (!form.substanceId) return setMessage('Choose a substance before saving.');
+    if (!form.title.trim()) return setMessage('Add a title before saving.');
+    if (!normalizedType) return setMessage('Choose a source type before saving.');
+    if (isDuplicate(form))
+      return setMessage(
+        'Possible duplicate found. Check the Source Library before adding this source.',
+      );
+    const source = await supabase
+      .from('research_sources')
+      .insert(toSourcePayload(form, user.id, normalizedType))
+      .select('id')
+      .single();
+    if (source.error) return setMessage(source.error.message);
+    const link = await supabase
+      .from('research_source_substances')
+      .insert({
+        source_id: source.data.id,
+        substance_id: form.substanceId,
+        notes: form.notes || null,
+        created_by: user.id,
+      });
+    if (link.error) return setMessage(link.error.message);
+    setForm(blankForm);
+    setSummary('Source saved.');
+    await load();
+  };
+  const filtered = sources.filter(
+    (source) =>
+      (!filters.substanceId ||
+        source.research_source_substances?.some(
+          (link) => link.substances?.id === filters.substanceId,
+        )) &&
+      (!filters.sourceType || source.source_type === filters.sourceType) &&
+      (!filters.search ||
+        [source.title, source.pmid, source.doi].some((value) =>
+          clean(value).toLowerCase().includes(filters.search.toLowerCase()),
+        )),
+  );
+
+  if (!allowed)
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+        You do not have access to Admin Research.
+      </div>
+    );
+  return (
+    <section className="space-y-5">
+      <div>
+        <h1 className="text-3xl font-black">Research</h1>
+        <p className="text-sm text-slate-500">
+          Import and manage reviewed source records for StackAtlas.
+        </p>
+      </div>
+      {message && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {message}
+        </div>
+      )}
+      {summary && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          {summary}
+        </div>
+      )}
+      {owner && (
+        <OwnerImport
+          csv={csv}
+          setCsv={setCsv}
+          preview={preview}
+          parse={buildPreview}
+          save={() => saveRows(preview)}
+        />
+      )}
+      <AddSingle form={form} setForm={setForm} substances={substances} save={saveSingle} />
+      <Library
+        filters={filters}
+        setFilters={setFilters}
+        substances={substances}
+        sources={filtered}
+      />
+    </section>
+  );
 }
-function Filters({ section, substances, filters, setFilters }: { section: Section; substances: Row[]; filters: Record<string,string>; setFilters: (f: Record<string,string>) => void }) { const set=(k:string,v:string)=>setFilters({...filters,[k]:v}); return <div className="flex flex-wrap gap-2"><Select value={filters.substance} onChange={v=>set('substance',v)} opts={substances.map(s=>[val(s.id),val(s.name)])} label="substance" />{section==='Runs'&&<Select value={filters.status} onChange={v=>set('status',v)} opts={runStatuses.map(x=>[x,x])} label="status" />}{(section==='Sources')&&<><Select value={filters.source_type} onChange={v=>set('source_type',v)} opts={sourceTypes.map(x=>[x,x])} label="source type" /><Select value={filters.source_tier} onChange={v=>set('source_tier',v)} opts={sourceTiers.map(x=>[x,x])} label="source tier" /><Select value={filters.match_status} onChange={v=>set('match_status',v)} opts={matchStatuses.map(x=>[x,x])} label="match status" /><Select value={filters.review_status} onChange={v=>set('review_status',v)} opts={sourceReview.map(x=>[x,x])} label="review status" /></>}{(section==='Extracted Notes'||section==='Review')&&<><input className="rounded-xl border px-3 py-2 dark:bg-zinc-950" placeholder="endpoint" value={filters.endpoint??''} onChange={e=>set('endpoint',e.target.value)} /><Select value={filters.direction} onChange={v=>set('direction',v)} opts={directions.map(x=>[x,x])} label="direction" /><Select value={filters.study_type} onChange={v=>set('study_type',v)} opts={studyTypes.map(x=>[x,x])} label="study type" />{section==='Extracted Notes'&&<Select value={filters.review_status} onChange={v=>set('review_status',v)} opts={noteReview.map(x=>[x,x])} label="review status" />}<Select value={filters.extraction_flag} onChange={v=>set('extraction_flag',v)} opts={flags.map(x=>[x,x])} label="extraction flag" /></>}</div>; }
-function Select({ value='', onChange, opts, label }: { value?: string; onChange: (v:string)=>void; opts: string[][]; label: string }) { return <select className="rounded-xl border px-3 py-2 dark:bg-zinc-950" value={value} onChange={e=>onChange(e.target.value)}><option value="">{label}</option>{opts.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>; }
-function Panel({ button, onNew, children }: { button: string; onNew:()=>void; children: React.ReactNode }) { return <div><button onClick={onNew} className="mb-3 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white">{button}</button>{children}</div>; }
-function Table({ rows, cols, edit }: { rows: Row[]; cols: string[]; edit:(r:Row)=>void }) { const get=(r:Row,c:string)=> c.includes('.') ? val((r[c.split('.')[0]] as Row)?.[c.split('.')[1]]) : c==='doi/pmid' ? (val(r.doi)||val(r.pmid)) : c==='dose' ? [val(r.dose_amount),val(r.dose_unit)].filter(Boolean).join(' ') : Array.isArray(r[c]) ? (r[c] as string[]).join(', ') : val(r[c]); return <div className="overflow-x-auto rounded-2xl border bg-white dark:border-zinc-800 dark:bg-zinc-900"><table className="min-w-full text-sm"><thead><tr>{cols.map(c=><th key={c} className="px-3 py-2 text-left">{c}</th>)}<th></th></tr></thead><tbody>{rows.map(r=><tr key={val(r.id)} className="border-t dark:border-zinc-800">{cols.map(c=><td key={c} className="px-3 py-2">{get(r,c)||'—'}</td>)}<td><button onClick={()=>edit(r)} className="rounded bg-slate-100 px-2 py-1 dark:bg-zinc-800">Open</button></td></tr>)}</tbody></table></div>; }
-function Form({ kind, form, setForm, substances, runs, sources, onSave, onCancel }: { kind: 'run'|'source'|'note'|null; form: Row; setForm:(r:Row)=>void; substances: Row[]; runs: Row[]; sources: Row[]; onSave:()=>void; onCancel:()=>void }) { const set=(k:string,v:unknown)=>setForm({...form,[k]:v}); const input=(k:string,p=k)=><input className="rounded-xl border px-3 py-2 dark:bg-zinc-950" placeholder={p} value={val(form[k])} onChange={e=>set(k,e.target.value)} />; return <div className="fixed inset-0 z-50 overflow-auto bg-black/40 p-6"><div className="mx-auto max-w-3xl rounded-2xl bg-white p-5 dark:bg-zinc-900"><h2 className="mb-3 font-bold">{kind==='run'?'New Run':kind==='source'?'Add Source':'Add Extracted Note'}</h2><div className="grid gap-2 md:grid-cols-2"><Select value={val(form.substance_id)} onChange={v=>set('substance_id',v)} opts={substances.map(s=>[val(s.id),val(s.name)])} label="linked substance" />{kind!=='run'&&<Select value={val(form.research_run_id)} onChange={v=>set('research_run_id',v)} opts={runs.map(r=>[val(r.id),val(r.title)])} label="linked run" />}{kind==='note'&&<Select value={val(form.research_source_id)} onChange={v=>set('research_source_id',v)} opts={sources.map(s=>[val(s.id),val(s.title)])} label="linked source" />}{kind==='run'&&<>{input('title','title')}<Select value={val(form.status)} onChange={v=>set('status',v)} opts={runStatuses.map(x=>[x,x])} label="status" /><textarea className="rounded-xl border px-3 py-2 dark:bg-zinc-950" placeholder="notes" value={val(form.notes)} onChange={e=>set('notes',e.target.value)} /></>}{kind==='source'&&<>{['title','authors','year','journal_or_site','url','doi','pmid'].map(k=>input(k,k))}<Select value={val(form.source_type)} onChange={v=>set('source_type',v)} opts={sourceTypes.map(x=>[x,x])} label="source type" /><Select value={val(form.source_tier)} onChange={v=>set('source_tier',v)} opts={sourceTiers.map(x=>[x,x])} label="source tier" /><Select value={val(form.match_status)} onChange={v=>set('match_status',v)} opts={matchStatuses.map(x=>[x,x])} label="match status" /><Select value={val(form.review_status)} onChange={v=>set('review_status',v)} opts={sourceReview.map(x=>[x,x])} label="review status" /><textarea className="rounded-xl border px-3 py-2 dark:bg-zinc-950" placeholder="abstract" value={val(form.abstract)} onChange={e=>set('abstract',e.target.value)} /><textarea className="rounded-xl border px-3 py-2 dark:bg-zinc-950" placeholder="raw metadata" value={val(form.raw_metadata)} onChange={e=>set('raw_metadata',e.target.value)} /></>}{kind==='note'&&<>{['intervention','endpoint','population','dose_amount','dose_unit','route','frequency','duration','short_result_summary','adverse_event_note','extraction_notes'].map(k=>input(k,k))}<Select value={val(form.direction)} onChange={v=>set('direction',v)} opts={directions.map(x=>[x,x])} label="direction" /><Select value={val(form.study_type)} onChange={v=>set('study_type',v)} opts={studyTypes.map(x=>[x,x])} label="study type" /><Select value={val(form.review_status)} onChange={v=>set('review_status',v)} opts={noteReview.map(x=>[x,x])} label="review status" /><select multiple className="rounded-xl border px-3 py-2 dark:bg-zinc-950" value={(form.extraction_flags as string[]) ?? []} onChange={e=>set('extraction_flags', Array.from(e.target.selectedOptions).map(o=>o.value))}>{flags.map(f=><option key={f}>{f}</option>)}</select></>}</div><div className="mt-4 flex gap-2"><button className="rounded-xl bg-emerald-600 px-4 py-2 text-white" onClick={onSave}>Save</button><button className="rounded-xl bg-slate-100 px-4 py-2 dark:bg-zinc-800" onClick={onCancel}>Cancel</button></div></div></div>; }
+function toSourcePayload(row: Form, userId: string, sourceType: SourceType) {
+  return {
+    title: row.title.trim(),
+    url: row.url || null,
+    pmid: row.pmid || null,
+    doi: row.doi || null,
+    year: row.year ? Number(row.year) : null,
+    journal_or_site: row.journalOrSite || null,
+    authors: row.authors || null,
+    abstract: row.abstract || null,
+    source_type: sourceType,
+    source_tier: 'unknown',
+    match_status: 'strong_match',
+    review_status: 'unreviewed',
+    created_by: userId,
+    updated_at: new Date().toISOString(),
+  };
+}
+function OwnerImport({
+  csv,
+  setCsv,
+  preview,
+  parse,
+  save,
+}: {
+  csv: string;
+  setCsv: (v: string) => void;
+  preview: PreviewRow[];
+  parse: () => void;
+  save: () => void;
+}) {
+  const ready = preview.filter((row) => row.status === 'Ready').length;
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <h2 className="text-xl font-bold">Owner Bulk Import</h2>
+      <p className="text-sm text-slate-500">
+        site_owner only. Paste CSV with required columns: substance, source_type, title.
+      </p>
+      <textarea
+        className="mt-3 h-44 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        value={csv}
+        onChange={(e) => setCsv(e.target.value)}
+        placeholder="substance,source_type,title,url,pmid,doi,year,journal_or_site,authors,abstract,notes"
+      />
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={parse}
+          className="rounded-xl bg-slate-900 px-4 py-2 font-semibold text-white dark:bg-white dark:text-slate-900"
+        >
+          Parse
+        </button>
+        <button
+          onClick={save}
+          disabled={!ready}
+          className="rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+        >
+          Import Ready Rows
+        </button>
+      </div>
+      {preview.length > 0 && <Preview rows={preview} />}
+    </section>
+  );
+}
+function AddSingle({
+  form,
+  setForm,
+  substances,
+  save,
+}: {
+  form: Form;
+  setForm: (f: Form) => void;
+  substances: Substance[];
+  save: () => void;
+}) {
+  const set = (key: keyof Form, value: string) => setForm({ ...form, [key]: value });
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <h2 className="text-xl font-bold">Add Single Source</h2>
+      <p className="text-sm text-slate-500">
+        Save one useful article, label, COA, vendor document, or other source.
+      </p>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <Select
+          value={form.substanceId}
+          onChange={(v) => set('substanceId', v)}
+          options={substances.map((s) => [s.id, s.name])}
+          label="Substance"
+        />
+        <Select
+          value={form.sourceType}
+          onChange={(v) => set('sourceType', v)}
+          options={sourceTypeOptions.map((o) => [o.value, o.label])}
+          label="Source Type"
+        />
+        {(['title', 'url', 'pmid', 'doi', 'year', 'journalOrSite', 'notes'] as (keyof Form)[]).map(
+          (key) => (
+            <input
+              key={key}
+              className="rounded-xl border px-3 py-2 dark:bg-zinc-950"
+              placeholder={
+                key === 'journalOrSite' ? 'Journal / Site' : key[0].toUpperCase() + key.slice(1)
+              }
+              value={form[key]}
+              onChange={(e) => set(key, e.target.value)}
+            />
+          ),
+        )}
+      </div>
+      <button
+        onClick={save}
+        className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white"
+      >
+        Save Source
+      </button>
+    </section>
+  );
+}
+function Library({
+  filters,
+  setFilters,
+  substances,
+  sources,
+}: {
+  filters: { substanceId: string; sourceType: string; search: string };
+  setFilters: (f: { substanceId: string; sourceType: string; search: string }) => void;
+  substances: Substance[];
+  sources: Source[];
+}) {
+  const set = (key: keyof typeof filters, value: string) =>
+    setFilters({ ...filters, [key]: value });
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <h2 className="text-xl font-bold">Source Library</h2>
+      <div className="my-3 flex flex-wrap gap-2">
+        <Select
+          value={filters.substanceId}
+          onChange={(v) => set('substanceId', v)}
+          options={substances.map((s) => [s.id, s.name])}
+          label="Substance"
+        />
+        <Select
+          value={filters.sourceType}
+          onChange={(v) => set('sourceType', v)}
+          options={sourceTypeOptions.map((o) => [o.value, o.label])}
+          label="Source Type"
+        />
+        <input
+          value={filters.search}
+          onChange={(e) => set('search', e.target.value)}
+          className="rounded-xl border px-3 py-2 dark:bg-zinc-950"
+          placeholder="Search title, PMID, or DOI"
+        />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase text-slate-500">
+              {[
+                'Substance',
+                'Title',
+                'Type',
+                'Year',
+                'Journal / Site',
+                'PMID / DOI',
+                'Added',
+                'Actions',
+              ].map((h) => (
+                <th className="px-3 py-2" key={h}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sources.map((source) => (
+              <tr className="border-t dark:border-zinc-800" key={source.id}>
+                <td className="px-3 py-3">
+                  {source.research_source_substances
+                    ?.map((link) => link.substances?.name)
+                    .filter(Boolean)
+                    .join(', ') || '—'}
+                </td>
+                <td className="max-w-sm px-3 py-3 font-semibold">{source.title}</td>
+                <td className="px-3 py-3">{typeLabel(source.source_type)}</td>
+                <td className="px-3 py-3">{source.year ?? '—'}</td>
+                <td className="px-3 py-3">{source.journal_or_site || '—'}</td>
+                <td className="px-3 py-3">
+                  {[source.pmid && `PMID ${source.pmid}`, source.doi && `DOI ${source.doi}`]
+                    .filter(Boolean)
+                    .join(' · ') || '—'}
+                </td>
+                <td className="px-3 py-3">{new Date(source.created_at).toLocaleDateString()}</td>
+                <td className="px-3 py-3">
+                  {source.url ? (
+                    <a
+                      className="font-semibold text-emerald-700"
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+              </tr>
+            ))}
+            {sources.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-3 py-10 text-center text-slate-500">
+                  No source records yet. Add one source or ask the site owner to import a CSV batch.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+function Preview({ rows }: { rows: PreviewRow[] }) {
+  return (
+    <div className="mt-4 overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead>
+          <tr className="text-left text-xs uppercase text-slate-500">
+            {['Row', 'Status', 'Substance', 'Title', 'Type', 'PMID', 'DOI', 'URL'].map((h) => (
+              <th key={h} className="px-3 py-2">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.rowNumber} className="border-t dark:border-zinc-800">
+              <td className="px-3 py-2">{row.rowNumber}</td>
+              <td
+                className={`px-3 py-2 font-semibold ${row.status === 'Ready' ? 'text-emerald-700' : row.status === 'Possible Duplicate' ? 'text-amber-700' : 'text-red-700'}`}
+              >
+                {row.status}
+              </td>
+              <td className="px-3 py-2">{row.substanceId ? 'Matched' : '—'}</td>
+              <td className="px-3 py-2">{row.title || '—'}</td>
+              <td className="px-3 py-2">
+                {row.normalizedType ? typeLabel(row.normalizedType) : row.sourceType || '—'}
+              </td>
+              <td className="px-3 py-2">{row.pmid || '—'}</td>
+              <td className="px-3 py-2">{row.doi || '—'}</td>
+              <td className="px-3 py-2">{row.url || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+function Select({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[][];
+  label: string;
+}) {
+  return (
+    <select
+      className="rounded-xl border px-3 py-2 dark:bg-zinc-950"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">{label}</option>
+      {options.map(([value, label]) => (
+        <option value={value} key={value}>
+          {label}
+        </option>
+      ))}
+    </select>
+  );
+}
