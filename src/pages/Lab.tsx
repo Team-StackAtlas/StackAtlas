@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { GitCompare, Layers, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
+import { useCatalog } from '../context/CatalogContext';
 import { Modal } from '../components/ui/Modal';
 import { CompareModal } from '../components/CompareModal';
 
@@ -42,6 +42,7 @@ const TOOLS: {
 ];
 
 export default function Lab() {
+  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
   const [pickerType, setPickerType] = useState<CompareType | null>(null);
   const [search, setSearch] = useState('');
   const [compare, setCompare] = useState<{ type: CompareType; id: string } | null>(null);
@@ -51,7 +52,7 @@ export default function Lab() {
     if (pickerType === 'brand') return BRANDS;
     if (pickerType === 'stack') return STACKS;
     return [];
-  }, [pickerType]);
+  }, [pickerType, SUPPLEMENTS, BRANDS, STACKS]);
 
   const filtered = items.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 

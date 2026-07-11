@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Search, Activity, ShieldAlert, Star, Settings2, Plus } from 'lucide-react';
-import { SUPPLEMENTS, BRANDS, STACKS, USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
+import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
 import { useFollowing } from '../hooks/useFollowing';
+import { useCatalog } from '../context/CatalogContext';
 import AccessBadge from '../components/AccessBadge';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
@@ -44,6 +45,7 @@ function readRecentSearches(): RecentSearch[] {
 }
 
 export default function Map() {
+  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
   const { scope } = useUserScope();
   const {
     activeTypes,
@@ -148,7 +150,7 @@ export default function Map() {
       }));
 
     return [...substanceResults, ...brandResults, ...stackResults].slice(0, 12);
-  }, [searchQuery]);
+  }, [searchQuery, SUPPLEMENTS, BRANDS, STACKS]);
 
   const visibleSearchResults = isAdminLike ? searchResults : searchResults.filter((result) => !isHidden(result.type, result.id) && !hasHiddenTag(result.tags));
   const hiddenSearchResultsCount = searchResults.length - visibleSearchResults.length;
