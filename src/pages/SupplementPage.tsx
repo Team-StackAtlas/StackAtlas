@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { SUPPLEMENTS, BRANDS, getPosts, TYPE_TAGS } from '../data/mockData';
-import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3 } from 'lucide-react';
+import { getPosts, TYPE_TAGS } from '../data/mockData';
+import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Info } from 'lucide-react';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import AccessBadge from '../components/AccessBadge';
 import Sources from '../components/Sources';
 import { useFollowing } from '../hooks/useFollowing';
 import { useAuth } from '../context/AuthContext';
+import { useCatalog } from '../context/CatalogContext';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
@@ -15,6 +16,7 @@ import { HideItemButton } from '../components/HideItemButton';
 export default function SupplementPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { substances: SUPPLEMENTS, brands: BRANDS } = useCatalog();
   const supplement = SUPPLEMENTS.find(s => s.id === id);
   
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
@@ -285,6 +287,35 @@ export default function SupplementPage() {
               ))}
             </div>
           </div>
+
+          {(supplement.origin || supplement.howObtained || supplement.halfLife) && (
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+                <Info size={20} className="text-slate-500" />
+                Origin & Sourcing
+              </h3>
+              <dl className="space-y-3 text-sm">
+                {supplement.origin && (
+                  <div>
+                    <dt className="text-xs text-slate-500 dark:text-zinc-500 mb-0.5">Origin</dt>
+                    <dd className="text-slate-700 dark:text-zinc-300">{supplement.origin}</dd>
+                  </div>
+                )}
+                {supplement.howObtained && (
+                  <div>
+                    <dt className="text-xs text-slate-500 dark:text-zinc-500 mb-0.5">How it's obtained</dt>
+                    <dd className="text-slate-700 dark:text-zinc-300">{supplement.howObtained}</dd>
+                  </div>
+                )}
+                {supplement.halfLife && (
+                  <div>
+                    <dt className="text-xs text-slate-500 dark:text-zinc-500 mb-0.5">Half-life</dt>
+                    <dd className="text-slate-700 dark:text-zinc-300">{supplement.halfLife}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          )}
         </div>
 
         {/* Right Column */}

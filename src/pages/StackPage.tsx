@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3 } from 'lucide-react';
-import { STACKS, SUBSTANCES, getPosts } from '../data/mockData';
+import { getPosts } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import Sources from '../components/Sources';
@@ -10,9 +10,11 @@ import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
 import { useFollowing } from '../hooks/useFollowing';
+import { useCatalog } from '../context/CatalogContext';
 
 export default function StackPage() {
   const { id } = useParams<{ id: string }>();
+  const { stacks: STACKS, substances: SUBSTANCES } = useCatalog();
   const stack = STACKS.find(s => s.id === id);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
-import { BRANDS, getPosts, SUPPLEMENTS } from '../data/mockData';
+import { getPosts } from '../data/mockData';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import Sources from '../components/Sources';
@@ -11,9 +11,11 @@ import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
 import { useFollowing } from '../hooks/useFollowing';
 import { useBrandRatings } from '../hooks/useBrandRatings';
+import { useCatalog } from '../context/CatalogContext';
 
 export default function BrandPage() {
   const { id } = useParams<{ id: string }>();
+  const { brands: BRANDS, substances: SUPPLEMENTS } = useCatalog();
   const brand = BRANDS.find(b => b.id === id);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);

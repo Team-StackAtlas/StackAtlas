@@ -125,6 +125,9 @@ export interface Substance {
   globalAverage?: string;
   peerMatch?: string;
   formula?: string;
+  origin?: string;
+  howObtained?: string;
+  halfLife?: string;
 }
 
 /** @deprecated Use `Substance`. Kept for back-compat during the rename. */

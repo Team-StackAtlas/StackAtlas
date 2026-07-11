@@ -1,0 +1,49 @@
+{
+  "_comment": "This pack is deliberately INVALID. It exists to exercise the Data Pack v1 validator/preview UI (Admin -> Research -> Import), not to be imported for real. Each row below has exactly one intentional problem: substances[0] is missing the required 'slug' field; substances[1] has a 'classification' value outside CLASSIFICATIONS_V1 ('Extreme'); stacks[0] has only 1 component (stacks require 2-10 distinct components); findings[0] has no source_pmid/source_doi/source_url so it cannot resolve to a source; findings[1] has a 'direction' value outside FINDING_DIRECTIONS_V1 ('sideways'). Expect the preview to mark all five rows 'invalid'.",
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "generated_by": "manual (broken-pack validator fixture)",
+  "label": "Broken pack - validator test fixture",
+  "substances": [
+    {
+      "name": "No Slug Substance",
+      "classification": "Everyday",
+      "description": "This substance row is missing the required slug field and should be marked invalid."
+    },
+    {
+      "slug": "bad-classification-substance",
+      "name": "Bad Classification Substance",
+      "classification": "Extreme",
+      "description": "This substance row uses a classification value that is not in the allowed enum (Everyday | Clinical | Frontier | Unknown)."
+    }
+  ],
+  "stacks": [
+    {
+      "name": "Too Few Components Stack",
+      "description": "This stack lists only one component. Stacks require between 2 and 10 distinct substance slugs.",
+      "components": ["glycine"]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Placeholder Source For Broken Finding Test",
+      "source_type": "human_study",
+      "pmid": "00000000"
+    }
+  ],
+  "findings": [
+    {
+      "substance_slug": "glycine",
+      "endpoint": "test endpoint",
+      "direction": "increased",
+      "finding_summary": "This finding has no source_pmid, source_doi, or source_url and should fail validation because it cannot resolve to a source."
+    },
+    {
+      "source_pmid": "00000000",
+      "substance_slug": "glycine",
+      "endpoint": "test endpoint",
+      "direction": "sideways",
+      "finding_summary": "This finding uses an invalid direction value that is not in the allowed enum (increased | decreased | no_clear_change | mixed | unclear)."
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "generated_by": "manual (Domonic, hand-authored documentation sample)",
+  "generated_at": "2026-07-11T00:00:00Z",
+  "label": "Sample pack — glycine / l-theanine / taurine (docs example)",
+  "substances": [
+    {
+      "slug": "glycine",
+      "name": "Glycine",
+      "classification": "Everyday",
+      "description": "A non-essential amino acid used by the body as a building block for protein and collagen, and commonly discussed in the context of evening relaxation routines.",
+      "aliases": ["Aminoacetic acid"],
+      "origin": "Naturally occurring amino acid; found in gelatin, collagen, and many protein-rich foods.",
+      "how_obtained": "Synthesized commercially or extracted from collagen/gelatin sources.",
+      "half_life": "Estimates vary; not firmly established in humans.",
+      "reported_dose_range": "Commonly studied range: 3 g, often taken shortly before bed",
+      "length_of_cycle": "Continuous",
+      "tolerance_buildup": "None",
+      "risk_level": "Low",
+      "formula": "C2H5NO2",
+      "routes": [
+        { "domain": "Mind", "category": "Sleep" }
+      ],
+      "type_tags": ["Supplement", "Amino Acid"],
+      "administration": ["Oral"],
+      "health_risks": ["Mild gastrointestinal discomfort reported at high doses"],
+      "subjective_effects": [
+        "Reported relaxation before sleep",
+        "Reported reduction in time to fall asleep"
+      ],
+      "pairings": ["l-theanine"],
+      "most_popular_brand_slug": "purity-labs"
+    },
+    {
+      "slug": "l-theanine",
+      "name": "L-Theanine",
+      "classification": "Everyday",
+      "description": "An amino acid found in tea leaves that is commonly discussed for calm focus, often alongside caffeine.",
+      "aliases": ["Theanine", "N-ethyl-L-glutamine"],
+      "origin": "Naturally occurring amino acid found in tea leaves (Camellia sinensis) and some mushrooms.",
+      "how_obtained": "Extracted from tea or produced via fermentation/synthesis.",
+      "half_life": "Roughly 60 minutes in pharmacokinetic studies.",
+      "reported_dose_range": "Commonly discussed range: 100-200 mg",
+      "length_of_cycle": "Continuous",
+      "tolerance_buildup": "Minimal",
+      "risk_level": "Low",
+      "formula": "C7H14N2O3",
+      "routes": [
+        { "domain": "Mind", "category": "Focus" },
+        { "domain": "Mind", "category": "Stress" }
+      ],
+      "type_tags": ["Supplement", "Amino Acid"],
+      "administration": ["Oral"],
+      "health_risks": ["No significant risks reported in reviewed literature"],
+      "subjective_effects": [
+        "Reported calm alertness",
+        "Reported reduced jitteriness when paired with caffeine"
+      ],
+      "pairings": ["glycine", "taurine"],
+      "most_popular_brand_slug": "purity-labs"
+    },
+    {
+      "slug": "taurine",
+      "name": "Taurine",
+      "classification": "Everyday",
+      "description": "A naturally occurring amino sulfonic acid found in meat, fish, and dairy, and produced endogenously; commonly discussed in the context of energy drinks and exercise performance.",
+      "aliases": ["2-Aminoethanesulfonic acid"],
+      "origin": "Naturally occurring amino sulfonic acid found in meat, fish, and dairy; also produced endogenously.",
+      "how_obtained": "Synthesized commercially, often from ethanolamine.",
+      "half_life": "Estimates vary; not firmly established in humans.",
+      "reported_dose_range": "Commonly discussed range: 500 mg-2 g daily",
+      "length_of_cycle": "Continuous",
+      "tolerance_buildup": "None",
+      "risk_level": "Low",
+      "formula": "C2H7NO3S",
+      "routes": [
+        { "domain": "Body", "category": "Endurance" }
+      ],
+      "type_tags": ["Supplement", "Amino Acid"],
+      "administration": ["Oral"],
+      "health_risks": ["Rare reports of gastrointestinal upset"],
+      "subjective_effects": ["Reported reduced perceived fatigue during exercise"],
+      "pairings": ["l-theanine"]
+    }
+  ],
+  "brands": [
+    {
+      "slug": "purity-labs",
+      "name": "Purity Labs",
+      "description": "A supplement brand focused on single-ingredient amino acid products with published certificates of analysis.",
+      "shipping_reliability": 4.6,
+      "contamination_reports": 0,
+      "products": [
+        {
+          "name": "Glycine Powder",
+          "substance_slug": "glycine",
+          "ingredients": [{ "name": "Glycine", "amount": "3 g per serving" }],
+          "health_labels": ["Non-GMO", "Third-Party Tested"]
+        }
+      ]
+    }
+  ],
+  "stacks": [
+    {
+      "name": "Evening Amino Stack",
+      "description": "A combination of glycine, L-theanine, and taurine that appears in user-shared evening-routine discussions; included here as an example, not a recommendation.",
+      "components": ["glycine", "l-theanine", "taurine"]
+    }
+  ],
+  "sources": [
+    {
+      "title": "Effects of L-Theanine Administration on Stress-Related Symptoms and Cognitive Functions in Healthy Adults: A Randomized Controlled Trial",
+      "source_type": "human_study",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31623400/",
+      "pmid": "31623400",
+      "doi": "10.3390/nu11102362",
+      "year": 2019,
+      "journal_or_site": "Nutrients",
+      "authors": "Hidese S, Ogawa S, Ota M, Ishida I, Yasukawa Z, Ozeki M, Kunugi H",
+      "substances": ["l-theanine"],
+      "notes": "Randomized, placebo-controlled, crossover trial; primary source for the sleep-quality finding in this pack."
+    },
+    {
+      "title": "New Therapeutic Strategy for Amino Acid Medicine: Glycine Improves the Quality of Sleep",
+      "source_type": "review_or_meta_analysis",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/22293292/",
+      "pmid": "22293292",
+      "doi": "10.1254/jphs.11R04FM",
+      "year": 2012,
+      "journal_or_site": "Journal of Pharmacological Sciences",
+      "authors": "Bannai M, Kawai N",
+      "substances": ["glycine"],
+      "notes": "Review summarizing human and animal glycine/sleep research; primary source for the sleep-quality finding in this pack."
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "31623400",
+      "substance_slug": "l-theanine",
+      "endpoint": "self-reported sleep quality (Pittsburgh Sleep Quality Index score)",
+      "direction": "increased",
+      "finding_summary": "In a 2019 randomized, placebo-controlled, crossover trial of 30 healthy adults, four weeks of 200 mg/day L-theanine was associated with improved Pittsburgh Sleep Quality Index scores, including subscales for sleep latency and sleep disturbance, compared with placebo.",
+      "population": "30 healthy adults (9 men, 21 women; mean age approximately 48 years), no major psychiatric illness",
+      "dose_amount": 200,
+      "dose_unit": "mg",
+      "frequency": "once daily",
+      "duration": "4 weeks",
+      "study_type": "human_rct",
+      "limitations": "Small sample size; self-reported outcome measures; crossover design may carry residual effects between phases."
+    },
+    {
+      "source_pmid": "22293292",
+      "substance_slug": "glycine",
+      "endpoint": "subjective sleep quality",
+      "direction": "increased",
+      "finding_summary": "A 2012 review of human trials summarized findings that glycine taken shortly before bedtime was associated with improved next-day alertness and subjective sleep quality ratings in adults reporting unsatisfactory sleep, alongside proposed mechanisms involving core body temperature regulation.",
+      "population": "Adults with self-reported unsatisfactory sleep (trials summarized in the review)",
+      "dose_amount": 3,
+      "dose_unit": "g",
+      "frequency": "once, before bedtime",
+      "duration": "single-night and short-term trials",
+      "study_type": "review",
+      "limitations": "Narrative review summarizing multiple small trials rather than a single controlled study; some proposed mechanisms are based on animal data."
+    }
+  ]
+}

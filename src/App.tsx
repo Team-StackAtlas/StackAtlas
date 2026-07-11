@@ -24,12 +24,14 @@ import RequireAuth from './components/RequireAuth';
 import { UserScopeProvider } from './context/UserScopeContext';
 import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
+import { CatalogProvider } from './context/CatalogContext';
 
 export default function App() {
   return (
     <UserScopeProvider>
       <FilterProvider>
         <MockRoleProvider>
+        <CatalogProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -59,6 +61,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </CatalogProvider>
         </MockRoleProvider>
       </FilterProvider>
     </UserScopeProvider>

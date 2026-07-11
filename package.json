@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "seed:validate": "tsx scripts/validate-seed.ts",
-    "seed:sql": "tsx scripts/generate-seed-sql.ts"
+    "seed:sql": "tsx scripts/generate-seed-sql.ts",
+    "pack:from-mock": "tsx scripts/export-mock-pack.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",

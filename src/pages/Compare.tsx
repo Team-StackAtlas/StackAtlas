@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { SUPPLEMENTS, STACKS, BRANDS } from '../data/mockData';
+import { useCatalog } from '../context/CatalogContext';
 import { ArrowLeft, CheckCircle, XCircle, Minus } from 'lucide-react';
 
 export default function Compare() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
   const type = searchParams.get('type');
   const id1 = searchParams.get('id1');
   const id2 = searchParams.get('id2');
@@ -24,7 +25,7 @@ export default function Compare() {
       setItem1(BRANDS.find(b => b.id === id1));
       setItem2(BRANDS.find(b => b.id === id2));
     }
-  }, [type, id1, id2]);
+  }, [type, id1, id2, SUPPLEMENTS, STACKS, BRANDS]);
 
   if (!type || !id1 || !id2) {
     return <div className="p-8 text-center text-slate-500">Invalid comparison parameters.</div>;
