@@ -10,6 +10,26 @@ export default function FindingsList({ client }: { client: SupabaseClient | null
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+
+  const review = async (id: string, status: 'approved' | 'rejected' | 'pending_review') => {
+    if (!client) return;
+    setReviewingId(id);
+    setError('');
+    try {
+      const { error: rpcError } = await client.rpc('admin_review_finding', {
+        p_finding_id: id,
+        p_status: status,
+      });
+      if (rpcError) throw rpcError;
+      setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, reviewStatus: status } : e)));
+    } catch (err) {
+      console.error('Review finding failed', err);
+      setError(err instanceof Error ? err.message : 'Failed to update the finding.');
+    } finally {
+      setReviewingId(null);
+    }
+  };
 
   const load = async () => {
     if (!client) return;
@@ -116,6 +136,35 @@ export default function FindingsList({ client }: { client: SupabaseClient | null
               {entry.population && <span>Population: {entry.population}</span>}
               {entry.studyType && <span>{studyTypeLabel(entry.studyType)}</span>}
               <span>Source: {entry.sourceTitle ?? 'Unknown source'}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {entry.reviewStatus === 'pending_review' ? (
+                <>
+                  <button
+                    onClick={() => void review(entry.id, 'approved')}
+                    disabled={reviewingId === entry.id}
+                    className="rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-800 disabled:opacity-50 dark:bg-emerald-500/15 dark:text-emerald-300"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => void review(entry.id, 'rejected')}
+                    disabled={reviewingId === entry.id}
+                    className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-800 disabled:opacity-50 dark:bg-red-500/15 dark:text-red-300"
+                  >
+                    Reject
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => void review(entry.id, 'pending_review')}
+                  disabled={reviewingId === entry.id}
+                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-300"
+                >
+                  Reopen review
+                </button>
+              )}
+              {reviewingId === entry.id && <Loader2 size={14} className="animate-spin self-center" />}
             </div>
           </div>
         ))}
