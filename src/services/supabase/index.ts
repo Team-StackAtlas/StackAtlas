@@ -603,14 +603,14 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       if (error) throw error;
     },
     async setUserStatus(userId: ID, status: string, note?: string) {
-      const { error } = await client.from('profiles').update({ account_status: status }).eq('id', userId);
+      // Audited server-side; the RPC also protects the site_owner account.
+      const { error } = await client.rpc('admin_set_account_status', { p_user_id: userId, p_status: status, p_note: note ?? null });
       if (error) throw error;
-      await client.from('moderation_log').insert({ action_type: `user ${status}`, target_type: 'user', target_id: userId, note: note ?? null });
     },
     async setSiteRole(userId: ID, role: string) {
-      const { error } = await client.from('profiles').update({ site_role: role }).eq('id', userId).neq('site_role', 'site_owner');
+      // Owner-only, enforced in the database (RPC check + profiles trigger).
+      const { error } = await client.rpc('admin_set_site_role', { p_user_id: userId, p_role: role });
       if (error) throw error;
-      await client.from('moderation_log').insert({ action_type: role === 'site_admin' ? 'site admin granted' : 'site admin removed', target_type: 'user', target_id: userId });
     },
     async listUsers(query = '') {
       const search = query.trim();
