@@ -16,6 +16,7 @@ import {
   Users,
   Edit3,
   Info,
+  Microscope,
 } from 'lucide-react';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
@@ -27,6 +28,19 @@ import { useCatalog } from '../context/CatalogContext';
 import { getCanonicalCategories } from '../lib/bearings';
 import { CompareModal } from '../components/CompareModal';
 import { HideItemButton } from '../components/HideItemButton';
+import { supabase } from '../services/supabase/client';
+import { listApprovedFindings, type PublicFinding } from '../services/research';
+import { studyTypeLabel } from '../components/admin/adminLabels';
+
+// 'mixed' reads as "Mixed results" here (not admin's shorter "Mixed") per the
+// public copy spec, so this map isn't reused from adminLabels.ts.
+const FINDING_DIRECTION_LABELS: Record<PublicFinding['direction'], string> = {
+  increased: 'Increased',
+  decreased: 'Decreased',
+  no_clear_change: 'No clear change',
+  mixed: 'Mixed results',
+  unclear: 'Unclear',
+};
 
 const RISK_LEVEL_STYLES: Record<'Low' | 'Moderate' | 'High', string> = {
   Low: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
@@ -58,6 +72,7 @@ export default function SupplementPage() {
   const { isFollowing, toggleFollow } = useFollowing();
   const { services, isBackendConfigured } = useAuth();
   const [followerCount, setFollowerCount] = useState(0);
+  const [findings, setFindings] = useState<PublicFinding[]>([]);
 
   useEffect(() => {
     if (!supplement) return;
@@ -67,6 +82,22 @@ export default function SupplementPage() {
       setFollowerCount(isFollowing('substance', supplement.id) ? 1 : 0);
     }
   }, [isBackendConfigured, isFollowing, services, supplement]);
+
+  useEffect(() => {
+    if (!supplement || !supabase) return;
+    let cancelled = false;
+    listApprovedFindings(supabase, supplement.id)
+      .then((rows) => {
+        if (!cancelled) setFindings(rows);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!cancelled) setFindings([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supplement]);
 
   const handleSubstanceFollow = async () => {
     if (!supplement) return;
@@ -319,6 +350,74 @@ export default function SupplementPage() {
             ))}
           </ul>
           <Sources targetType="substance" targetId={supplement.id} section="side_effects" />
+        </div>
+      )}
+
+      {/* Research Findings */}
+      {findings.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
+          <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+            <Microscope size={20} className="text-indigo-500" />
+            Research Findings
+          </h3>
+          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
+            Findings from reviewed sources. Informational only — not medical advice.
+          </p>
+          <div className="space-y-4">
+            {findings.map((finding) => {
+              const metaParts = [
+                finding.population,
+                finding.doseAmount != null && finding.doseUnit ? `${finding.doseAmount}${finding.doseUnit}` : null,
+                finding.frequency,
+                finding.duration,
+                finding.studyType ? studyTypeLabel(finding.studyType) : null,
+              ].filter((part): part is string => Boolean(part));
+              const sourceHref = finding.source
+                ? (finding.source.url ??
+                    (finding.source.doi ? `https://doi.org/${finding.source.doi}` : null) ??
+                    (finding.source.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${finding.source.pmid}/` : null))
+                : null;
+              const sourceSuffix = finding.source
+                ? [finding.source.publication, finding.source.year != null ? String(finding.source.year) : null]
+                    .filter((part): part is string => Boolean(part))
+                    .join(', ')
+                : '';
+              return (
+                <div key={finding.id} className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-slate-900 dark:text-zinc-100">{finding.endpoint}</h4>
+                    <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-zinc-300">
+                      {FINDING_DIRECTION_LABELS[finding.direction]}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-zinc-300">{finding.summary}</p>
+                  {metaParts.length > 0 && (
+                    <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">{metaParts.join(' · ')}</p>
+                  )}
+                  {finding.limitations && (
+                    <p className="mt-1 text-xs italic text-slate-400 dark:text-zinc-500">Limitations: {finding.limitations}</p>
+                  )}
+                  {finding.source && (
+                    <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
+                      {sourceHref ? (
+                        <a
+                          href={sourceHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          {finding.source.title}
+                        </a>
+                      ) : (
+                        finding.source.title
+                      )}
+                      {sourceSuffix && ` — ${sourceSuffix}`}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
