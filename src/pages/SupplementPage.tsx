@@ -171,7 +171,7 @@ export default function SupplementPage() {
             {/* Clinical Baseline */}
             <div>
               <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1 flex items-center justify-between">
-                <span className="flex items-center gap-1"><ShieldCheck size={12} /> Clinical Baseline</span>
+                <span className="flex items-center gap-1"><ShieldCheck size={12} /> Reported Dose Range</span>
                 {supplement.clinicalBaseline?.links && supplement.clinicalBaseline.links.length > 0 && (
                   <a href={supplement.clinicalBaseline.links[0]} target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400" title="View Source">
                     <LinkIcon size={12} />

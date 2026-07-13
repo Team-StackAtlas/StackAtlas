@@ -90,7 +90,7 @@ export default function Compare() {
           {type === 'substance' && (
             <>
               {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('Average Dosage', item1.averageDosage, item2.averageDosage)}
+              {renderComparisonRow('Reported Dose Range', item1.averageDosage, item2.averageDosage)}
               {renderComparisonRow('Length of Cycle', item1.lengthOfCycle, item2.lengthOfCycle)}
               {renderComparisonRow('Risk Level', item1.riskLevel, item2.riskLevel)}
               {renderComparisonRow('Classification', item1.classification, item2.classification)}
