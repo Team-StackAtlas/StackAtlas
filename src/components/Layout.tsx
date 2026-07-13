@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { GlobalSearch } from './GlobalSearch';
 import {
   Bell,
   Compass,
@@ -153,6 +154,7 @@ export default function Layout() {
             <h1 className="text-lg font-semibold tracking-tight">{getPageTitle()}</h1>
 
             <div className="flex items-center gap-2">
+              <GlobalSearch />
               <button
                 onClick={toggleTheme}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
@@ -170,6 +172,7 @@ export default function Layout() {
         {/* Desktop Header */}
         <header className="hidden md:flex sticky top-0 z-40 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md px-8 py-4 items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight">{getPageTitle()}</h1>
+          <GlobalSearch />
         </header>
 
         <div className="md:hidden p-4 pb-0"></div>
