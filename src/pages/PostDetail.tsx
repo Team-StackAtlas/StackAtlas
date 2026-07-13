@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageCircle, Reply, ShieldCheck, Trash2 } from 'lucide-react';
 import { SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
@@ -11,6 +11,13 @@ import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import { useFollowing } from '../hooks/useFollowing';
 import { usePostLike } from '../hooks/usePostLike';
 import { ReportAction } from '../components/ReportAction';
+import { supabase, isBackendConfigured } from '../services/supabase/client';
+import {
+  createSupabaseComment,
+  loadSupabaseComments,
+  softDeleteSupabaseComment,
+  toggleSupabaseCommentVote,
+} from '../services/posts';
 
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
@@ -51,6 +58,15 @@ function updateCommentTree(comments: CommentNode[], id: string, update: (comment
   });
 }
 
+function findCommentInTree(comments: CommentNode[], id: string): CommentNode | undefined {
+  for (const comment of comments) {
+    if (comment.id === id) return comment;
+    const nested = findCommentInTree(comment.replies ?? [], id);
+    if (nested) return nested;
+  }
+  return undefined;
+}
+
 function addReplyToTree(comments: CommentNode[], parentId: string, reply: CommentNode): CommentNode[] {
   return comments.map(comment => {
     if (comment.id === parentId) return { ...comment, replies: [...(comment.replies ?? []), reply] };
@@ -84,6 +100,27 @@ export default function PostDetail() {
   const postLike = usePostLike(post?.id ?? '', post?.helpfulCount ?? 0, post?.author.id);
   const [comments, setComments] = useState<CommentNode[]>(() => (post ? readCommentOverrides(post.id) ?? ((post.commentItems ?? []) as CommentNode[]) : []));
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState('');
+
+  // Supabase-backed posts persist their discussion; seed/local posts keep the
+  // original localStorage behavior.
+  const usesBackendComments = !!(post?.persisted && isBackendConfigured && supabase);
+
+  const reloadBackendComments = async () => {
+    if (!usesBackendComments || !post || !supabase) return;
+    try {
+      setComments(await loadSupabaseComments(supabase, post.id, user?.id));
+    } catch (err) {
+      console.error('Load comments failed', err);
+      setCommentError(err instanceof Error ? err.message : 'Failed to load comments.');
+    }
+  };
+
+  useEffect(() => {
+    if (!usesBackendComments) return;
+    void reloadBackendComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usesBackendComments, post?.id, user?.id]);
 
   const discussionCount = useMemo(() => countVisibleComments(comments), [comments]);
 
@@ -98,6 +135,21 @@ export default function PostDetail() {
     const form = new FormData(event.currentTarget);
     const content = String(form.get('content') ?? '').trim();
     if (!content) return;
+    setCommentError('');
+    if (usesBackendComments && post && supabase) {
+      const formElement = event.currentTarget;
+      createSupabaseComment(supabase, { postId: post.id, parentId, body: content })
+        .then(() => {
+          formElement.reset();
+          setReplyingTo(null);
+          return reloadBackendComments();
+        })
+        .catch((err) => {
+          console.error('Create comment failed', err);
+          setCommentError(err instanceof Error ? err.message : 'Failed to post the comment.');
+        });
+      return;
+    }
     const comment: CommentNode = { id: crypto.randomUUID(), author: user?.username ?? 'member', content, createdAt: new Date().toISOString(), likes: 0, likedBy: [], replies: [] };
     persistComments(parentId ? addReplyToTree(comments, parentId, comment) : [...comments, comment]);
     event.currentTarget.reset();
@@ -107,15 +159,34 @@ export default function PostDetail() {
   function toggleCommentLike(commentId: string) {
     if (!requireAccount()) return;
     const userId = user?.id ?? 'local-user';
-    persistComments(updateCommentTree(comments, commentId, comment => {
+    const nextTree = updateCommentTree(comments, commentId, comment => {
       const likedBy = comment.likedBy ?? [];
       const liked = likedBy.includes(userId);
       return { ...comment, likedBy: liked ? likedBy.filter(id => id !== userId) : [...likedBy, userId], likes: Math.max(0, (comment.likes ?? likedBy.length) + (liked ? -1 : 1)) };
-    }));
+    });
+    if (usesBackendComments && supabase && user) {
+      const wasLiked = (findCommentInTree(comments, commentId)?.likedBy ?? []).includes(userId);
+      setComments(nextTree);
+      toggleSupabaseCommentVote(supabase, commentId, user.id, !wasLiked).catch((err) => {
+        console.error('Comment vote failed', err);
+        void reloadBackendComments();
+      });
+      return;
+    }
+    persistComments(nextTree);
   }
 
   function deleteComment(commentId: string) {
     if (!post) return;
+    if (usesBackendComments && supabase) {
+      softDeleteSupabaseComment(supabase, commentId)
+        .then(() => reloadBackendComments())
+        .catch((err) => {
+          console.error('Delete comment failed', err);
+          setCommentError(err instanceof Error ? err.message : 'Only your own comments can be deleted.');
+        });
+      return;
+    }
     persistComments(updateCommentTree(comments, commentId, comment => (comment.replies?.length ? { ...comment, deleted: true, content: 'Comment deleted' } : null)));
   }
 
@@ -202,6 +273,7 @@ export default function PostDetail() {
 
       <section id="comments" className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="mb-4 text-xl font-bold text-slate-950 dark:text-zinc-50">Comments ({discussionCount})</h2>
+        {commentError && <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{commentError}</p>}
         <form onSubmit={addComment} className="mb-5 flex gap-2">
           <input name="content" placeholder="Add a comment" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" />
           <button className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white">Post</button>
