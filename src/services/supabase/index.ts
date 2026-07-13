@@ -639,6 +639,15 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       if (error) throw error;
       return (data ?? []).map((row: any) => ({ id: row.id, actionType: row.action_type, targetType: row.target_type, targetId: row.target_id, note: row.note ?? undefined, createdAt: row.created_at, adminUsername: row.profiles?.username }));
     },
+    async listDeletedPosts() {
+      const { data, error } = await client.from('posts').select('id,kind,title,deleted_at,profiles(username)').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }).limit(100);
+      if (error) throw error;
+      return (data ?? []).map((row: any) => ({ id: row.id, kind: row.kind, title: row.title, authorUsername: row.profiles?.username, deletedAt: row.deleted_at }));
+    },
+    async moderatePost(postId: ID, action: 'soft_delete' | 'restore') {
+      const { error } = await client.rpc('admin_moderate_post', { p_post_id: postId, p_action: action });
+      if (error) throw error;
+    },
   };
 
   return { auth, profiles, saved, hidden, follows, notifications, reports, suggestEdits, moderation, library, postLikes };

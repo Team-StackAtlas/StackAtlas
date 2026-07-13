@@ -152,6 +152,8 @@ export interface ModerationService {
   setSiteRole(userId: ID, role: string): Promise<void>;
   listUsers(query?: string): Promise<ProfileDTO[]>;
   listLog(): Promise<{ id: ID; actionType: string; targetType: string; targetId: ID; note?: string; createdAt: string; adminUsername?: string }[]>;
+  listDeletedPosts(): Promise<{ id: ID; kind: string; title: string; authorUsername?: string; deletedAt: string }[]>;
+  moderatePost(postId: ID, action: 'soft_delete' | 'restore'): Promise<void>;
 }
 
 export interface ImportService {

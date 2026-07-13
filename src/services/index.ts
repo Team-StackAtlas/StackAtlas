@@ -197,6 +197,8 @@ export function createStubServices(): Services {
       async setSiteRole() { return ni('moderation.setSiteRole'); },
       async listUsers() { return ni('moderation.listUsers'); },
       async listLog() { return ni('moderation.listLog'); },
+      async listDeletedPosts() { return ni('moderation.listDeletedPosts'); },
+      async moderatePost() { return ni('moderation.moderatePost'); },
     },
     imports: {
       // Real: dry-run validation works today.

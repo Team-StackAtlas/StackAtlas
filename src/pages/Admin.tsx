@@ -36,6 +36,9 @@ export default function Admin() {
       adminUsername?: string;
     }[]
   >([]);
+  const [deletedPosts, setDeletedPosts] = useState<
+    { id: string; kind: string; title: string; authorUsername?: string; deletedAt: string }[]
+  >([]);
   const [message, setMessage] = useState('');
 
   const allowed = isAdmin(profile);
@@ -48,6 +51,7 @@ export default function Admin() {
       if (tab === 'review' || tab === 'suggest') setItems(await services.moderation.listQueue());
       if (tab === 'log') setLog(await services.moderation.listLog());
       if (tab === 'users') setUsers(await services.moderation.listUsers(query));
+      if (tab === 'deleted') setDeletedPosts(await services.moderation.listDeletedPosts());
     } catch (err) {
       console.error('Admin tab load failed', err);
       setMessage(err instanceof Error ? err.message : 'Failed to load this admin tab.');
@@ -189,10 +193,48 @@ export default function Admin() {
         </section>
       )}
       {tab === 'deleted' && (
-        <Empty
-          title="Deleted content"
-          text="Soft-deleted content restored by admins appears here when backed by Supabase rows with deleted_at/restored_at fields."
-        />
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="space-y-2">
+            {deletedPosts.length === 0 && (
+              <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-zinc-950">
+                No soft-deleted posts. Content removed by moderation appears here and can be
+                restored.
+              </p>
+            )}
+            {deletedPosts.map((post) => (
+              <div
+                key={post.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm dark:border-zinc-800"
+              >
+                <div className="min-w-0">
+                  <span className="mr-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase dark:bg-zinc-800">
+                    {post.kind}
+                  </span>
+                  <strong>{post.title}</strong>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {post.authorUsername ? `@${post.authorUsername} · ` : ''}
+                    Deleted {new Date(post.deletedAt).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!services) return;
+                    try {
+                      await services.moderation.moderatePost(post.id, 'restore');
+                      setDeletedPosts(await services.moderation.listDeletedPosts());
+                    } catch (err) {
+                      console.error('Restore failed', err);
+                      setMessage(err instanceof Error ? err.message : 'Restore failed.');
+                    }
+                  }}
+                  className="rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+                >
+                  Restore
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
       {tab === 'quarters' && (
         <Empty
