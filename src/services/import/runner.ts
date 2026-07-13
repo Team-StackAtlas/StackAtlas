@@ -226,7 +226,7 @@ export async function listImportBatches(client: SupabaseClient): Promise<ImportB
   const { data, error } = await client
     .from('research_import_batches')
     .select(
-      'id, label, schema_version, generated_by, row_count, imported_count, skipped_count, error_count, entity_counts, created_at',
+      'id, label, schema_version, generated_by, row_count, imported_count, skipped_count, error_count, entity_counts, notes, created_at',
     )
     .order('created_at', { ascending: false })
     .limit(50);
@@ -241,8 +241,17 @@ export async function listImportBatches(client: SupabaseClient): Promise<ImportB
     skippedCount: row.skipped_count,
     errorCount: row.error_count,
     entityCounts: row.entity_counts ?? null,
+    notes: row.notes ?? null,
     createdAt: row.created_at,
   }));
+}
+
+// Removes everything a batch created: its findings, source links, and newly
+// created sources (owner-only, audit-logged server-side). Catalog rows are
+// not affected — correct those by re-importing.
+export async function revertImportBatch(client: SupabaseClient, batchId: string): Promise<void> {
+  const { error } = await client.rpc('admin_revert_import_batch', { p_batch_id: batchId });
+  if (error) throw error;
 }
 
 export interface SourceLibraryEntry {

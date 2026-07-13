@@ -227,5 +227,6 @@ export interface ImportBatchRecord {
   skippedCount: number;
   errorCount: number;
   entityCounts: Record<string, unknown> | null;
+  notes: string | null;
   createdAt: string;
 }

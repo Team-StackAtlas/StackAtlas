@@ -9,6 +9,7 @@ export {
   fetchExistingKeys,
   runImport,
   listImportBatches,
+  revertImportBatch,
   listSourceLibrary,
   listFindings,
   type SourceLibraryEntry,

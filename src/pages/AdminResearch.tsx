@@ -94,7 +94,7 @@ export default function AdminResearch({
         )}
         {tab === 'history' && (
           <SectionErrorBoundary>
-            <ImportHistory client={supabase} />
+            <ImportHistory client={supabase} isOwner={owner} />
           </SectionErrorBoundary>
         )}
       </section>

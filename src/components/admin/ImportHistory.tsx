@@ -1,14 +1,40 @@
 import { useEffect, useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { listImportBatches, type ImportBatchRecord } from '../../services/import';
+import { listImportBatches, revertImportBatch, type ImportBatchRecord } from '../../services/import';
 import Badge from './Badge';
 
-export default function ImportHistory({ client }: { client: SupabaseClient | null }) {
+export default function ImportHistory({
+  client,
+  isOwner = false,
+}: {
+  client: SupabaseClient | null;
+  isOwner?: boolean;
+}) {
   const [batches, setBatches] = useState<ImportBatchRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
+  const [revertingId, setRevertingId] = useState<string | null>(null);
+
+  const revert = async (batch: ImportBatchRecord) => {
+    if (!client) return;
+    const confirmed = window.confirm(
+      `Revert "${batch.label ?? 'this batch'}"? Findings, source links, and sources this batch created will be removed. Catalog entries are not affected.`,
+    );
+    if (!confirmed) return;
+    setRevertingId(batch.id);
+    setError('');
+    try {
+      await revertImportBatch(client, batch.id);
+      setBatches(await listImportBatches(client));
+    } catch (err) {
+      console.error('Revert batch failed', err);
+      setError(err instanceof Error ? err.message : 'Failed to revert the batch.');
+    } finally {
+      setRevertingId(null);
+    }
+  };
 
   const load = async () => {
     if (!client) return;
@@ -94,11 +120,22 @@ export default function ImportHistory({ client }: { client: SupabaseClient | nul
                   {batch.schemaVersion != null ? ` · schema v${batch.schemaVersion}` : ''}
                 </p>
               </div>
-              <div className="flex shrink-0 flex-wrap gap-1.5 text-xs">
+              <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-xs">
                 <Badge tone="slate">{batch.rowCount} rows</Badge>
                 <Badge tone="green">{batch.importedCount} imported</Badge>
                 <Badge tone="amber">{batch.skippedCount} skipped</Badge>
                 {batch.errorCount > 0 && <Badge tone="red">{batch.errorCount} errors</Badge>}
+                {batch.notes?.includes('reverted') && <Badge tone="red">Reverted</Badge>}
+                {isOwner && !batch.notes?.includes('reverted') && (
+                  <button
+                    onClick={() => void revert(batch)}
+                    disabled={revertingId === batch.id}
+                    className="rounded-lg bg-red-100 px-2.5 py-1 font-semibold text-red-700 disabled:opacity-50 dark:bg-red-500/15 dark:text-red-300"
+                    title="Remove the findings, source links, and sources this batch created"
+                  >
+                    {revertingId === batch.id ? 'Reverting…' : 'Revert'}
+                  </button>
+                )}
               </div>
             </div>
             {batch.entityCounts && Object.keys(batch.entityCounts).length > 0 && (
