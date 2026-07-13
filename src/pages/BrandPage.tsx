@@ -54,7 +54,7 @@ export default function BrandPage() {
               <HideItemButton id={brand.id} name={brand.name} type="brand" />
             </div>
           </div>
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-wrap items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
               {brand.name}
             </h1>

@@ -52,7 +52,7 @@ export default function StackPage() {
               <HideItemButton id={stack.id} name={stack.name} type="stack" />
             </div>
           </div>
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-wrap items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
               {stack.name}
             </h1>

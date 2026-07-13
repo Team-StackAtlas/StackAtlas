@@ -111,7 +111,7 @@ function InfoTooltip({ label, text }: { label: string; text: string }) {
       <span tabIndex={0} role="button" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()} className="peer rounded-full text-slate-400 transition-colors hover:text-slate-700 focus:text-slate-700 focus:outline-none dark:text-zinc-500 dark:hover:text-zinc-200 dark:focus:text-zinc-200" aria-label={label}>
         <HelpCircle size={16} />
       </span>
-      <span role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-72 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-100 peer-hover:opacity-100 peer-focus:opacity-100 dark:bg-zinc-100 dark:text-zinc-900">
+      <span role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-56 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-100 peer-hover:opacity-100 peer-focus:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 sm:w-72">
         {text}
       </span>
     </span>
