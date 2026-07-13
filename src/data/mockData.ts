@@ -240,6 +240,8 @@ export interface Post {
   bearings?: string[];
   dispatchProtocol?: PostDispatchProtocol;
   commentItems?: PostComment[];
+  /** True when the post was loaded from Supabase rather than seed/localStorage. */
+  persisted?: boolean;
 }
 
 export interface Stack {

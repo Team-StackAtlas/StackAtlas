@@ -25,6 +25,7 @@ import { UserScopeProvider } from './context/UserScopeContext';
 import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
 import { CatalogProvider } from './context/CatalogContext';
+import { PostsProvider } from './context/PostsContext';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
       <FilterProvider>
         <MockRoleProvider>
         <CatalogProvider>
+        <PostsProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -61,6 +63,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </PostsProvider>
         </CatalogProvider>
         </MockRoleProvider>
       </FilterProvider>

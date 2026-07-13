@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getPosts, TYPE_TAGS } from '../data/mockData';
+import { TYPE_TAGS } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import { ShieldCheck, Activity, Beaker, Package, Link as LinkIcon, Star, ShieldAlert, Clock, ArrowLeft, Users, Edit3, Info } from 'lucide-react';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
@@ -17,6 +18,7 @@ export default function SupplementPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { substances: SUPPLEMENTS, brands: BRANDS } = useCatalog();
+  const { posts: allPosts } = usePosts();
   const supplement = SUPPLEMENTS.find(s => s.id === id);
   
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
@@ -49,7 +51,7 @@ export default function SupplementPage() {
   }
 
   const popularBrand = BRANDS.find(b => b.id === supplement.mostPopularBrandId);
-  const relatedPosts = getPosts().filter(p => p.supplementId === supplement.id);
+  const relatedPosts = allPosts.filter(p => p.supplementId === supplement.id);
   // Global Average is derived ONLY from sufficiently complete Comprehensive
   // Dispatches (quality >= 90 with a recorded dosage).
   const comprehensiveDispatches = relatedPosts.filter(

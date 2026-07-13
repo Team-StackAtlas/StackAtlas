@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronDown, HelpCircle, Search, X } from 'lucide-react';
-import { SUPPLEMENTS, BRANDS, Post, Domain, addPost } from '../data/mockData';
+import { SUPPLEMENTS, BRANDS, Post, Domain } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { BEARING_GROUPS, CATEGORY_BEARING_SUGGESTIONS, getAllowedBearings } from '../lib/bearings';
@@ -16,7 +17,7 @@ type Duration = { amount: string; unit: string };
 type Frequency = { preset: string; cycleMode: 'every' | 'onOff'; everyAmount: string; everyUnit: string; onAmount: string; onUnit: string; offAmount: string; offUnit: string };
 type SubstanceProtocol = { dose: Dose; frequency: Frequency };
 
-type FormErrors = Partial<Record<'auth' | 'entity' | 'title' | 'content' | 'dose' | 'frequency' | 'duration' | 'bearings', string>>;
+type FormErrors = Partial<Record<'auth' | 'entity' | 'title' | 'content' | 'dose' | 'frequency' | 'duration' | 'bearings' | 'publish', string>>;
 
 const MIN_DISPATCH_BODY_CHARS = 100;
 const DOSE_UNITS = ['mcg', 'mg', 'g', 'IU', 'mL', 'cc'];
@@ -414,6 +415,8 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
 export default function Create() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { publishPost } = usePosts();
+  const [publishing, setPublishing] = useState(false);
   const [activeType, setActiveType] = useState<CreateType | null>(null);
   const [dispatchEntity, setDispatchEntity] = useState<EntityOption | null>(null);
   const [signalEntity, setSignalEntity] = useState<EntityOption | null>(null);
@@ -446,7 +449,7 @@ export default function Create() {
   };
   const validateProtocol = (protocol: SubstanceProtocol) => isPositiveNumber(protocol.dose.amount) && validateFrequency(protocol.frequency);
 
-  const handleDispatchSubmit = (e: React.FormEvent) => {
+  const handleDispatchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nextErrors: FormErrors = {};
     if (!user || !profile) nextErrors.auth = 'Sign in with a complete profile before creating a post.';
@@ -484,11 +487,19 @@ export default function Create() {
       bearings: dispatchBearings,
       dispatchProtocol: { entries: protocolEntries, duration: durationLabel, clarification: dispatchData.clarification.trim() || undefined },
     };
-    addPost(newPost);
-    navigate('/square');
+    setPublishing(true);
+    try {
+      await publishPost(newPost);
+      navigate('/square');
+    } catch (err) {
+      console.error('Publish dispatch failed', err);
+      setErrors({ publish: err instanceof Error ? err.message : 'Publishing failed. Try again.' });
+    } finally {
+      setPublishing(false);
+    }
   };
 
-  const handleSignalSubmit = (e: React.FormEvent) => {
+  const handleSignalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nextErrors: FormErrors = {};
     if (!user || !profile) nextErrors.auth = 'Sign in with a complete profile before creating a post.';
@@ -516,8 +527,16 @@ export default function Create() {
       qualityScore: 50,
       bearings: signalBearings,
     };
-    addPost(newPost);
-    navigate('/square');
+    setPublishing(true);
+    try {
+      await publishPost(newPost);
+      navigate('/square');
+    } catch (err) {
+      console.error('Publish signal failed', err);
+      setErrors({ publish: err instanceof Error ? err.message : 'Publishing failed. Try again.' });
+    } finally {
+      setPublishing(false);
+    }
   };
 
   return (
@@ -597,7 +616,8 @@ export default function Create() {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end"><button type="submit" className="rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-600">Submit Dispatch</button></div>
+            {errors.publish && <ErrorText>{errors.publish}</ErrorText>}
+            <div className="flex justify-end"><button type="submit" disabled={publishing} className="rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-60">{publishing ? 'Publishing…' : 'Submit Dispatch'}</button></div>
           </form>
         ) : (
           <form onSubmit={handleSignalSubmit} className="space-y-8">
@@ -620,7 +640,8 @@ export default function Create() {
               </div>
               <BearingPicker mode="signal" selected={signalBearings} entity={signalEntity} onChange={setSignalBearings} error={errors.bearings} />
             </div>
-            <div className="flex justify-end"><button type="submit" className="rounded-xl bg-blue-500 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-600">Broadcast Signal</button></div>
+            {errors.publish && <ErrorText>{errors.publish}</ErrorText>}
+            <div className="flex justify-end"><button type="submit" disabled={publishing} className="rounded-xl bg-blue-500 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-600 disabled:opacity-60">{publishing ? 'Publishing…' : 'Broadcast Signal'}</button></div>
           </form>
         )}
       </div>

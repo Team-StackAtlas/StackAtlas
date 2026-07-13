@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { BRANDS, getPosts, STACKS, SUPPLEMENTS, USERS } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import PostCard from '../components/PostCard';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
 import { useSaved } from '../hooks/useSaved';
@@ -40,6 +41,7 @@ export default function Profile() {
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
   const { following: followedItems, requests: followRequests, isFollowing, requestStatus, toggleFollow } = useFollowing();
+  const { posts: allPosts } = usePosts();
   const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
   const [profileError, setProfileError] = useState('');
@@ -120,7 +122,7 @@ export default function Profile() {
 
   const shownProfile = isOwnProfile ? authProfile ?? profile : profile;
   const settings = withDefaultProfileSettings(shownProfile?.settings);
-  const userPosts = getPosts().filter((post) => post.author.username.toLowerCase() === shownProfile?.username.toLowerCase());
+  const userPosts = allPosts.filter((post) => post.author.username.toLowerCase() === shownProfile?.username.toLowerCase());
   const filteredPosts = userPosts.filter((post) => {
     if (activeTab === 'dispatches') return post.type === 'Dispatch';
     if (activeTab === 'signals') return post.type === 'Signal';

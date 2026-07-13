@@ -1,7 +1,8 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bookmark, ExternalLink, Folder, Search, Trash2 } from 'lucide-react';
-import { getPosts, SOURCES } from '../data/mockData';
+import { SOURCES } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import { useAuth } from '../context/AuthContext';
 import { useSaved, type SavedItem as HookSavedItem } from '../hooks/useSaved';
 import { useLibrary } from '../hooks/useLibrary';
@@ -26,13 +27,14 @@ function label(type: string) {
 export default function Library() {
   const { status } = useAuth();
   const { savedItems, unsaveItem } = useSaved();
+  const { posts: allPosts } = usePosts();
   const { albums, albumItems, createAlbum, deleteAlbum, addToAlbum, removeFromAlbum } = useLibrary();
   const [filter, setFilter] = useState<Filter>('all');
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest');
   const [query, setQuery] = useState('');
 
   const resolved = savedItems.map((item) => {
-    const post = getPosts().find((p) => p.id === item.id);
+    const post = allPosts.find((p) => p.id === item.id);
     const source = SOURCES.find((s) => s.id === item.id);
     const type = normalizeSavedType(item.type, post?.type);
     return { ...item, type, title: item.title ?? post?.title ?? source?.title, description: item.description ?? post?.content, url: item.url ?? source?.url, siteName: item.siteName ?? source?.publisher, author: item.siteName ?? post?.author.displayName ?? post?.author.username, originalCreatedAt: item.originalCreatedAt ?? post?.createdAt, unavailable: (type === 'dispatch' || type === 'signal') && !post };

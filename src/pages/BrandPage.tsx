@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
-import { getPosts } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
 import Sources from '../components/Sources';
@@ -16,6 +16,7 @@ import { useCatalog } from '../context/CatalogContext';
 export default function BrandPage() {
   const { id } = useParams<{ id: string }>();
   const { brands: BRANDS, substances: SUPPLEMENTS } = useCatalog();
+  const { posts: allPosts } = usePosts();
   const brand = BRANDS.find(b => b.id === id);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function BrandPage() {
 
   const ratingSummary = getSummary(brand.id);
 
-  const relatedPosts = getPosts().filter(p => p.brandId === brand.id);
+  const relatedPosts = allPosts.filter(p => p.brandId === brand.id);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto w-full pb-8 px-4 pt-6">

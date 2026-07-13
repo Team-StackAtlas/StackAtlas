@@ -1,7 +1,8 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageCircle, Reply, ShieldCheck, Trash2 } from 'lucide-react';
-import { getPosts, SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
+import { SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import { SaveButton } from '../components/SaveButton';
 import { useAuth } from '../context/AuthContext';
 import { getSavedPostMetadata } from '../lib/savedPostMetadata';
@@ -77,7 +78,8 @@ export default function PostDetail() {
   const requireAccount = useRequireAccountAction();
   const { isFollowing, toggleFollow } = useFollowing();
   const { id } = useParams<{ id: string }>();
-  const post = getPosts().find(p => p.id === id);
+  const { posts } = usePosts();
+  const post = posts.find(p => p.id === id);
 
   const postLike = usePostLike(post?.id ?? '', post?.helpfulCount ?? 0, post?.author.id);
   const [comments, setComments] = useState<CommentNode[]>(() => (post ? readCommentOverrides(post.id) ?? ((post.commentItems ?? []) as CommentNode[]) : []));
