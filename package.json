@@ -15,7 +15,8 @@
     "seed:validate": "tsx scripts/validate-seed.ts",
     "seed:sql": "tsx scripts/generate-seed-sql.ts",
     "pack:from-mock": "tsx scripts/export-mock-pack.ts",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
@@ -23,6 +24,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "fflate": "^0.8.3",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.0",
@@ -50,6 +52,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.60.1",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^4.1.10"
   }
 }

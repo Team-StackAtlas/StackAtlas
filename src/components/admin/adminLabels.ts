@@ -104,6 +104,52 @@ export function rowStatusTone(status: string): BadgeTone {
   }
 }
 
+const FILE_KIND_LABELS: Record<string, string> = {
+  json: 'JSON pack',
+  csv: 'CSV sources',
+  markdown: 'Markdown',
+  zip: 'ZIP archive',
+  unsupported: 'Unsupported',
+};
+export function fileKindLabel(kind: string): string {
+  return FILE_KIND_LABELS[kind] ?? titleCase(kind);
+}
+export function fileKindTone(kind: string): BadgeTone {
+  switch (kind) {
+    case 'json':
+      return 'blue';
+    case 'csv':
+      return 'blue';
+    case 'markdown':
+      return 'purple';
+    case 'zip':
+      return 'slate';
+    default:
+      return 'red';
+  }
+}
+
+const FILE_STATUS_LABELS: Record<string, string> = {
+  parsed: 'Parsed',
+  skipped: 'Skipped',
+  error: 'Error',
+};
+export function fileStatusLabel(status: string): string {
+  return FILE_STATUS_LABELS[status] ?? titleCase(status);
+}
+export function fileStatusTone(status: string): BadgeTone {
+  switch (status) {
+    case 'parsed':
+      return 'green';
+    case 'skipped':
+      return 'amber';
+    case 'error':
+      return 'red';
+    default:
+      return 'slate';
+  }
+}
+
 const ENTITY_LABELS: Record<string, string> = {
   substances: 'Substances',
   brands: 'Brands',

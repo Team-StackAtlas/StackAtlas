@@ -16,6 +16,7 @@ import {
   type PackValidationReport,
 } from './types';
 import { slugify, sourceKeyVariants } from './validate';
+import type { SubstanceCatalogEntry } from './markdown';
 
 const CHUNK_SIZE = 500;
 
@@ -43,7 +44,7 @@ export async function fetchExistingKeys(client: SupabaseClient): Promise<Existin
     client.from('substance_aliases').select('alias'),
     client.from('brands').select('slug'),
     client.from('stacks').select('component_signature'),
-    client.from('research_sources').select('pmid, doi, url, title, year'),
+    client.from('research_sources').select('pmid, doi, url, title, year, content_hash'),
   ]);
   if (substancesRes.error) throw substancesRes.error;
   if (aliasesRes.error) throw aliasesRes.error;
@@ -79,6 +80,23 @@ export async function fetchExistingKeys(client: SupabaseClient): Promise<Existin
     sourceKeys,
     findingKeys: new Set<string>(),
   };
+}
+
+// Substances + their aliases, grouped, for Markdown heading-to-substance
+// matching (see markdown.ts). Distinct from fetchExistingKeys's flattened
+// slug set, which loses the name/alias -> slug association this needs.
+export async function fetchSubstanceCatalog(client: SupabaseClient): Promise<SubstanceCatalogEntry[]> {
+  const { data, error } = await client
+    .from('substances')
+    .select('slug, name, substance_aliases(alias)');
+  if (error) throw error;
+  return (data ?? []).map((row: any) => ({
+    slug: row.slug,
+    name: row.name,
+    aliases: ((row.substance_aliases ?? []) as { alias: string }[])
+      .map((a) => a.alias)
+      .filter(Boolean),
+  }));
 }
 
 function emptyResult(entity: EntityKind): EntityImportResult {

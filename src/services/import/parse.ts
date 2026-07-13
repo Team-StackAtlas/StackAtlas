@@ -10,10 +10,15 @@ import {
   ENTITY_ORDER,
   type DataPack,
   type EntityKind,
+  type ImportedFileKind,
+  type ImportedFileSummary,
   type ResearchSourceType,
   type RowIssue,
   type SourcePackRow,
 } from './types';
+import { hashText } from './hash';
+import { extractMarkdownSource, type SubstanceCatalogEntry } from './markdown';
+import { extractZip, ZipLimitError } from './zip';
 
 const KNOWN_TOP_LEVEL_KEYS = new Set<string>([
   'kind',
@@ -302,4 +307,148 @@ export function parseSourcesCsv(text: string): { pack: DataPack | null; issues: 
     sources,
   };
   return { pack, issues };
+}
+
+// ---------------------------------------------------------------------------
+// Multi-file / ZIP upload — "Upload research files" in Admin → Research.
+//
+// Accepts any mix of .zip, .md/.markdown, .csv, and .json files (a ZIP is
+// unpacked and its supported entries dispatched the same way), normalizes
+// everything into one DataPack, and reports per-file results so one
+// malformed file never discards the valid ones from the same batch. The
+// combined pack + issues then flow through the exact same validatePack /
+// runImport pipeline as a hand-pasted JSON pack.
+// ---------------------------------------------------------------------------
+
+function appendPack(target: DataPack, addition: DataPack): void {
+  if (addition.substances?.length) target.substances = [...(target.substances ?? []), ...addition.substances];
+  if (addition.brands?.length) target.brands = [...(target.brands ?? []), ...addition.brands];
+  if (addition.stacks?.length) target.stacks = [...(target.stacks ?? []), ...addition.stacks];
+  if (addition.sources?.length) target.sources = [...(target.sources ?? []), ...addition.sources];
+  if (addition.findings?.length) target.findings = [...(target.findings ?? []), ...addition.findings];
+}
+
+function entityCounts(pack: DataPack): Partial<Record<EntityKind, number>> {
+  const counts: Partial<Record<EntityKind, number>> = {};
+  for (const entity of ENTITY_ORDER) {
+    const n = (pack[entity] ?? []).length;
+    if (n > 0) counts[entity] = n;
+  }
+  return counts;
+}
+
+export interface ParseImportFilesResult {
+  pack: DataPack;
+  issues: RowIssue[]; // envelope-level issues from JSON/CSV entries, path-prefixed with the source filename
+  files: ImportedFileSummary[];
+}
+
+export async function parseImportFiles(
+  inputFiles: File[],
+  catalog: SubstanceCatalogEntry[] = [],
+): Promise<ParseImportFilesResult> {
+  const combined: DataPack = { kind: DATA_PACK_KIND, schema_version: DATA_PACK_SCHEMA_VERSION };
+  const files: ImportedFileSummary[] = [];
+  const issues: RowIssue[] = [];
+
+  const recordParsed = (
+    path: string,
+    name: string,
+    kind: ImportedFileKind,
+    result: { pack: DataPack | null; issues: RowIssue[] },
+  ) => {
+    result.issues.forEach((issue) =>
+      issues.push({ ...issue, path: `${name}${issue.path ? `:${issue.path}` : ''}` }),
+    );
+    const hasError = result.issues.some((i) => i.severity === 'error');
+    if (!result.pack || hasError) {
+      files.push({
+        path,
+        name,
+        kind,
+        status: 'error',
+        message: result.issues.find((i) => i.severity === 'error')?.message ?? 'Could not parse this file.',
+      });
+      return;
+    }
+    appendPack(combined, result.pack);
+    files.push({ path, name, kind, status: 'parsed', entityCounts: entityCounts(result.pack) });
+  };
+
+  const recordMarkdown = async (path: string, name: string, text: string) => {
+    try {
+      const { source, ambiguous } = extractMarkdownSource(name, text, catalog);
+      source.content_hash = await hashText(text);
+      source.raw_content = text;
+      source.original_filename = name;
+      source.file_type = 'markdown';
+      source.import_relative_path = path;
+      appendPack(combined, { kind: DATA_PACK_KIND, schema_version: DATA_PACK_SCHEMA_VERSION, sources: [source] });
+      files.push({
+        path,
+        name,
+        kind: 'markdown',
+        status: 'parsed',
+        entityCounts: { sources: 1 },
+        ambiguousMatches: ambiguous.length > 0 ? ambiguous : undefined,
+      });
+    } catch (err) {
+      files.push({
+        path,
+        name,
+        kind: 'markdown',
+        status: 'error',
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
+  for (const file of inputFiles) {
+    const lower = file.name.toLowerCase();
+
+    if (lower.endsWith('.zip')) {
+      try {
+        const extraction = await extractZip(file);
+        for (const entry of extraction.skipped) {
+          files.push({
+            path: entry.path,
+            name: entry.path.split('/').pop() ?? entry.path,
+            kind: 'unsupported',
+            status: 'skipped',
+            message: entry.reason,
+          });
+        }
+        for (const entry of extraction.entries) {
+          if (entry.ext === '.md' || entry.ext === '.markdown') {
+            await recordMarkdown(entry.path, entry.name, entry.content);
+          } else if (entry.ext === '.json') {
+            recordParsed(entry.path, entry.name, 'json', parseDataPackJson(entry.content));
+          } else if (entry.ext === '.csv') {
+            recordParsed(entry.path, entry.name, 'csv', parseSourcesCsv(entry.content));
+          }
+        }
+      } catch (err) {
+        const message =
+          err instanceof ZipLimitError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : String(err);
+        files.push({ path: file.name, name: file.name, kind: 'zip', status: 'error', message });
+      }
+      continue;
+    }
+
+    if (lower.endsWith('.md') || lower.endsWith('.markdown')) {
+      await recordMarkdown(file.name, file.name, await file.text());
+    } else if (lower.endsWith('.json')) {
+      recordParsed(file.name, file.name, 'json', parseDataPackJson(await file.text()));
+    } else if (lower.endsWith('.csv')) {
+      recordParsed(file.name, file.name, 'csv', parseSourcesCsv(await file.text()));
+    } else {
+      files.push({ path: file.name, name: file.name, kind: 'unsupported', status: 'skipped', message: 'unsupported file type' });
+    }
+  }
+
+  return { pack: combined, issues, files };
 }

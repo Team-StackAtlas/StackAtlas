@@ -3,10 +3,11 @@
 // individual modules.
 
 export * from './types';
-export { parseDataPackJson, parseSourcesCsv } from './parse';
+export { parseDataPackJson, parseSourcesCsv, parseImportFiles, type ParseImportFilesResult } from './parse';
 export { validatePack, slugify, sourceKeyVariants } from './validate';
 export {
   fetchExistingKeys,
+  fetchSubstanceCatalog,
   runImport,
   listImportBatches,
   revertImportBatch,
@@ -15,3 +16,6 @@ export {
   type SourceLibraryEntry,
   type FindingEntry,
 } from './runner';
+export { extractMarkdownSource, type SubstanceCatalogEntry, type MarkdownAmbiguousMatch } from './markdown';
+export { extractZip, ZipLimitError, SUPPORTED_ENTRY_EXTENSIONS, ZIP_MAX_ENTRIES, ZIP_MAX_FILE_BYTES, ZIP_MAX_TOTAL_BYTES } from './zip';
+export { hashText } from './hash';

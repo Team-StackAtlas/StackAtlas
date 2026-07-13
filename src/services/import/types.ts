@@ -117,6 +117,36 @@ export interface SourcePackRow {
   abstract?: string;
   substances?: string[]; // substance slugs to link via research_source_substances
   notes?: string; // stored on the source-substance link
+  // Provenance for sources extracted from a raw document (Markdown, etc.)
+  // rather than a hand-authored pack row. content_hash lets a document with
+  // no pmid/doi/url still dedupe on re-import — see sourceKeyVariants.
+  content_hash?: string;
+  raw_content?: string;
+  original_filename?: string;
+  file_type?: string;
+  import_relative_path?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Multi-file / ZIP upload (Admin → Research "Upload research files")
+// ---------------------------------------------------------------------------
+
+export type ImportedFileKind = 'json' | 'csv' | 'markdown' | 'zip' | 'unsupported';
+export type ImportedFileStatus = 'parsed' | 'skipped' | 'error';
+
+export interface ImportedFileAmbiguousMatch {
+  headingOrTitle: string;
+  candidates: string[]; // substance slugs
+}
+
+export interface ImportedFileSummary {
+  path: string; // relative path (inside a zip) or the dropped filename
+  name: string;
+  kind: ImportedFileKind;
+  status: ImportedFileStatus;
+  message?: string; // reason when skipped/error
+  entityCounts?: Partial<Record<EntityKind, number>>;
+  ambiguousMatches?: ImportedFileAmbiguousMatch[];
 }
 
 export interface FindingPackRow {

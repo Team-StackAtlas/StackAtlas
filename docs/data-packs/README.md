@@ -5,6 +5,49 @@ catalog and research data. Packs are usually generated outside the app (by a
 cheaper AI model, or by a script like `scripts/export-mock-pack.ts`) and then
 imported through **Admin → Research → Import**.
 
+The importer also accepts **multiple files at once and ZIP archives** — see
+§0 below. A JSON pack is still the only way to define substances, brands,
+stacks, and findings; the other formats feed the sources side of the pipeline.
+
+---
+
+## 0. Upload formats and limits
+
+**Admin → Research → Import → Upload research files** accepts any mix of:
+
+| Format | What it becomes |
+|---|---|
+| `.json` | A full data pack (this document's main subject) |
+| `.csv` | A list of research sources, one per row (§ Sources CSV columns: `title,source_type,url,pmid,doi,year,journal_or_site,authors,abstract,substances,notes`; multiple substance slugs separated by `;`) |
+| `.md` / `.markdown` | One research **source** per file — the document text is stored verbatim, metadata (title/url/year/authors/source_type) is read from optional frontmatter or the first heading, and headings that exactly match a substance name link automatically (ambiguous matches are flagged for manual linking, never guessed) |
+| `.zip` | Unpacked in the browser and every supported file inside is processed as above |
+
+ZIP safety limits (the archive is rejected as a whole if exceeded):
+
+- **300 entries** max
+- **10 MB** per file (uncompressed)
+- **50 MB** total (uncompressed)
+- suspicious compression ratios are rejected (archive-bomb guard)
+- entries with `..`/absolute paths are refused (zip-slip guard)
+- nested archives inside the ZIP are skipped
+- `.DS_Store`, `Thumbs.db`, and `__MACOSX/` are silently ignored
+
+Every file in a batch parses independently — one malformed file is reported
+per-file in the preview and does not discard the valid files uploaded with it.
+
+Markdown documents dedupe on a **content hash**: re-importing an unchanged
+`.md` file (even renamed) updates the existing source instead of creating a
+duplicate. This slots into the same natural-key chain as everything else:
+`pmid → doi → url → content hash → title+year`.
+
+Markdown never creates findings. A finding is a specific measured result and
+must be authored as a JSON or CSV row — extracting "findings" from freeform
+prose would violate the golden rule in §4.
+
+For building a corpus ZIP with an external model, hand the model
+[`CHATGPT_ZIP_INSTRUCTIONS.md`](CHATGPT_ZIP_INSTRUCTIONS.md) — it contains a
+paste-ready prompt with this whole contract inlined.
+
 Rows inside a pack reference each other by **natural keys** — a substance
 slug, a source's PMID/DOI/URL — never by database UUIDs. That's what makes
 packs safe to hand-author, regenerate, and re-import: the server resolves
