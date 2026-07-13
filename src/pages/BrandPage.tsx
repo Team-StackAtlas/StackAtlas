@@ -7,7 +7,6 @@ import SuggestEditModal from '../components/SuggestEditModal';
 import Sources from '../components/Sources';
 import StarRating from '../components/StarRating';
 import { CompareModal } from '../components/CompareModal';
-import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
 import { useFollowing } from '../hooks/useFollowing';
 import { useBrandRatings } from '../hooks/useBrandRatings';
@@ -279,8 +278,6 @@ export default function BrandPage() {
           )}
         </div>
       </div>
-
-      <AdminObjectActions targetType="brand" targetId={brand.id} targetName={brand.name} />
 
       <div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-6">Dispatches & Signals</h2>

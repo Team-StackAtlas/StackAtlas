@@ -7,7 +7,6 @@ import SuggestEditModal from '../components/SuggestEditModal';
 import Sources from '../components/Sources';
 import AccessBadge from '../components/AccessBadge';
 import { CompareModal } from '../components/CompareModal';
-import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
 import { useFollowing } from '../hooks/useFollowing';
 import { useCatalog } from '../context/CatalogContext';
@@ -119,8 +118,6 @@ export default function StackPage() {
           )}
         </div>
       </div>
-
-      <AdminObjectActions targetType="stack" targetId={stack.id} targetName={stack.name} />
 
       <div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-4">Related Dispatches</h2>
