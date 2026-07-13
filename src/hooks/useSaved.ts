@@ -87,7 +87,7 @@ export function useSaved() {
         .catch((error) => { console.error('Failed to load saved items', error); setSavedItems(readLocal()); });
       return;
     }
-    if (!isBackendConfigured) setSavedItems(readLocal());
+    if (!isBackendConfigured) Promise.resolve().then(() => setSavedItems(readLocal()));
   }, [backed, isBackendConfigured, services, user]);
 
   useEffect(() => {

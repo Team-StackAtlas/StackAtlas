@@ -25,11 +25,14 @@ export function useLibrary() {
   const refresh = useCallback(async () => {
     if (backed && services && user) {
       const loadedAlbums = await services.library.listAlbums(user.id);
-      setAlbums(loadedAlbums);
-      setAlbumItems((await Promise.all(loadedAlbums.map((album) => services.library.listAlbumItems(album.id)))).flat());
+      await Promise.resolve().then(() => setAlbums(loadedAlbums));
+      const loadedItems = (await Promise.all(loadedAlbums.map((album) => services.library.listAlbumItems(album.id)))).flat();
+      await Promise.resolve().then(() => setAlbumItems(loadedItems));
     } else if (!isBackendConfigured) {
-      setAlbums(read<LibraryAlbum>(ALBUMS_KEY));
-      setAlbumItems(read<AlbumItem>(ITEMS_KEY));
+      await Promise.resolve().then(() => {
+        setAlbums(read<LibraryAlbum>(ALBUMS_KEY));
+        setAlbumItems(read<AlbumItem>(ITEMS_KEY));
+      });
     }
   }, [backed, isBackendConfigured, services, user]);
 

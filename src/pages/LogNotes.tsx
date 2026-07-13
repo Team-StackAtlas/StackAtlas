@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Edit2, Plus } from 'lucide-react';
-import { useLogs } from '../context/LogContext';
-import { cn } from '../lib/utils';
+import { useLogs, type PrivateNote } from '../context/LogContext';
 import { SUPPLEMENTS, STACKS } from '../data/mockData';
 
 export default function LogNotes() {
@@ -41,7 +40,7 @@ export default function LogNotes() {
     setLinkedDate('');
   };
 
-  const handleEdit = (note: any) => {
+  const handleEdit = (note: PrivateNote) => {
     setEditingId(note.id);
     setTitle(note.title);
     setBody(note.body);

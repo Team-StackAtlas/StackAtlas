@@ -79,7 +79,7 @@ export default function SupplementPage() {
     if (isBackendConfigured && services) {
       services.follows.count({ targetType: 'substance', targetId: supplement.id }).then(setFollowerCount).catch(() => setFollowerCount(isFollowing('substance', supplement.id) ? 1 : 0));
     } else {
-      setFollowerCount(isFollowing('substance', supplement.id) ? 1 : 0);
+      Promise.resolve().then(() => setFollowerCount(isFollowing('substance', supplement.id) ? 1 : 0));
     }
   }, [isBackendConfigured, isFollowing, services, supplement]);
 

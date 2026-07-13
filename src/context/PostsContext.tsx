@@ -33,12 +33,14 @@ export function PostsProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!isBackendConfigured || !supabase) {
-      setLocalVersion((v) => v + 1);
+      await Promise.resolve().then(() => setLocalVersion((v) => v + 1));
       return;
     }
     const loaded = await loadSupabasePosts(supabase);
-    if (loaded) setRemotePosts(loaded);
-    setLoading(false);
+    await Promise.resolve().then(() => {
+      if (loaded) setRemotePosts(loaded);
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {

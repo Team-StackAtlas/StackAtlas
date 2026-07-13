@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Moon, Sun, Activity, AlertTriangle, Dumbbell, Droplet, Calendar as CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Activity, AlertTriangle, Dumbbell, Droplet, Calendar as CalendarIcon, type LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 type LogType = 'sleep' | 'mood' | 'symptoms' | 'side_effects' | 'workout' | 'bloodwork';
 
-const LOG_TYPES: Record<LogType, { title: string; icon: any; color: string; bg: string }> = {
+const LOG_TYPES: Record<LogType, { title: string; icon: LucideIcon; color: string; bg: string }> = {
   sleep: { title: 'Sleep', icon: Moon, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10' },
   mood: { title: 'Mood', icon: Sun, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10' },
   symptoms: { title: 'Symptoms', icon: Activity, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-500/10' },

@@ -40,9 +40,11 @@ export function usePostLike(postId: string, initialCount: number, authorId?: str
         .catch((error) => console.error('Failed to load post like state', error));
       return;
     }
-    setLiked(readLocal().some((row) => row.postId === postId && row.userId === userId));
-    setRemoteCount(null);
-    setLocalDelta(0);
+    Promise.resolve().then(() => {
+      setLiked(readLocal().some((row) => row.postId === postId && row.userId === userId));
+      setRemoteCount(null);
+      setLocalDelta(0);
+    });
   }, [canUseBackend, postId, services, user, userId]);
 
   const count = useMemo(() => Math.max(0, (remoteCount ?? initialCount) + localDelta), [initialCount, localDelta, remoteCount]);
