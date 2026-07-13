@@ -1,21 +1,25 @@
-import { useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AlertTriangle, Info, Loader2, Upload } from 'lucide-react';
 import {
   ENTITY_ORDER,
   fetchExistingKeys,
+  fetchSubstanceCatalog,
   parseDataPackJson,
+  parseImportFiles,
   parseSourcesCsv,
   runImport,
   validatePack,
   type DataPack,
   type EntityKind,
+  type ImportedFileSummary,
   type ImportRunResult,
   type PackValidationReport,
   type RowIssue,
+  type SubstanceCatalogEntry,
 } from '../../services/import';
 import Badge from './Badge';
-import { entityLabel } from './adminLabels';
+import { entityLabel, fileKindLabel, fileKindTone, fileStatusLabel, fileStatusTone } from './adminLabels';
 import ImportPreviewTable, { type PreviewFilter } from './ImportPreviewTable';
 
 type Step = 'load' | 'review' | 'execute';
@@ -59,6 +63,8 @@ export default function ImportWizard({
   const [loadSourceLabel, setLoadSourceLabel] = useState('');
   const [pack, setPack] = useState<DataPack | null>(null);
   const [loadIssues, setLoadIssues] = useState<RowIssue[]>([]);
+  const [loadFiles, setLoadFiles] = useState<ImportedFileSummary[]>([]);
+  const [substanceCatalog, setSubstanceCatalog] = useState<SubstanceCatalogEntry[]>([]);
 
   const [report, setReport] = useState<PackValidationReport | null>(null);
   const [validating, setValidating] = useState(false);
@@ -69,12 +75,29 @@ export default function ImportWizard({
   const [runResult, setRunResult] = useState<ImportRunResult | null>(null);
   const [runError, setRunError] = useState('');
 
+  useEffect(() => {
+    if (!client) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const entries = await fetchSubstanceCatalog(client);
+        if (!cancelled) setSubstanceCatalog(entries);
+      } catch (err) {
+        console.error('Load substance catalog failed', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
+
   const resetAll = () => {
     setStep('load');
     setPastedText('');
     setLoadSourceLabel('');
     setPack(null);
     setLoadIssues([]);
+    setLoadFiles([]);
     setReport(null);
     setValidateError('');
     setPreviewFilter('all');
@@ -86,6 +109,7 @@ export default function ImportWizard({
   const applyParseResult = (result: { pack: DataPack | null; issues: RowIssue[] }, label: string) => {
     setPack(result.pack);
     setLoadIssues(result.issues);
+    setLoadFiles([]);
     setLoadSourceLabel(label);
     setReport(null);
     setRunResult(null);
@@ -93,27 +117,25 @@ export default function ImportWizard({
     setValidateError('');
   };
 
-  const handleFile = async (file: File) => {
-    const text = await file.text();
-    const lower = file.name.toLowerCase();
-    if (lower.endsWith('.json')) {
-      applyParseResult(parseDataPackJson(text), `file "${file.name}"`);
-    } else if (lower.endsWith('.csv')) {
-      applyParseResult(parseSourcesCsv(text), `file "${file.name}"`);
-    } else {
-      setPack(null);
-      setLoadIssues([
-        { path: '', message: 'Unsupported file type — use a .json or .csv file.', severity: 'error' },
-      ]);
-      setLoadSourceLabel(`file "${file.name}"`);
-    }
+  const handleFiles = async (fileList: FileList | File[]) => {
+    const files = Array.from(fileList);
+    if (files.length === 0) return;
+    const result = await parseImportFiles(files, substanceCatalog);
+    const label = files.length === 1 ? `file "${files[0].name}"` : `${files.length} files`;
+    setPack(result.pack);
+    setLoadIssues(result.issues);
+    setLoadFiles(result.files);
+    setLoadSourceLabel(label);
+    setReport(null);
+    setRunResult(null);
+    setRunError('');
+    setValidateError('');
   };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) void handleFile(file);
+    if (e.dataTransfer.files.length > 0) void handleFiles(e.dataTransfer.files);
   };
 
   const handleParsePasted = () => {
@@ -212,22 +234,24 @@ export default function ImportWizard({
           >
             <Upload className="mx-auto text-slate-400" size={28} />
             <p className="mt-2 text-sm text-slate-600 dark:text-zinc-400">
-              Drag a .json or .csv file here, or
+              Upload research files or a ZIP archive, or drag them here
             </p>
+            <p className="mt-1 text-xs text-slate-400">Accepts .json, .csv, .md, .markdown, and .zip — drop several at once.</p>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="mt-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-slate-900"
+              className="mt-3 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-slate-900"
             >
-              Choose file
+              Upload research files
             </button>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,.csv"
+              accept=".json,.csv,.md,.markdown,.zip"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void handleFile(file);
+                const files = e.target.files;
+                if (files && files.length > 0) void handleFiles(files);
                 e.target.value = '';
               }}
             />
@@ -303,6 +327,48 @@ export default function ImportWizard({
                 <p className="mt-2 text-sm text-red-700 dark:text-red-400">
                   Could not read a data pack from this input.
                 </p>
+              )}
+              {loadFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-semibold">Files ({loadFiles.length})</p>
+                  {loadFiles.map((f, i) => (
+                    <div
+                      key={`${f.path}-${i}`}
+                      className="rounded-xl border border-slate-200 p-3 text-sm dark:border-zinc-800"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{f.name}</span>
+                        <Badge tone={fileKindTone(f.kind)}>{fileKindLabel(f.kind)}</Badge>
+                        <Badge tone={fileStatusTone(f.status)}>{fileStatusLabel(f.status)}</Badge>
+                      </div>
+                      {f.path !== f.name && <p className="mt-0.5 text-xs text-slate-400">{f.path}</p>}
+                      {f.message && <p className="mt-1 text-xs text-slate-500">{f.message}</p>}
+                      {f.entityCounts && Object.keys(f.entityCounts).length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {Object.entries(f.entityCounts).map(([entity, count]) => (
+                            <Badge key={entity} tone="slate">
+                              {entityLabel(entity)}: {count}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {f.ambiguousMatches && f.ambiguousMatches.length > 0 && (
+                        <div className="mt-2 space-y-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                          <p className="flex items-start gap-1.5 font-semibold">
+                            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                            Ambiguous substance matches — link these manually in the Source Library after
+                            import
+                          </p>
+                          {f.ambiguousMatches.map((m, j) => (
+                            <p key={j}>
+                              &quot;{m.headingOrTitle}&quot; could match: {m.candidates.join(', ')}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
               {loadIssues.length > 0 && (
                 <ul className="mt-3 space-y-1 text-xs">

@@ -77,15 +77,20 @@ export function sourceKeyVariants(row: {
   url?: string | null;
   title?: string | null;
   year?: number | null;
+  content_hash?: string | null;
 }): string[] {
   const keys: string[] = [];
   const pmid = trimmed(row.pmid);
   const doi = trimmed(row.doi);
   const url = trimmed(row.url);
   const title = trimmed(row.title);
+  const contentHash = trimmed(row.content_hash);
   if (pmid) keys.push(`p:${pmid.toLowerCase()}`);
   if (doi) keys.push(`d:${doi.toLowerCase()}`);
   if (url) keys.push(`u:${url}`);
+  // Documents with no other identity (e.g. imported Markdown) dedupe on the
+  // exact text of the file, checked before the weaker title+year fallback.
+  if (contentHash) keys.push(`h:${contentHash}`);
   if (title) keys.push(`t:${title.toLowerCase()}|${row.year ?? ''}`);
   return keys;
 }
