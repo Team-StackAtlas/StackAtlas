@@ -38,6 +38,8 @@ export interface CommsMessage {
   attachment?: CommsAttachment;
   reactions: Record<string, string[]>;
   deleted?: boolean;
+  /** Set on messages backed by Supabase (see src/hooks/useComms.ts); unset for mock messages. */
+  persisted?: boolean;
 }
 
 export interface CommsConversation {
@@ -47,6 +49,8 @@ export interface CommsConversation {
   requestedBy?: string;
   declined?: boolean;
   typingUserIds: string[];
+  /** Set on conversations backed by Supabase (see src/hooks/useComms.ts); unset for mock conversations. */
+  persisted?: boolean;
 }
 
 export interface Quarter {
