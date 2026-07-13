@@ -30,6 +30,7 @@ export default function Comms() {
   const [error, setError] = useState('');
   const [quarterTitle, setQuarterTitle] = useState('');
   const [quarterDescription, setQuarterDescription] = useState('');
+  const [inviteUsername, setInviteUsername] = useState('');
   const [recording, setRecording] = useState(false);
   const recordTimer = useRef<number | undefined>(undefined);
 
@@ -53,8 +54,9 @@ export default function Comms() {
   const activeQuarterMessages = comms.messages.filter(
     (message) => message.quarterId === activeQuarter?.id,
   );
-  // Attachments/voice aren't part of phase 1 DM persistence; Quarters (always mock) keep them.
-  const showRichComposer = tab === 'quarters' || !activeConversation?.persisted;
+  // Attachments/voice aren't part of DM or Quarter persistence; only mock threads keep them.
+  const showRichComposer =
+    tab === 'quarters' ? !activeQuarter?.persisted : !activeConversation?.persisted;
 
   useEffect(() => {
     if (tab === 'messages' && activeConversation) comms.markConversationRead(activeConversation.id);
@@ -125,8 +127,8 @@ export default function Comms() {
     const sender = comms.getUser(message.senderId);
     const reactions = Object.entries(message.reactions).filter(([, users]) => users.length > 0);
     const latestMine = mine && activeMessages[activeMessages.length - 1]?.id === message.id;
-    // Reactions aren't part of phase 1 DM persistence; only mock (non-persisted) DMs keep them.
-    const hideReactions = message.scope === 'dm' && message.persisted;
+    // Reactions aren't part of DM or Quarter persistence; only mock (non-persisted) threads keep them.
+    const hideReactions = message.persisted === true;
     return (
       <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
         <div
@@ -161,7 +163,7 @@ export default function Comms() {
           )}
           <div className="mt-2 flex items-center gap-2 text-xs">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
-            {message.scope === 'quarter' && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
+            {message.scope === 'quarter' && !activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
             {!hideReactions && (
               <>
                 <button type="button" onClick={() => comms.react(message.id)}>
@@ -323,6 +325,37 @@ export default function Comms() {
                   </div>
                 );
               })}
+              <div className="pt-2">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Quarter Invites
+                </p>
+                {comms.quarterInvites.length === 0 && (
+                  <p className="text-sm text-slate-500">No pending quarter invites.</p>
+                )}
+                {comms.quarterInvites.map((invite) => (
+                  <div
+                    key={invite.id}
+                    className="rounded-xl border border-slate-200 p-3 text-sm dark:border-zinc-800"
+                  >
+                    <strong>{invite.quarterTitle}</strong>
+                    <p className="text-slate-500">Invited by @{invite.inviterUsername}.</p>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={() => comms.acceptQuarterInvite(invite.id)}
+                        className="rounded-lg bg-emerald-600 px-3 py-1 text-white"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => comms.declineQuarterInvite(invite.id)}
+                        className="rounded-lg bg-slate-100 px-3 py-1 dark:bg-zinc-800"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -353,19 +386,23 @@ export default function Comms() {
                   <Plus size={14} /> Create Quarter
                 </button>
               </div>
-              {comms.quarters.map((quarter) => (
+              {comms.quarters.map((quarter) => {
+                const last = comms.messages.filter((m) => m.quarterId === quarter.id).at(-1);
+                return (
                 <button
                   key={quarter.id}
                   onClick={() => setActiveQuarterId(quarter.id)}
                   className="w-full rounded-xl border border-slate-200 p-3 text-left text-sm dark:border-zinc-800"
                 >
                   <strong>{quarter.title}</strong>
+                  {last && <p className="truncate text-slate-500">{last.body}</p>}
                   <p className="text-slate-500">
                     {quarter.memberIds.length} members · {comms.unreadQuarterCount(quarter.id)}{' '}
                     unread
                   </p>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </aside>
@@ -398,39 +435,62 @@ export default function Comms() {
                   </h2>
                   <p className="text-sm text-slate-500">{activeQuarter.description}</p>
                 </div>
-                <button
-                  onClick={() => comms.leaveQuarter(activeQuarter.id)}
-                  className="rounded-lg bg-slate-100 px-3 py-1 text-sm dark:bg-zinc-800"
-                >
-                  Leave
-                </button>
+                {!(activeQuarter.persisted && activeQuarter.ownerId === comms.viewerId) && (
+                  <button
+                    onClick={() => comms.leaveQuarter(activeQuarter.id)}
+                    className="rounded-lg bg-slate-100 px-3 py-1 text-sm dark:bg-zinc-800"
+                  >
+                    Leave
+                  </button>
+                )}
               </div>
               <div className="mt-4 rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><h3 className="mb-2 text-sm font-bold">Quarter Controls</h3><p className="mb-2 text-xs text-slate-500">Role: {activeQuarter.ownerId === comms.viewerId ? 'quarter_owner' : activeQuarter.adminIds.includes(comms.viewerId) ? 'quarter_moderator' : 'quarter_member'}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 {activeQuarter.memberIds.map((id) => (
                   <span key={id} className="rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-800">
                     @{comms.getUser(id)?.username}{' '}
-                    {(activeQuarter.ownerId === comms.viewerId || activeQuarter.adminIds.includes(comms.viewerId)) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
-                    {activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && !activeQuarter.adminIds.includes(id) && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
-                    {activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && activeQuarter.adminIds.includes(id) && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
+                    {!activeQuarter.persisted && (activeQuarter.ownerId === comms.viewerId || activeQuarter.adminIds.includes(comms.viewerId)) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
+                    {!activeQuarter.persisted && activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && !activeQuarter.adminIds.includes(id) && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
+                    {!activeQuarter.persisted && activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && activeQuarter.adminIds.includes(id) && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
                   </span>
                 ))}
               </div></div>
-              <select
-                onChange={(e) =>
-                  e.target.value && comms.inviteToQuarter(activeQuarter.id, e.target.value)
-                }
-                className="mt-3 rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
-              >
-                <option value="">Invite user…</option>
-                {comms.users
-                  .filter((u) => u.id !== comms.viewerId && !activeQuarter.memberIds.includes(u.id))
-                  .map((u) => (
-                    <option key={u.id} value={u.id}>
-                      @{u.username}
-                    </option>
-                  ))}
-              </select>
+              {activeQuarter.persisted ? (
+                <div className="mt-3 flex gap-2">
+                  <input
+                    value={inviteUsername}
+                    onChange={(e) => setInviteUsername(e.target.value)}
+                    placeholder="Invite by username"
+                    className="flex-1 rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
+                  />
+                  <button
+                    disabled={!inviteUsername.trim()}
+                    onClick={() => {
+                      comms.inviteToQuarterByUsername(activeQuarter.id, inviteUsername);
+                      setInviteUsername('');
+                    }}
+                    className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  >
+                    Invite
+                  </button>
+                </div>
+              ) : (
+                <select
+                  onChange={(e) =>
+                    e.target.value && comms.inviteToQuarter(activeQuarter.id, e.target.value)
+                  }
+                  className="mt-3 rounded-lg border border-slate-200 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
+                >
+                  <option value="">Invite user…</option>
+                  {comms.users
+                    .filter((u) => u.id !== comms.viewerId && !activeQuarter.memberIds.includes(u.id))
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        @{u.username}
+                      </option>
+                    ))}
+                </select>
+              )}
               <div className="mt-4 space-y-3">{activeQuarterMessages.map(renderMessage)}</div>
             </>
           )}

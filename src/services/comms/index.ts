@@ -1,13 +1,22 @@
-// Supabase adapter for Comms direct messages (phase 1: DMs only; Quarters
-// stay mock, see src/hooks/useComms.ts).
+// Supabase adapter for Comms direct messages and Quarters.
 //
-// Reads/writes go straight to the 0009 comms tables under their existing
-// RLS policies + grants (conversations/conversation_participants/messages
-// select, messages insert into an accepted conversation, profiles select
-// for search). Conversation creation, request accept/decline, and marking
-// a conversation read have no covering direct-table policy, so those three
-// go through the SECURITY DEFINER RPCs in
+// DMs (phase 1): reads/writes go straight to the 0009 comms tables under
+// their existing RLS policies + grants (conversations/
+// conversation_participants/messages select, messages insert into an
+// accepted conversation, profiles select for search). Conversation
+// creation, request accept/decline, and marking a conversation read have
+// no covering direct-table policy, so those three go through the
+// SECURITY DEFINER RPCs in
 // supabase/migrations/20260713100000_comms_dm_persistence.sql.
+//
+// Quarters (phase 2): reads and message sends similarly go straight to the
+// 0009/0011 tables under their existing RLS policies + grants (quarters/
+// quarter_members/quarter_invites select, quarter_messages select+insert
+// for active members, profiles select for username lookups). Quarter
+// creation, inviting by username, invite accept/decline, leaving, and
+// marking a quarter read have no covering direct-table policy, so those
+// five go through the SECURITY DEFINER RPCs in
+// supabase/migrations/20260713190000_comms_quarters_persistence.sql.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -172,5 +181,198 @@ export async function respondToRequest(
 
 export async function markConversationRead(client: SupabaseClient, conversationId: string): Promise<void> {
   const { error } = await client.rpc('mark_conversation_read', { p_conversation_id: conversationId });
+  if (error) throw error;
+}
+
+export type CommsQuarterRole = 'quarter_owner' | 'quarter_moderator' | 'quarter_member';
+
+export interface CommsQuarterDTO {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string | null;
+  role: CommsQuarterRole;
+}
+
+export interface CommsQuarterMemberDTO {
+  quarterId: string;
+  userId: string;
+  role: CommsQuarterRole;
+}
+
+export interface CommsQuarterMessageDTO {
+  id: string;
+  quarterId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  deleted: boolean;
+}
+
+export interface CommsQuarterInviteDTO {
+  id: string;
+  quarterId: string;
+  quarterTitle: string;
+  inviterId: string;
+  inviterUsername: string;
+  createdAt: string;
+}
+
+export interface CommsQuartersLoadResult {
+  quarters: CommsQuarterDTO[];
+  members: CommsQuarterMemberDTO[];
+  messages: CommsQuarterMessageDTO[];
+  profiles: CommsProfileDTO[];
+  lastReadAt: Record<string, string | null>;
+  invites: CommsQuarterInviteDTO[];
+}
+
+// Loads every quarter the viewer belongs to (plus its members, messages,
+// and member profiles) and every pending invite addressed to the viewer.
+// Phase-2 scale keeps this as a small, fixed number of queries rather than
+// a paginated/aggregated RPC, mirroring loadComms above.
+export async function loadQuarters(client: SupabaseClient, viewerId: string): Promise<CommsQuartersLoadResult> {
+  const [mineResult, invitesResult] = await Promise.all([
+    client
+      .from('quarter_members')
+      .select('quarter_id, role, last_read_at')
+      .eq('user_id', viewerId)
+      .is('removed_at', null),
+    client
+      .from('quarter_invites')
+      .select('id, quarter_id, inviter_id, created_at, quarters(title), profiles!quarter_invites_inviter_id_fkey(username)')
+      .eq('invitee_id', viewerId)
+      .eq('status', 'pending'),
+  ]);
+  if (mineResult.error) throw mineResult.error;
+  if (invitesResult.error) throw invitesResult.error;
+
+  const invites: CommsQuarterInviteDTO[] = (invitesResult.data ?? []).map((row: any) => ({
+    id: row.id,
+    quarterId: row.quarter_id,
+    quarterTitle: row.quarters?.title ?? '',
+    inviterId: row.inviter_id,
+    inviterUsername: row.profiles?.username ?? '',
+    createdAt: row.created_at,
+  }));
+
+  const ids = (mineResult.data ?? []).map((row: any) => row.quarter_id as string);
+  const lastReadAt: Record<string, string | null> = {};
+  const roleByQuarter = new Map<string, CommsQuarterRole>();
+  (mineResult.data ?? []).forEach((row: any) => {
+    lastReadAt[row.quarter_id] = row.last_read_at;
+    roleByQuarter.set(row.quarter_id, row.role);
+  });
+  if (ids.length === 0) {
+    return { quarters: [], members: [], messages: [], profiles: [], lastReadAt, invites };
+  }
+
+  const [quartersResult, membersResult, messagesResult] = await Promise.all([
+    client.from('quarters').select('id, owner_id, title, description').in('id', ids),
+    client
+      .from('quarter_members')
+      .select('quarter_id, user_id, role, profiles!quarter_members_user_id_fkey(id, username, display_name)')
+      .in('quarter_id', ids)
+      .is('removed_at', null),
+    client
+      .from('quarter_messages')
+      .select('id, quarter_id, sender_id, body, created_at, deleted_at')
+      .in('quarter_id', ids)
+      .order('created_at', { ascending: true }),
+  ]);
+  if (quartersResult.error) throw quartersResult.error;
+  if (membersResult.error) throw membersResult.error;
+  if (messagesResult.error) throw messagesResult.error;
+
+  const profilesById = new Map<string, CommsProfileDTO>();
+  const members: CommsQuarterMemberDTO[] = (membersResult.data ?? []).map((row: any) => {
+    const profile = row.profiles;
+    if (profile) {
+      profilesById.set(profile.id, {
+        id: profile.id,
+        username: profile.username,
+        displayName: profile.display_name ?? undefined,
+      });
+    }
+    return { quarterId: row.quarter_id, userId: row.user_id, role: row.role };
+  });
+
+  const quarters: CommsQuarterDTO[] = (quartersResult.data ?? []).map((row: any) => ({
+    id: row.id,
+    ownerId: row.owner_id,
+    title: row.title,
+    description: row.description,
+    role: roleByQuarter.get(row.id) ?? 'quarter_member',
+  }));
+
+  const messages: CommsQuarterMessageDTO[] = (messagesResult.data ?? []).map((row: any) => ({
+    id: row.id,
+    quarterId: row.quarter_id,
+    senderId: row.sender_id,
+    body: row.body,
+    createdAt: row.created_at,
+    deleted: row.deleted_at != null,
+  }));
+
+  return { quarters, members, messages, profiles: Array.from(profilesById.values()), lastReadAt, invites };
+}
+
+export async function sendQuarterMessage(
+  client: SupabaseClient,
+  quarterId: string,
+  senderId: string,
+  body: string,
+): Promise<CommsQuarterMessageDTO> {
+  const { data, error } = await client
+    .from('quarter_messages')
+    .insert({ quarter_id: quarterId, sender_id: senderId, body, kind: 'text' })
+    .select('id, quarter_id, sender_id, body, created_at, deleted_at')
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id,
+    quarterId: data.quarter_id,
+    senderId: data.sender_id,
+    body: data.body,
+    createdAt: data.created_at,
+    deleted: data.deleted_at != null,
+  };
+}
+
+export async function createQuarterRemote(
+  client: SupabaseClient,
+  title: string,
+  description: string,
+): Promise<string> {
+  const { data, error } = await client.rpc('create_quarter', { p_title: title, p_description: description });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function inviteToQuarterRemote(
+  client: SupabaseClient,
+  quarterId: string,
+  username: string,
+): Promise<void> {
+  const { error } = await client.rpc('invite_to_quarter', { p_quarter_id: quarterId, p_username: username });
+  if (error) throw error;
+}
+
+export async function respondToQuarterInvite(
+  client: SupabaseClient,
+  inviteId: string,
+  accept: boolean,
+): Promise<void> {
+  const { error } = await client.rpc('respond_to_quarter_invite', { p_invite_id: inviteId, p_accept: accept });
+  if (error) throw error;
+}
+
+export async function leaveQuarterRemote(client: SupabaseClient, quarterId: string): Promise<void> {
+  const { error } = await client.rpc('leave_quarter', { p_quarter_id: quarterId });
+  if (error) throw error;
+}
+
+export async function markQuarterReadRemote(client: SupabaseClient, quarterId: string): Promise<void> {
+  const { error } = await client.rpc('mark_quarter_read', { p_quarter_id: quarterId });
   if (error) throw error;
 }
