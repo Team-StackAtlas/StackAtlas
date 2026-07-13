@@ -61,7 +61,7 @@ export function HideItemButton({
       >
         <div className="p-5 pt-4">
           <p className="text-sm leading-6 text-slate-600 dark:text-zinc-400">
-            You will stop seeing this in normal StackAtlas results and recommendations. You can
+            You will stop seeing this in normal StackAtlas results and feeds. You can
             manage hidden items from Profile.
           </p>
           <div className="mt-5 flex justify-end gap-2">
