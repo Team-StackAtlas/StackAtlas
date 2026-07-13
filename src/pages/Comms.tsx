@@ -33,6 +33,16 @@ export default function Comms() {
   const [inviteUsername, setInviteUsername] = useState('');
   const [recording, setRecording] = useState(false);
   const recordTimer = useRef<number | undefined>(undefined);
+  const [controlsError, setControlsError] = useState('');
+
+  // Phase 3 in-quarter governance controls (persisted quarters only): runs
+  // an owner/moderator action, optionally confirming first, and surfaces a
+  // failure inline instead of silently swallowing it.
+  const runQuarterAction = (run: () => Promise<void>, errorMessage: string, confirmText?: string) => {
+    if (confirmText && !window.confirm(confirmText)) return;
+    setControlsError('');
+    run().catch((err) => setControlsError(err instanceof Error ? err.message : errorMessage));
+  };
 
   const conversations = comms.conversations.filter(
     (conversation) => conversation.accepted && !conversation.declined,
@@ -164,6 +174,32 @@ export default function Comms() {
           <div className="mt-2 flex items-center gap-2 text-xs">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
             {message.scope === 'quarter' && !activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
+            {message.scope === 'quarter' && activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && (
+              <button
+                type="button"
+                onClick={() =>
+                  runQuarterAction(
+                    () => comms.deleteQuarterMessage(message.id),
+                    'Failed to delete message.',
+                    'Delete this message?',
+                  )
+                }
+                className="text-red-500"
+              >
+                delete
+              </button>
+            )}
+            {message.scope === 'quarter' && activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && message.deleted && (
+              <button
+                type="button"
+                onClick={() =>
+                  runQuarterAction(() => comms.restoreQuarterMessage(message.id), 'Failed to restore message.')
+                }
+                className="text-emerald-600"
+              >
+                restore
+              </button>
+            )}
             {!hideReactions && (
               <>
                 <button type="button" onClick={() => comms.react(message.id)}>
@@ -445,15 +481,66 @@ export default function Comms() {
                 )}
               </div>
               <div className="mt-4 rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><h3 className="mb-2 text-sm font-bold">Quarter Controls</h3><p className="mb-2 text-xs text-slate-500">Role: {activeQuarter.ownerId === comms.viewerId ? 'quarter_owner' : activeQuarter.adminIds.includes(comms.viewerId) ? 'quarter_moderator' : 'quarter_member'}</p>
+              {controlsError && (
+                <p className="mb-2 rounded-lg bg-red-50 p-2 text-xs text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                  {controlsError}
+                </p>
+              )}
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                {activeQuarter.memberIds.map((id) => (
+                {activeQuarter.memberIds.map((id) => {
+                  const isOwner = activeQuarter.ownerId === comms.viewerId;
+                  const isMod = activeQuarter.adminIds.includes(comms.viewerId);
+                  const targetIsMod = activeQuarter.adminIds.includes(id);
+                  const username = comms.getUser(id)?.username;
+                  return (
                   <span key={id} className="rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-800">
-                    @{comms.getUser(id)?.username}{' '}
-                    {!activeQuarter.persisted && (activeQuarter.ownerId === comms.viewerId || activeQuarter.adminIds.includes(comms.viewerId)) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
-                    {!activeQuarter.persisted && activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && !activeQuarter.adminIds.includes(id) && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
-                    {!activeQuarter.persisted && activeQuarter.ownerId === comms.viewerId && id !== comms.viewerId && activeQuarter.adminIds.includes(id) && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
+                    @{username}{' '}
+                    {!activeQuarter.persisted && (isOwner || isMod) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
+                    {!activeQuarter.persisted && isOwner && id !== comms.viewerId && !targetIsMod && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
+                    {!activeQuarter.persisted && isOwner && id !== comms.viewerId && targetIsMod && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
+                    {activeQuarter.persisted && (isOwner || isMod) && id !== activeQuarter.ownerId && id !== comms.viewerId && (isOwner || !targetIsMod) && (
+                      <button
+                        onClick={() =>
+                          runQuarterAction(
+                            () => comms.removeQuarterMember(activeQuarter.id, id),
+                            'Failed to remove member.',
+                            `Remove @${username} from this quarter?`,
+                          )
+                        }
+                        className="ml-1 text-red-500"
+                      >
+                        remove
+                      </button>
+                    )}
+                    {activeQuarter.persisted && isOwner && id !== comms.viewerId && !targetIsMod && (
+                      <button
+                        onClick={() =>
+                          runQuarterAction(
+                            () => comms.promoteQuarterModerator(activeQuarter.id, id),
+                            'Failed to promote member.',
+                          )
+                        }
+                        className="ml-1 text-emerald-600"
+                      >
+                        promote
+                      </button>
+                    )}
+                    {activeQuarter.persisted && isOwner && id !== comms.viewerId && targetIsMod && (
+                      <button
+                        onClick={() =>
+                          runQuarterAction(
+                            () => comms.removeQuarterModerator(activeQuarter.id, id),
+                            'Failed to demote moderator.',
+                          )
+                        }
+                        className="ml-1 text-amber-600"
+                      >
+                        remove mod
+                      </button>
+                    )}
                   </span>
-                ))}
+                  );
+                })}
               </div></div>
               {activeQuarter.persisted ? (
                 <div className="mt-3 flex gap-2">
