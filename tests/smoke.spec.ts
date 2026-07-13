@@ -48,6 +48,13 @@ test('admin routes are gated for signed-out visitors', async ({ page }) => {
   await expect(page.locator('body')).not.toHaveText('');
 });
 
+test('global search finds catalog entries and posts', async ({ page }) => {
+  await page.goto('/map');
+  await page.keyboard.press('ControlOrMeta+k');
+  await page.getByPlaceholder(/Search substances, brands/i).fill('magnesium');
+  await expect(page.getByRole('button', { name: /Magnesium Glycinate/i }).first()).toBeVisible();
+});
+
 test('create flow requires the create route to load', async ({ page }) => {
   await page.goto('/create');
   // RequireAuth may bounce to login in seed mode; both outcomes render UI.
