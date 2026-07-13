@@ -22,6 +22,9 @@ import {
   respondToQuarterInvite as respondToQuarterInviteRemote,
   leaveQuarterRemote,
   markQuarterReadRemote,
+  quarterSetMemberRole,
+  quarterRemoveMember,
+  quarterModerateMessage,
   type CommsConversationDTO,
   type CommsMessageDTO,
   type CommsProfileDTO,
@@ -351,6 +354,92 @@ export function useComms(searchQuery: string) {
     [usingReal, mock, refresh],
   );
 
+  // Phase 3 in-quarter governance. Mock branches reuse useMockComms's
+  // functions unchanged; real branches call the quarter_* RPCs and patch
+  // local state directly (not a full refresh()) so a soft-deleted message
+  // stays visible-as-deleted to the actor for a possible restore -- a
+  // refresh() would re-run loadQuarters, whose query excludes deleted_at
+  // rows entirely and would make it disappear even for the owner/moderator.
+  const promoteQuarterModerator = useCallback(
+    (quarterId: string, userId: string) => {
+      if (!usingReal) {
+        mock.promoteQuarterModerator(quarterId, userId);
+        return Promise.resolve();
+      }
+      return quarterSetMemberRole(supabase!, quarterId, userId, 'quarter_moderator').then(() => {
+        setRealQuarterMembers((current) =>
+          current.map((m) =>
+            m.quarterId === quarterId && m.userId === userId
+              ? { ...m, role: 'quarter_moderator' }
+              : m,
+          ),
+        );
+      });
+    },
+    [usingReal, mock],
+  );
+
+  const removeQuarterModerator = useCallback(
+    (quarterId: string, userId: string) => {
+      if (!usingReal) {
+        mock.removeQuarterModerator(quarterId, userId);
+        return Promise.resolve();
+      }
+      return quarterSetMemberRole(supabase!, quarterId, userId, 'quarter_member').then(() => {
+        setRealQuarterMembers((current) =>
+          current.map((m) =>
+            m.quarterId === quarterId && m.userId === userId
+              ? { ...m, role: 'quarter_member' }
+              : m,
+          ),
+        );
+      });
+    },
+    [usingReal, mock],
+  );
+
+  const removeQuarterMember = useCallback(
+    (quarterId: string, userId: string) => {
+      if (!usingReal) {
+        mock.removeQuarterMember(quarterId, userId);
+        return Promise.resolve();
+      }
+      return quarterRemoveMember(supabase!, quarterId, userId).then(() => {
+        setRealQuarterMembers((current) =>
+          current.filter((m) => !(m.quarterId === quarterId && m.userId === userId)),
+        );
+      });
+    },
+    [usingReal, mock],
+  );
+
+  const deleteQuarterMessage = useCallback(
+    (messageId: string) => {
+      if (!usingReal) {
+        mock.deleteQuarterMessage(messageId);
+        return Promise.resolve();
+      }
+      return quarterModerateMessage(supabase!, messageId, 'soft_delete').then(() => {
+        setRealQuarterMessages((current) =>
+          current.map((m) => (m.id === messageId ? { ...m, deleted: true } : m)),
+        );
+      });
+    },
+    [usingReal, mock],
+  );
+
+  const restoreQuarterMessage = useCallback(
+    (messageId: string) => {
+      if (!usingReal) return Promise.resolve();
+      return quarterModerateMessage(supabase!, messageId, 'restore').then(() => {
+        setRealQuarterMessages((current) =>
+          current.map((m) => (m.id === messageId ? { ...m, deleted: false } : m)),
+        );
+      });
+    },
+    [usingReal],
+  );
+
   const markConversationRead = useCallback(
     (conversationId: string) => {
       if (!usingReal) {
@@ -441,5 +530,10 @@ export function useComms(searchQuery: string) {
     acceptQuarterInvite,
     declineQuarterInvite,
     leaveQuarter,
+    promoteQuarterModerator,
+    removeQuarterModerator,
+    removeQuarterMember,
+    deleteQuarterMessage,
+    restoreQuarterMessage,
   };
 }

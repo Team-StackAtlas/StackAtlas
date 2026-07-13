@@ -383,6 +383,49 @@ export async function markQuarterReadRemote(client: SupabaseClient, quarterId: s
   if (error) throw error;
 }
 
+// Phase 3 in-quarter governance (owner/moderator controls on a persisted
+// quarter). Distinct from the site-admin RPCs below: these check the
+// caller's own quarter role and write no moderation_log entry. See
+// supabase/migrations/20260713210000_quarter_governance.sql.
+
+export async function quarterSetMemberRole(
+  client: SupabaseClient,
+  quarterId: string,
+  userId: string,
+  role: 'quarter_moderator' | 'quarter_member',
+): Promise<void> {
+  const { error } = await client.rpc('quarter_set_member_role', {
+    p_quarter_id: quarterId,
+    p_user_id: userId,
+    p_role: role,
+  });
+  if (error) throw error;
+}
+
+export async function quarterRemoveMember(
+  client: SupabaseClient,
+  quarterId: string,
+  userId: string,
+): Promise<void> {
+  const { error } = await client.rpc('quarter_remove_member', {
+    p_quarter_id: quarterId,
+    p_user_id: userId,
+  });
+  if (error) throw error;
+}
+
+export async function quarterModerateMessage(
+  client: SupabaseClient,
+  messageId: string,
+  action: 'soft_delete' | 'restore',
+): Promise<void> {
+  const { error } = await client.rpc('quarter_moderate_message', {
+    p_message_id: messageId,
+    p_action: action,
+  });
+  if (error) throw error;
+}
+
 // Site-admin moderation (Admin -> Quarters tab). Reads go straight to the
 // quarters/quarter_members/quarter_messages tables under the site-admin
 // SELECT policies added in
