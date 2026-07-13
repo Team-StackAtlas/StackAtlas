@@ -9,6 +9,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Post } from '../../data/mockData';
+import type { CommentNode } from '../../lib/comments';
 
 const POSTS_SELECT =
   'id, kind, title, content, domain, category, subcategory, quality_score, is_gold, ' +
@@ -95,4 +96,95 @@ export async function createSupabasePost(client: SupabaseClient, post: Post): Pr
   const { data, error } = await client.rpc('create_post', { p_post: payload });
   if (error) throw error;
   return data as string;
+}
+
+// ---------------------------------------------------------------------------
+// Comments (post_comments + post_comment_votes)
+// ---------------------------------------------------------------------------
+
+export async function loadSupabaseComments(
+  client: SupabaseClient,
+  postId: string,
+  viewerId?: string,
+): Promise<CommentNode[]> {
+  const { data, error } = await client
+    .from('post_comments')
+    .select('id, parent_id, body, deleted_at, created_at, profiles(username), post_comment_votes(count)')
+    .eq('post_id', postId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+
+  let viewerVotes = new Set<string>();
+  if (viewerId && (data ?? []).length > 0) {
+    const { data: votes } = await client
+      .from('post_comment_votes')
+      .select('comment_id')
+      .eq('user_id', viewerId)
+      .in('comment_id', (data ?? []).map((row: any) => row.id));
+    viewerVotes = new Set((votes ?? []).map((row: any) => row.comment_id));
+  }
+
+  const nodes = new Map<string, CommentNode>();
+  (data ?? []).forEach((row: any) => {
+    nodes.set(row.id, {
+      id: row.id,
+      author: row.profiles?.username ?? 'member',
+      content: row.deleted_at ? 'Comment deleted' : row.body,
+      createdAt: row.created_at,
+      deleted: !!row.deleted_at,
+      likes: countOf(row.post_comment_votes),
+      likedBy: viewerVotes.has(row.id) && viewerId ? [viewerId] : [],
+      replies: [],
+    });
+  });
+
+  const roots: CommentNode[] = [];
+  (data ?? []).forEach((row: any) => {
+    const node = nodes.get(row.id)!;
+    const parent = row.parent_id ? nodes.get(row.parent_id) : undefined;
+    if (parent) parent.replies!.push(node);
+    else roots.push(node);
+  });
+  return roots;
+}
+
+export async function createSupabaseComment(
+  client: SupabaseClient,
+  input: { postId: string; parentId?: string; body: string },
+): Promise<void> {
+  const { error } = await client.from('post_comments').insert({
+    post_id: input.postId,
+    parent_id: input.parentId ?? null,
+    body: input.body,
+  });
+  if (error) throw error;
+}
+
+export async function softDeleteSupabaseComment(client: SupabaseClient, commentId: string): Promise<void> {
+  const { error } = await client
+    .from('post_comments')
+    .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', commentId);
+  if (error) throw error;
+}
+
+export async function toggleSupabaseCommentVote(
+  client: SupabaseClient,
+  commentId: string,
+  userId: string,
+  liked: boolean,
+): Promise<void> {
+  if (liked) {
+    const { error } = await client
+      .from('post_comment_votes')
+      .upsert({ comment_id: commentId, user_id: userId }, { onConflict: 'comment_id,user_id' });
+    if (error) throw error;
+    return;
+  }
+  const { error } = await client
+    .from('post_comment_votes')
+    .delete()
+    .eq('comment_id', commentId)
+    .eq('user_id', userId);
+  if (error) throw error;
 }
