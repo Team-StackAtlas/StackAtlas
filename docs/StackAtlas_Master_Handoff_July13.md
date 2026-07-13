@@ -1,6 +1,8 @@
 # StackAtlas Master Handoff
 
-Last updated: July 13, 2026
+Last updated: July 13, 2026 (evening revision — Comms persistence, ZIP
+importer, public research sections, and Quarters admin shipped since the
+morning edition)
 Owner: Domonic Mata
 Repo: Team-StackAtlas/StackAtlas
 Purpose: current source of truth for any AI coding session (Claude Code, ChatGPT/Codex, or other). Supersedes the July 11 handoff wherever they conflict.
@@ -31,11 +33,34 @@ automatically.
   in the database (seeded through the importer itself). Map, substance,
   brand, and stack pages read from Supabase and fall back to the bundled
   seed data only if the backend is unreachable or empty.
-- **The research pipeline is complete.** Admin → Research has: a Data Pack
-  import wizard (load → validate/preview → import), a Source Library, a
-  Findings tab with Approve/Reject/Reopen (audit-logged), and Import History
-  with owner-only one-click **Revert** that removes exactly what a batch
-  created.
+- **The research pipeline is complete, end to end.** Admin → Research has:
+  an import wizard accepting `.zip` archives and mixed `.md`/`.csv`/`.json`
+  uploads (drag-drop, one consolidated preview, per-file results; zip-slip
+  and archive-bomb guards, limits 300 files / 10MB per file / 50MB total), a
+  Source Library with inline bibliographic **editing** (audit-logged
+  `admin_edit_source`), a Findings tab with Approve/Reject/Reopen, and
+  Import History with owner-only **Revert**. **Approved findings render
+  publicly** on substance pages ("Research Findings" section — hidden until
+  approved findings exist; RLS exposes approved rows only). Markdown files
+  import as sources (frontmatter/heading metadata, content-hash dedup) and
+  never create findings. Corpus-building prompt for external models:
+  `docs/data-packs/CHATGPT_ZIP_INSTRUCTIONS.md`.
+- **Comms is real.** DMs: search real users, send a request, recipient
+  accepts/declines, persistent text messages, unread state via
+  `conversation_participants.last_read_at`, 15s poll + on-focus refetch (no
+  realtime yet). Quarters: create, invite by username, accept/decline
+  invites in the Requests tab, persistent group messages, leave (non-owner).
+  Attachments/voice/reactions have no backend yet — their affordances are
+  hidden on persisted threads. Seed mode still runs the mock hook. Admin →
+  Quarters lists every quarter with audit-logged moderation
+  (soft-delete/restore messages, remove non-owner members). Private DM
+  bodies are invisible to admins by design. NOTE: the original 0009
+  membership policies had a self-referencing-policy bug (42P17 infinite
+  recursion on every authenticated comms read) — fixed in
+  `20260713203000_fix_comms_rls_recursion.sql` with SECURITY DEFINER
+  membership helpers; keep using `is_conversation_participant()` /
+  `is_quarter_member()` in any new comms policy instead of subquerying the
+  membership tables.
 - **Saves, follows, hides, votes, star ratings, Library albums** all persist
   (these were silently broken for months due to missing table grants —
   fixed).
@@ -123,20 +148,21 @@ composite) instead of duplicating.
 
 ## 7. What remains (in priority order)
 
-1. **Real research data** — generate packs with the kit and import them.
-   Nothing else blocks this; it is data work, not code work.
-2. Substance page deeper visual redesign toward the mockups (origin /
-   half-life / categories already render; layout polish remains).
-3. Quarters admin controls (Admin tab is a placeholder; Comms Quarters
-   exist).
-4. Public research sections on substance pages — GATED until approved
-   findings exist; render approved findings only, cautious framing.
-5. ESLint warning burndown (~40 warnings, all pre-existing patterns) and a
-   device-level mobile QA pass.
-6. Dead-button cleanup: `AdminObjectActions` component (Edit/Hide/Merge
-   buttons are non-functional placeholders).
-7. Glossary import/manager, source metadata editing — nice-to-haves from
-   the old roadmap.
+Items 2–7 of the morning edition all shipped July 13 (substance page
+redesign #71, public research sections #72, lint burndown #73, mobile QA
+#74, ZIP importer #75, source editing #76, Comms DMs #77, Quarters #78,
+Quarters admin + RLS recursion fix #79). What's genuinely left:
+
+1. **Real research data** — build corpus ZIPs (see
+   `docs/data-packs/CHATGPT_ZIP_INSTRUCTIONS.md`), import via Admin →
+   Research, approve findings. This is data work, not code work, and it is
+   the only thing between the site and real public research content.
+2. Comms niceties: attachments/voice/reactions/typing for persisted
+   threads, realtime instead of polling, quarter moderator tools for
+   quarter owners (promote/demote/remove are mock-only today).
+3. Glossary import/manager — old-roadmap nice-to-have.
+4. Remaining 16 ESLint warnings (all justified pre-existing patterns) and
+   the `react-refresh/only-export-components` rule if it ever matters.
 
 ## 8. Owner-action checklist (Domonic, once)
 
@@ -162,3 +188,10 @@ Playwright smoke suite in CI · #63 admin soft delete/restore + Deleted
 tab · #64 global search · #65 copy audit · #66 brand transparency · #67
 bundle splitting · #68 import batch revert. (#51 was closed unmerged as
 redundant.)
+
+Evening wave: #71 substance page redesign + dead admin buttons removed ·
+#72 public Research Findings sections (approved-only RLS) · #73 ESLint
+burndown 42→16 · #74 mobile overflow fixes · #75 ZIP/Markdown/multi-file
+importer + vitest suite in CI · #76 source metadata editing · #77 Comms
+DM persistence · #78 Quarters persistence · #79 Quarters admin controls +
+comms RLS recursion fix (critical).
