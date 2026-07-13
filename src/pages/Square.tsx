@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, Flame, Clock, ArrowBigUp, Layers, Plus, Settings2 } from 'lucide-react';
-import { BRANDS, STACKS, SUPPLEMENTS, Post, getPosts, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS } from '../data/mockData';
+import { BRANDS, STACKS, SUPPLEMENTS, Post, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS } from '../data/mockData';
+import { usePosts } from '../context/PostsContext';
 import { cn } from '../lib/utils';
 import PostCard from '../components/PostCard';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -112,7 +113,7 @@ export default function Square() {
 
 
 
-  const allPosts = getPosts();
+  const { posts: allPosts } = usePosts();
   const postsMatchingFilters = allPosts.filter(passesFeedFilters);
   const hiddenPostsCount = postsMatchingFilters.filter(isPostHiddenByPreferences).length;
   const filteredPosts = postsMatchingFilters.filter(post => !isPostHiddenByPreferences(post));
