@@ -63,6 +63,8 @@ export interface Quarter {
   invitedUserIds: string[];
   declinedUserIds: string[];
   typingUserIds: string[];
+  /** Set on quarters backed by Supabase (see src/hooks/useComms.ts); unset for mock quarters. */
+  persisted?: boolean;
 }
 
 interface CommsState {

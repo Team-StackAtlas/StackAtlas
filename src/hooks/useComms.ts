@@ -1,10 +1,9 @@
 // Mirrors useMockComms's interface so Comms.tsx stays a thin consumer.
 //
-// Quarters and their messages always come from useMockComms (phase 1 does
-// not wire Quarters to Supabase). DM conversations/messages come from
-// Supabase when the backend is configured and the viewer is signed in;
-// mock demo DM conversations are hidden in that case. Otherwise everything
-// (including DMs) falls back to the mock hook, unchanged.
+// DM conversations/messages and Quarters both come from Supabase when the
+// backend is configured and the viewer is signed in; mock demo DMs and
+// Quarters are hidden in that case. Otherwise everything falls back to the
+// mock hook, unchanged.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase, isBackendConfigured } from '../services/supabase/client';
@@ -16,9 +15,20 @@ import {
   createConversationRequest,
   respondToRequest,
   markConversationRead as markConversationReadRemote,
+  loadQuarters,
+  sendQuarterMessage,
+  createQuarterRemote,
+  inviteToQuarterRemote,
+  respondToQuarterInvite as respondToQuarterInviteRemote,
+  leaveQuarterRemote,
+  markQuarterReadRemote,
   type CommsConversationDTO,
   type CommsMessageDTO,
   type CommsProfileDTO,
+  type CommsQuarterDTO,
+  type CommsQuarterMemberDTO,
+  type CommsQuarterMessageDTO,
+  type CommsQuarterInviteDTO,
 } from '../services/comms';
 import {
   useMockComms,
@@ -26,9 +36,11 @@ import {
   type CommsConversation,
   type CommsMessage,
   type CommsUser,
+  type Quarter,
 } from './useMockComms';
 
 export type { CommsAttachment, CommsConversation, CommsMessage, CommsUser, Quarter } from './useMockComms';
+export type { CommsQuarterInviteDTO } from '../services/comms';
 
 const REFRESH_INTERVAL_MS = 15000;
 
@@ -56,15 +68,31 @@ export function useComms(searchQuery: string) {
   const [lastReadAt, setLastReadAt] = useState<Record<string, string | null>>({});
   const [searchResults, setSearchResults] = useState<CommsProfileDTO[]>([]);
 
+  const [realQuarters, setRealQuarters] = useState<CommsQuarterDTO[]>([]);
+  const [realQuarterMembers, setRealQuarterMembers] = useState<CommsQuarterMemberDTO[]>([]);
+  const [realQuarterMessages, setRealQuarterMessages] = useState<CommsQuarterMessageDTO[]>([]);
+  const [realQuarterProfiles, setRealQuarterProfiles] = useState<CommsProfileDTO[]>([]);
+  const [quarterLastReadAt, setQuarterLastReadAt] = useState<Record<string, string | null>>({});
+  const [quarterInvites, setQuarterInvites] = useState<CommsQuarterInviteDTO[]>([]);
+
   const refresh = useCallback(async () => {
     if (!usingReal || !supabase || !user) return;
     try {
-      const result = await loadComms(supabase, user.id);
+      const [result, quarterResult] = await Promise.all([
+        loadComms(supabase, user.id),
+        loadQuarters(supabase, user.id),
+      ]);
       await Promise.resolve().then(() => {
         setRealConversations(result.conversations);
         setRealMessages(result.messages);
         setRealProfiles(result.profiles);
         setLastReadAt(result.lastReadAt);
+        setRealQuarters(quarterResult.quarters);
+        setRealQuarterMembers(quarterResult.members);
+        setRealQuarterMessages(quarterResult.messages);
+        setRealQuarterProfiles(quarterResult.profiles);
+        setQuarterLastReadAt(quarterResult.lastReadAt);
+        setQuarterInvites(quarterResult.invites);
       });
     } catch (err) {
       console.warn('Comms refresh failed:', err);
@@ -109,11 +137,12 @@ export function useComms(searchQuery: string) {
   const profileMap = useMemo(() => {
     const map = new Map<string, CommsUser>();
     realProfiles.forEach((profile) => map.set(profile.id, toCommsUser(profile)));
+    realQuarterProfiles.forEach((profile) => map.set(profile.id, toCommsUser(profile)));
     if (usingReal && user) {
       map.set(user.id, toCommsUser({ id: user.id, username: user.username }));
     }
     return map;
-  }, [realProfiles, usingReal, user]);
+  }, [realProfiles, realQuarterProfiles, usingReal, user]);
 
   const getUser = useCallback(
     (id: string): CommsUser | undefined => profileMap.get(id) ?? mock.getUser(id),
@@ -133,8 +162,25 @@ export function useComms(searchQuery: string) {
     }));
   }, [usingReal, realConversations, viewerId, mock.conversations]);
 
+  const quarters: Quarter[] = useMemo(() => {
+    if (!usingReal) return mock.quarters;
+    return realQuarters.map((q) => ({
+      id: q.id,
+      title: q.title,
+      description: q.description ?? undefined,
+      ownerId: q.ownerId,
+      adminIds: realQuarterMembers
+        .filter((m) => m.quarterId === q.id && m.role === 'quarter_moderator')
+        .map((m) => m.userId),
+      memberIds: realQuarterMembers.filter((m) => m.quarterId === q.id).map((m) => m.userId),
+      invitedUserIds: [],
+      declinedUserIds: [],
+      typingUserIds: [],
+      persisted: true,
+    }));
+  }, [usingReal, realQuarters, realQuarterMembers, mock.quarters]);
+
   const messages: CommsMessage[] = useMemo(() => {
-    const quarterMessages = mock.messages.filter((m) => m.scope === 'quarter');
     if (!usingReal) return mock.messages;
     const dmMessages: CommsMessage[] = realMessages.map((m) => ({
       id: m.id,
@@ -148,8 +194,21 @@ export function useComms(searchQuery: string) {
       reactions: {},
       persisted: true,
     }));
+    const quarterMessages: CommsMessage[] = realQuarterMessages.map((m) => ({
+      id: m.id,
+      scope: 'quarter',
+      quarterId: m.quarterId,
+      senderId: m.senderId,
+      kind: 'text',
+      body: m.deleted ? '[deleted]' : m.body,
+      createdAt: m.createdAt,
+      readBy: [],
+      reactions: {},
+      deleted: m.deleted,
+      persisted: true,
+    }));
     return [...dmMessages, ...quarterMessages];
-  }, [usingReal, realMessages, mock.messages]);
+  }, [usingReal, realMessages, realQuarterMessages, mock.messages]);
 
   const unreadConversationCount = useCallback(
     (conversationId: string) => {
@@ -165,6 +224,20 @@ export function useComms(searchQuery: string) {
     [usingReal, mock, lastReadAt, realMessages, viewerId],
   );
 
+  const unreadQuarterCount = useCallback(
+    (quarterId: string) => {
+      if (!usingReal) return mock.unreadQuarterCount(quarterId);
+      const readAt = quarterLastReadAt[quarterId];
+      return realQuarterMessages.filter(
+        (m) =>
+          m.quarterId === quarterId &&
+          m.senderId !== viewerId &&
+          (!readAt || new Date(m.createdAt) > new Date(readAt)),
+      ).length;
+    },
+    [usingReal, mock, quarterLastReadAt, realQuarterMessages, viewerId],
+  );
+
   const counts = useMemo(() => {
     if (!usingReal) return mock.counts;
     const messagesUnread = realConversations
@@ -173,21 +246,109 @@ export function useComms(searchQuery: string) {
     const requests = realConversations.filter(
       (c) => c.status === 'requested' && c.requestedBy !== viewerId,
     ).length;
-    const quarters = mock.counts.quarters;
+    const quarters =
+      realQuarters.reduce((sum, q) => sum + unreadQuarterCount(q.id), 0) + quarterInvites.length;
     return { messages: messagesUnread, requests, quarters, total: messagesUnread + requests + quarters };
-  }, [usingReal, realConversations, unreadConversationCount, viewerId, mock.counts]);
+  }, [usingReal, realConversations, unreadConversationCount, viewerId, realQuarters, unreadQuarterCount, quarterInvites, mock.counts]);
 
   const sendMessage = useCallback(
     async (target: { conversationId?: string; quarterId?: string }, body: string, attachment?: CommsAttachment) => {
-      if (target.quarterId || !usingReal) {
+      if (!usingReal) {
         mock.sendMessage(target, body, attachment);
         return;
       }
-      if (!target.conversationId || !user || !body.trim()) return;
+      if (!user || !body.trim()) return;
+      if (target.quarterId) {
+        const message = await sendQuarterMessage(supabase!, target.quarterId, user.id, body.trim());
+        setRealQuarterMessages((current) => [...current, message]);
+        return;
+      }
+      if (!target.conversationId) return;
       const message = await sendCommsMessage(supabase!, target.conversationId, user.id, body.trim());
       setRealMessages((current) => [...current, message]);
     },
     [usingReal, mock, user],
+  );
+
+  const markQuarterRead = useCallback(
+    (quarterId: string) => {
+      if (!usingReal) {
+        mock.markQuarterRead(quarterId);
+        return;
+      }
+      setQuarterLastReadAt((current) => ({ ...current, [quarterId]: new Date().toISOString() }));
+      void markQuarterReadRemote(supabase!, quarterId).catch((err) =>
+        console.warn('Failed to mark quarter read:', err),
+      );
+    },
+    [usingReal, mock],
+  );
+
+  const createQuarter = useCallback(
+    (title: string, description: string) => {
+      if (!usingReal) {
+        mock.createQuarter(title, description);
+        return;
+      }
+      void createQuarterRemote(supabase!, title, description)
+        .then(() => refresh())
+        .catch((err) => console.warn('Failed to create quarter:', err));
+    },
+    [usingReal, mock, refresh],
+  );
+
+  const inviteToQuarterByUsername = useCallback(
+    (quarterId: string, username: string) => {
+      if (!usingReal || !username.trim()) return;
+      void inviteToQuarterRemote(supabase!, quarterId, username.trim())
+        .then(() => refresh())
+        .catch((err) => console.warn('Failed to invite to quarter:', err));
+    },
+    [usingReal, refresh],
+  );
+
+  const acceptQuarterInvite = useCallback(
+    (id: string) => {
+      if (!usingReal) {
+        mock.acceptQuarterInvite(id);
+        return;
+      }
+      setQuarterInvites((current) => current.filter((invite) => invite.id !== id));
+      void respondToQuarterInviteRemote(supabase!, id, true)
+        .then(() => refresh())
+        .catch((err) => {
+          console.warn('Failed to accept quarter invite:', err);
+          void refresh();
+        });
+    },
+    [usingReal, mock, refresh],
+  );
+
+  const declineQuarterInvite = useCallback(
+    (inviteId: string) => {
+      if (!usingReal) return;
+      setQuarterInvites((current) => current.filter((invite) => invite.id !== inviteId));
+      void respondToQuarterInviteRemote(supabase!, inviteId, false)
+        .then(() => refresh())
+        .catch((err) => {
+          console.warn('Failed to decline quarter invite:', err);
+          void refresh();
+        });
+    },
+    [usingReal, refresh],
+  );
+
+  const leaveQuarter = useCallback(
+    (quarterId: string) => {
+      if (!usingReal) {
+        mock.leaveQuarter(quarterId);
+        return;
+      }
+      void leaveQuarterRemote(supabase!, quarterId)
+        .then(() => refresh())
+        .catch((err) => console.warn('Failed to leave quarter:', err));
+    },
+    [usingReal, mock, refresh],
   );
 
   const markConversationRead = useCallback(
@@ -262,14 +423,23 @@ export function useComms(searchQuery: string) {
     viewerId,
     conversations,
     messages,
+    quarters,
+    quarterInvites: usingReal ? quarterInvites : [],
     searchUsers,
     getUser,
     unreadConversationCount,
+    unreadQuarterCount,
     counts,
     sendMessage,
     markConversationRead,
+    markQuarterRead,
     acceptRequest,
     declineRequest,
     startConversation,
+    createQuarter,
+    inviteToQuarterByUsername,
+    acceptQuarterInvite,
+    declineQuarterInvite,
+    leaveQuarter,
   };
 }
