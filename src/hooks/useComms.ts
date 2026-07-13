@@ -46,6 +46,13 @@ export type { CommsAttachment, CommsConversation, CommsMessage, CommsUser, Quart
 export type { CommsQuarterInviteDTO } from '../services/comms';
 
 const REFRESH_INTERVAL_MS = 15000;
+// Fallback heartbeat while Realtime is connected -- postgres_changes should
+// make polling redundant, but this catches anything the channel misses
+// (e.g. a dropped connection that hasn't reported an error yet).
+const REFRESH_INTERVAL_REALTIME_MS = 60000;
+// Coalesces bursts of postgres_changes events (e.g. several DMs in a row)
+// into a single refresh() call instead of one per row.
+const REALTIME_DEBOUNCE_MS = 300;
 
 function avatarInitial(username?: string) {
   return (username?.[0] ?? '?').toUpperCase();
@@ -102,17 +109,55 @@ export function useComms(searchQuery: string) {
     }
   }, [usingReal, user]);
 
+  const [pollIntervalMs, setPollIntervalMs] = useState(REFRESH_INTERVAL_MS);
+
   useEffect(() => {
     if (!usingReal) return;
     void refresh();
-    const interval = window.setInterval(() => void refresh(), REFRESH_INTERVAL_MS);
+    const interval = window.setInterval(() => void refresh(), pollIntervalMs);
     const onFocus = () => void refresh();
     window.addEventListener('focus', onFocus);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener('focus', onFocus);
     };
-  }, [usingReal, refresh]);
+  }, [usingReal, refresh, pollIntervalMs]);
+
+  // Realtime: one channel per signed-in session, subscribed to the events
+  // that can change what refresh() would load. Payloads aren't read -- any
+  // matching event is just a signal to re-run the existing RLS-scoped
+  // refresh() (debounced so a burst of inserts collapses into one refetch).
+  // While SUBSCRIBED, the poll above stretches to a 60s fallback heartbeat;
+  // if the channel errors/closes/times out, it drops back to 15s.
+  useEffect(() => {
+    if (!usingReal || !supabase || !user) return;
+    let debounceTimer: number | undefined;
+    const debouncedRefresh = () => {
+      if (debounceTimer) window.clearTimeout(debounceTimer);
+      debounceTimer = window.setTimeout(() => void refresh(), REALTIME_DEBOUNCE_MS);
+    };
+
+    const channel = supabase
+      .channel(`comms-realtime-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, debouncedRefresh)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'quarter_messages' }, debouncedRefresh)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'quarter_invites' }, debouncedRefresh)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversations' }, debouncedRefresh)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' }, debouncedRefresh)
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setPollIntervalMs(REFRESH_INTERVAL_REALTIME_MS);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setPollIntervalMs(REFRESH_INTERVAL_MS);
+        }
+      });
+
+    return () => {
+      if (debounceTimer) window.clearTimeout(debounceTimer);
+      setPollIntervalMs(REFRESH_INTERVAL_MS);
+      void supabase!.removeChannel(channel);
+    };
+  }, [usingReal, user, refresh]);
 
   // Debounced live profile search for the DM search box (real mode only).
   useEffect(() => {
