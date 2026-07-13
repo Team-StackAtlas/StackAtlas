@@ -51,3 +51,31 @@ export function getAllowedBearings(mode: 'dispatch' | 'signal') {
 export function getFilterBearings(values: string[]) {
   return Array.from(new Set(values.flatMap(value => CATEGORY_BEARING_SUGGESTIONS[value] ?? [value])));
 }
+
+// Old route categories (Mind/Body/Vitality taxonomy) mapped into the twelve
+// canonical categories. Route categories with no canonical home (Popular,
+// Beginner-Friendly, Novel) are intentionally unmapped.
+const ROUTE_CATEGORY_TO_CANONICAL: Record<string, string> = {
+  Focus: 'Cognition',
+  Memory: 'Cognition',
+  Sleep: 'Recovery',
+  Recovery: 'Recovery',
+  Endurance: 'Performance',
+  'Strength & Muscle': 'Performance',
+  Longevity: 'Longevity',
+  Stress: 'Mood & Stress',
+  Mood: 'Mood & Stress',
+  'Fat Loss': 'Metabolic Health',
+  'Metabolic Health': 'Metabolic Health',
+  Hormones: 'Hormonal Health',
+  'Sexual Health': 'Hormonal Health',
+  'Gut Health': 'Digestive Health',
+};
+
+/** Canonical category names for a substance's route categories, in canonical order. */
+export function getCanonicalCategories(routeCategories: string[]): string[] {
+  const mapped = new Set(
+    routeCategories.map(category => ROUTE_CATEGORY_TO_CANONICAL[category]).filter(Boolean),
+  );
+  return BEARING_CATEGORIES.map(category => category.name).filter(name => mapped.has(name));
+}

@@ -10,6 +10,7 @@ import Sources from '../components/Sources';
 import { useFollowing } from '../hooks/useFollowing';
 import { useAuth } from '../context/AuthContext';
 import { useCatalog } from '../context/CatalogContext';
+import { getCanonicalCategories } from '../lib/bearings';
 import { CompareModal } from '../components/CompareModal';
 import { AdminObjectActions } from '../components/AdminObjectActions';
 import { HideItemButton } from '../components/HideItemButton';
@@ -86,10 +87,19 @@ export default function SupplementPage() {
               <HideItemButton id={supplement.id} name={supplement.name} type="substance" />
             </div>
           </div>
-          <div className="mb-2 text-xs font-medium text-slate-400 dark:text-zinc-600" title={supplement.paths.map(path => `${path.domain} > ${path.category}`).join(' • ')}>
-            {supplement.paths.slice(0, 2).map(path => `${path.domain} / ${path.category}`).join(' • ')}
-            {supplement.paths.length > 2 ? ` +${supplement.paths.length - 2} routes` : ''}
-          </div>
+          {getCanonicalCategories(supplement.paths.map(path => path.category)).length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {getCanonicalCategories(supplement.paths.map(path => path.category)).map(category => (
+                <Link
+                  key={category}
+                  to={`/map?category=${encodeURIComponent(category)}`}
+                  className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                >
+                  {category}
+                </Link>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">{supplement.name}</h1>
             <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">{followerCount} followers</span>
