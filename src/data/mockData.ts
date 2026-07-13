@@ -170,6 +170,8 @@ export interface Brand {
   userRating: number; // 1-5
   /** Number of seed ratings the average is based on (for the "enough ratings" gate). */
   ratingCount?: number;
+  /** Reviewed transparency signals (COA availability, named lab, testing methods, contact, docs). */
+  transparency?: Record<string, unknown>;
 }
 
 export interface PostComment {
