@@ -278,6 +278,12 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
       .from('quarter_messages')
       .select('id, quarter_id, sender_id, body, created_at, deleted_at')
       .in('quarter_id', ids)
+      // quarter_messages_member_read does not filter deleted_at, so a
+      // soft-deleted message's body would otherwise still cross the wire to
+      // every member (the Comms UI only hides it client-side via the
+      // `deleted` flag below). Excluding it here keeps admin soft-deletes
+      // actually private from members, not just visually hidden.
+      .is('deleted_at', null)
       .order('created_at', { ascending: true }),
   ]);
   if (quartersResult.error) throw quartersResult.error;
@@ -374,5 +380,153 @@ export async function leaveQuarterRemote(client: SupabaseClient, quarterId: stri
 
 export async function markQuarterReadRemote(client: SupabaseClient, quarterId: string): Promise<void> {
   const { error } = await client.rpc('mark_quarter_read', { p_quarter_id: quarterId });
+  if (error) throw error;
+}
+
+// Site-admin moderation (Admin -> Quarters tab). Reads go straight to the
+// quarters/quarter_members/quarter_messages tables under the site-admin
+// SELECT policies added in
+// supabase/migrations/20260713200000_quarters_admin_controls.sql (is_site_
+// admin()), which let an admin see every quarter, not just ones they
+// belong to. Unlike loadQuarters above, the message read here intentionally
+// does NOT filter deleted_at -- admins need to see soft-deleted messages
+// (visibly marked) to review/restore them. Moderation writes go through the
+// admin_moderate_quarter_message / admin_remove_quarter_member SECURITY
+// DEFINER RPCs from that same migration.
+
+export interface AdminQuarterSummaryDTO {
+  id: string;
+  title: string;
+  ownerId: string;
+  ownerUsername: string;
+  memberCount: number;
+  messageCount: number;
+  createdAt: string;
+}
+
+export async function adminListQuarters(client: SupabaseClient): Promise<AdminQuarterSummaryDTO[]> {
+  const [quartersResult, membersResult, messagesResult] = await Promise.all([
+    client
+      .from('quarters')
+      .select('id, owner_id, title, created_at, profiles!quarters_owner_id_fkey(username)')
+      .order('created_at', { ascending: false }),
+    client.from('quarter_members').select('quarter_id').is('removed_at', null),
+    client.from('quarter_messages').select('quarter_id'),
+  ]);
+  if (quartersResult.error) throw quartersResult.error;
+  if (membersResult.error) throw membersResult.error;
+  if (messagesResult.error) throw messagesResult.error;
+
+  const memberCounts = new Map<string, number>();
+  (membersResult.data ?? []).forEach((row: any) => {
+    memberCounts.set(row.quarter_id, (memberCounts.get(row.quarter_id) ?? 0) + 1);
+  });
+  const messageCounts = new Map<string, number>();
+  (messagesResult.data ?? []).forEach((row: any) => {
+    messageCounts.set(row.quarter_id, (messageCounts.get(row.quarter_id) ?? 0) + 1);
+  });
+
+  return (quartersResult.data ?? []).map((row: any) => ({
+    id: row.id,
+    title: row.title,
+    ownerId: row.owner_id,
+    ownerUsername: row.profiles?.username ?? '',
+    memberCount: memberCounts.get(row.id) ?? 0,
+    messageCount: messageCounts.get(row.id) ?? 0,
+    createdAt: row.created_at,
+  }));
+}
+
+export interface AdminQuarterMemberDTO {
+  userId: string;
+  username: string;
+  role: CommsQuarterRole;
+  joinedAt: string;
+}
+
+export interface AdminQuarterMessageDTO {
+  id: string;
+  senderId: string;
+  senderUsername: string;
+  body: string;
+  createdAt: string;
+  deletedAt: string | null;
+  deletedBy: string | null;
+  deletionReason: string | null;
+}
+
+export interface AdminQuarterDetail {
+  members: AdminQuarterMemberDTO[];
+  messages: AdminQuarterMessageDTO[];
+}
+
+export async function adminLoadQuarterDetail(client: SupabaseClient, quarterId: string): Promise<AdminQuarterDetail> {
+  const [membersResult, messagesResult] = await Promise.all([
+    client
+      .from('quarter_members')
+      .select('user_id, role, created_at, profiles!quarter_members_user_id_fkey(username)')
+      .eq('quarter_id', quarterId)
+      .is('removed_at', null)
+      .order('created_at', { ascending: true }),
+    client
+      .from('quarter_messages')
+      .select(
+        'id, sender_id, body, created_at, deleted_at, deleted_by, deletion_reason, profiles!quarter_messages_sender_id_fkey(username)',
+      )
+      .eq('quarter_id', quarterId)
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ]);
+  if (membersResult.error) throw membersResult.error;
+  if (messagesResult.error) throw messagesResult.error;
+
+  const members: AdminQuarterMemberDTO[] = (membersResult.data ?? []).map((row: any) => ({
+    userId: row.user_id,
+    username: row.profiles?.username ?? '',
+    role: row.role,
+    joinedAt: row.created_at,
+  }));
+
+  const messages: AdminQuarterMessageDTO[] = (messagesResult.data ?? [])
+    .map((row: any) => ({
+      id: row.id,
+      senderId: row.sender_id,
+      senderUsername: row.profiles?.username ?? '',
+      body: row.body,
+      createdAt: row.created_at,
+      deletedAt: row.deleted_at,
+      deletedBy: row.deleted_by,
+      deletionReason: row.deletion_reason,
+    }))
+    // Fetched most-recent-first (for the limit), re-ordered to chronological
+    // for display.
+    .reverse();
+
+  return { members, messages };
+}
+
+export async function adminModerateQuarterMessage(
+  client: SupabaseClient,
+  messageId: string,
+  action: 'soft_delete' | 'restore',
+  reason?: string,
+): Promise<void> {
+  const { error } = await client.rpc('admin_moderate_quarter_message', {
+    p_message_id: messageId,
+    p_action: action,
+    p_reason: reason ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function adminRemoveQuarterMember(
+  client: SupabaseClient,
+  quarterId: string,
+  userId: string,
+): Promise<void> {
+  const { error } = await client.rpc('admin_remove_quarter_member', {
+    p_quarter_id: quarterId,
+    p_user_id: userId,
+  });
   if (error) throw error;
 }
