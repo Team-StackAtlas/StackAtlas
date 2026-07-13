@@ -91,6 +91,12 @@ export interface BrandPackRow {
   shipping_reliability?: number; // 0–5, one decimal
   contamination_reports?: number;
   products?: BrandProductPackRow[];
+  /**
+   * Reviewed transparency signals. Known keys: coa_available (bool),
+   * per_batch_coa (bool), third_party_lab (string), testing_methods
+   * (string[]), public_contact (string), documentation_url (string).
+   */
+  transparency?: Record<string, unknown>;
 }
 
 export interface StackPackRow {

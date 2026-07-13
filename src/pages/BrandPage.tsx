@@ -115,6 +115,70 @@ export default function BrandPage() {
              </div>
           </div>
 
+          {/* Transparency signals: reviewed documentation facts, never rankings. */}
+          <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+              Transparency Signals
+            </p>
+            {(() => {
+              const t = (brand.transparency ?? {}) as Record<string, unknown>;
+              const chips: { label: string; positive?: boolean }[] = [];
+              if (t.coa_available === true) chips.push({ label: 'COA available', positive: true });
+              if (t.per_batch_coa === true) chips.push({ label: 'Per-batch COAs', positive: true });
+              if (typeof t.third_party_lab === 'string' && t.third_party_lab)
+                chips.push({ label: `Third-party lab: ${t.third_party_lab}`, positive: true });
+              if (Array.isArray(t.testing_methods))
+                t.testing_methods.forEach((method) => {
+                  if (typeof method === 'string' && method) chips.push({ label: method });
+                });
+              if (typeof t.public_contact === 'string' && t.public_contact)
+                chips.push({ label: `Public contact: ${t.public_contact}` });
+              const docUrl = typeof t.documentation_url === 'string' ? t.documentation_url : undefined;
+              const hasAny = chips.length > 0 || !!docUrl || brand.thirdPartyTestingLinks.length > 0;
+              if (!hasAny) {
+                return (
+                  <p className="text-sm text-slate-500 dark:text-zinc-400">
+                    No reviewed transparency records yet. Signals appear here once documentation
+                    like COAs or third-party testing has been reviewed.
+                  </p>
+                );
+              }
+              return (
+                <div className="flex flex-wrap gap-2">
+                  {chips.map((chip) => (
+                    <span
+                      key={chip.label}
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${chip.positive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300'}`}
+                    >
+                      {chip.label}
+                    </span>
+                  ))}
+                  {docUrl && (
+                    <a
+                      href={docUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300"
+                    >
+                      Documentation ↗
+                    </a>
+                  )}
+                  {brand.thirdPartyTestingLinks.map((link) => (
+                    <a
+                      key={link}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300"
+                    >
+                      Testing report ↗
+                    </a>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Your rating (0–5, quarter-star increments) */}
           <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
             <div className="flex flex-wrap items-center justify-between gap-3">

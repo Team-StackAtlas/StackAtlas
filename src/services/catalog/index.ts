@@ -33,7 +33,7 @@ const SUBSTANCE_SELECT =
   'substance_pairings!substance_id(pairs_with_id)';
 
 const BRAND_SELECT =
-  'id, slug, name, description, shipping_reliability, contamination_reports, ' +
+  'id, slug, name, description, shipping_reliability, contamination_reports, transparency, ' +
   'brand_products(name, substance_id, brand_ingredients(name,amount), brand_health_labels(label))';
 
 const STACK_SELECT = 'id, name, description, creator_id, status, created_at, stack_components(substance_id)';
@@ -147,6 +147,7 @@ function mapBrands(rows: any[], substanceIdToSlug: Map<string, string>): Brand[]
       productCatalog: productCatalog.length > 0 ? productCatalog : undefined,
       shippingReliability: row.shipping_reliability != null ? Number(row.shipping_reliability) : 0,
       contaminationReports: row.contamination_reports ?? 0,
+      transparency: row.transparency ?? undefined,
       // Not modeled in the catalog schema yet (per-user star ratings and 3rd
       // party testing links live elsewhere / haven't landed); default so the
       // shape stays valid until those surfaces are wired up.
