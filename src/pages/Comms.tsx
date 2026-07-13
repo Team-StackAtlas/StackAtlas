@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, MessageSquare, Mic, Paperclip, Plus, Search, Send, Users } from 'lucide-react';
-import { useMockComms, type CommsAttachment, type CommsMessage } from '../hooks/useMockComms';
+import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -21,13 +21,13 @@ function bytes(value: number) {
 }
 
 export default function Comms() {
-  const comms = useMockComms();
+  const [query, setQuery] = useState('');
+  const comms = useComms(query);
   const [tab, setTab] = useState<Tab>('messages');
   const [activeConversationId, setActiveConversationId] = useState('dm-marlow');
   const [activeQuarterId, setActiveQuarterId] = useState('quarter-sleep');
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
   const [quarterTitle, setQuarterTitle] = useState('');
   const [quarterDescription, setQuarterDescription] = useState('');
   const [recording, setRecording] = useState(false);
@@ -53,6 +53,8 @@ export default function Comms() {
   const activeQuarterMessages = comms.messages.filter(
     (message) => message.quarterId === activeQuarter?.id,
   );
+  // Attachments/voice aren't part of phase 1 DM persistence; Quarters (always mock) keep them.
+  const showRichComposer = tab === 'quarters' || !activeConversation?.persisted;
 
   useEffect(() => {
     if (tab === 'messages' && activeConversation) comms.markConversationRead(activeConversation.id);
@@ -63,10 +65,10 @@ export default function Comms() {
 
   const matches = useMemo(
     () =>
-      comms.users.filter(
+      comms.searchUsers.filter(
         (user) => user.id !== comms.viewerId && user.username.includes(query.toLowerCase()),
       ),
-    [comms.users, comms.viewerId, query],
+    [comms.searchUsers, comms.viewerId, query],
   );
 
   const send = (attachment?: CommsAttachment) => {
@@ -123,6 +125,8 @@ export default function Comms() {
     const sender = comms.getUser(message.senderId);
     const reactions = Object.entries(message.reactions).filter(([, users]) => users.length > 0);
     const latestMine = mine && activeMessages[activeMessages.length - 1]?.id === message.id;
+    // Reactions aren't part of phase 1 DM persistence; only mock (non-persisted) DMs keep them.
+    const hideReactions = message.scope === 'dm' && message.persisted;
     return (
       <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
         <div
@@ -158,14 +162,18 @@ export default function Comms() {
           <div className="mt-2 flex items-center gap-2 text-xs">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
             {message.scope === 'quarter' && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
-            <button type="button" onClick={() => comms.react(message.id)}>
-              👍
-            </button>
-            {reactions.map(([emoji, users]) => (
-              <span key={emoji}>
-                {emoji} {users.length}
-              </span>
-            ))}
+            {!hideReactions && (
+              <>
+                <button type="button" onClick={() => comms.react(message.id)}>
+                  👍
+                </button>
+                {reactions.map(([emoji, users]) => (
+                  <span key={emoji}>
+                    {emoji} {users.length}
+                  </span>
+                ))}
+              </>
+            )}
             {latestMine && message.readBy.length > 1 && <span className="ml-auto">Seen</span>}
           </div>
         </div>
@@ -246,7 +254,9 @@ export default function Comms() {
           {tab === 'messages' && (
             <div className="space-y-2">
               {conversations.length === 0 && (
-                <p className="text-sm text-slate-500">No conversations yet.</p>
+                <p className="text-sm text-slate-500">
+                  No conversations yet. Find someone via search to start one.
+                </p>
               )}
               {conversations.map((conversation) => {
                 const other = comms.getUser(
@@ -438,38 +448,42 @@ export default function Comms() {
               className="h-20 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">
-                <Image className="inline" size={15} /> Image
-                <input
-                  hidden
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    const att = file && fileToAttachment(file, 'image');
-                    if (att) send(att);
-                  }}
-                />
-              </label>
-              <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">
-                <Paperclip className="inline" size={15} /> File
-                <input
-                  hidden
-                  type="file"
-                  accept="application/pdf,text/plain,image/png,image/jpeg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    const att = file && fileToAttachment(file, 'file');
-                    if (att) send(att);
-                  }}
-                />
-              </label>
-              <button
-                onClick={recording ? stopVoice : startVoice}
-                className={`rounded-lg px-3 py-2 text-sm ${recording ? 'bg-red-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
-              >
-                <Mic className="inline" size={15} /> {recording ? 'Stop recording' : 'Record voice'}
-              </button>
+              {showRichComposer && (
+                <>
+                  <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">
+                    <Image className="inline" size={15} /> Image
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        const att = file && fileToAttachment(file, 'image');
+                        if (att) send(att);
+                      }}
+                    />
+                  </label>
+                  <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">
+                    <Paperclip className="inline" size={15} /> File
+                    <input
+                      hidden
+                      type="file"
+                      accept="application/pdf,text/plain,image/png,image/jpeg,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        const att = file && fileToAttachment(file, 'file');
+                        if (att) send(att);
+                      }}
+                    />
+                  </label>
+                  <button
+                    onClick={recording ? stopVoice : startVoice}
+                    className={`rounded-lg px-3 py-2 text-sm ${recording ? 'bg-red-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
+                  >
+                    <Mic className="inline" size={15} /> {recording ? 'Stop recording' : 'Record voice'}
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => send()}
                 disabled={!draft.trim()}
