@@ -12,8 +12,10 @@ export {
   listImportBatches,
   revertImportBatch,
   listSourceLibrary,
+  editSource,
   listFindings,
   type SourceLibraryEntry,
+  type SourceEditPatch,
   type FindingEntry,
 } from './runner';
 export { extractMarkdownSource, type SubstanceCatalogEntry, type MarkdownAmbiguousMatch } from './markdown';

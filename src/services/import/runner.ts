@@ -315,6 +315,56 @@ export async function listSourceLibrary(client: SupabaseClient): Promise<SourceL
   }));
 }
 
+export type SourceEditPatch = Partial<{
+  title: string;
+  url: string | null;
+  pmid: string | null;
+  doi: string | null;
+  year: number | null;
+  journalOrSite: string | null;
+  authors: string | null;
+  abstract: string | null;
+  sourceType: string;
+}>;
+
+export async function editSource(
+  client: SupabaseClient,
+  sourceId: string,
+  patch: SourceEditPatch,
+): Promise<SourceLibraryEntry> {
+  const p_patch: Record<string, unknown> = {};
+  if ('title' in patch) p_patch.title = patch.title;
+  if ('url' in patch) p_patch.url = patch.url;
+  if ('pmid' in patch) p_patch.pmid = patch.pmid;
+  if ('doi' in patch) p_patch.doi = patch.doi;
+  if ('year' in patch) p_patch.year = patch.year;
+  if ('journalOrSite' in patch) p_patch.journal_or_site = patch.journalOrSite;
+  if ('authors' in patch) p_patch.authors = patch.authors;
+  if ('abstract' in patch) p_patch.abstract = patch.abstract;
+  if ('sourceType' in patch) p_patch.source_type = patch.sourceType;
+
+  const { data, error } = await client.rpc('admin_edit_source', {
+    p_source_id: sourceId,
+    p_patch,
+  });
+  if (error) throw error;
+  const row = data as any;
+  return {
+    id: row.id,
+    title: row.title,
+    url: row.url ?? null,
+    pmid: row.pmid ?? null,
+    doi: row.doi ?? null,
+    year: row.year ?? null,
+    journalOrSite: row.journal_or_site ?? null,
+    authors: row.authors ?? null,
+    sourceType: row.source_type,
+    abstract: row.abstract ?? null,
+    createdAt: row.created_at,
+    substances: [],
+  };
+}
+
 export interface FindingEntry {
   id: string;
   endpoint: string;
