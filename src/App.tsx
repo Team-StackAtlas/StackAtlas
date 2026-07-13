@@ -1,31 +1,34 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Map from './pages/Map';
-import Square from './pages/Square';
-import Lab from './pages/Lab';
-import Comms from './pages/Comms';
-import Notifications from './pages/Notifications';
-import Profile from './pages/Profile';
-import SupplementPage from './pages/SupplementPage';
-import StackPage from './pages/StackPage';
-import BrandPage from './pages/BrandPage';
-import PostDetail from './pages/PostDetail';
-import Login from './pages/Login';
-import LogIntake from './pages/LogIntake';
-import LogEntry from './pages/LogEntry';
-import LogNotes from './pages/LogNotes';
-import Onboarding from './pages/Onboarding';
-import Create from './pages/Create';
-import Compare from './pages/Compare';
-import Library from './pages/Library';
-import Admin from './pages/Admin';
-import AlbumDetail from './pages/AlbumDetail';
 import RequireAuth from './components/RequireAuth';
 import { UserScopeProvider } from './context/UserScopeContext';
 import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
 import { CatalogProvider } from './context/CatalogContext';
 import { PostsProvider } from './context/PostsContext';
+
+// Route-level code splitting: each page loads on demand.
+const Map = lazy(() => import('./pages/Map'));
+const Square = lazy(() => import('./pages/Square'));
+const Lab = lazy(() => import('./pages/Lab'));
+const Comms = lazy(() => import('./pages/Comms'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Profile = lazy(() => import('./pages/Profile'));
+const SupplementPage = lazy(() => import('./pages/SupplementPage'));
+const StackPage = lazy(() => import('./pages/StackPage'));
+const BrandPage = lazy(() => import('./pages/BrandPage'));
+const PostDetail = lazy(() => import('./pages/PostDetail'));
+const Login = lazy(() => import('./pages/Login'));
+const LogIntake = lazy(() => import('./pages/LogIntake'));
+const LogEntry = lazy(() => import('./pages/LogEntry'));
+const LogNotes = lazy(() => import('./pages/LogNotes'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Create = lazy(() => import('./pages/Create'));
+const Compare = lazy(() => import('./pages/Compare'));
+const Library = lazy(() => import('./pages/Library'));
+const Admin = lazy(() => import('./pages/Admin'));
+const AlbumDetail = lazy(() => import('./pages/AlbumDetail'));
 
 export default function App() {
   return (
@@ -35,6 +38,7 @@ export default function App() {
         <CatalogProvider>
         <PostsProvider>
         <BrowserRouter>
+          <Suspense fallback={<div className="flex h-screen items-center justify-center text-sm text-slate-400">Loading…</div>}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/onboarding" element={<Onboarding />} />
@@ -62,6 +66,7 @@ export default function App() {
               <Route path="compare" element={<Compare />} />
             </Route>
           </Routes>
+          </Suspense>
         </BrowserRouter>
         </PostsProvider>
         </CatalogProvider>
