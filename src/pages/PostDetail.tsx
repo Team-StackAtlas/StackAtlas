@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Heart, MessageCircle, Reply, ShieldCheck, Trash2 } from 'lucide-react';
 import { SUPPLEMENTS, BRANDS, STACKS, Post, USERS } from '../data/mockData';
 import { usePosts } from '../context/PostsContext';
@@ -90,7 +90,9 @@ function getDispatchRows(post: Post) {
 }
 
 export default function PostDetail() {
-  const { user } = useAuth();
+  const { user, profile, services } = useAuth();
+  const navigate = useNavigate();
+  const isSiteAdmin = profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner';
   const requireAccount = useRequireAccountAction();
   const { isFollowing, toggleFollow } = useFollowing();
   const { id } = useParams<{ id: string }>();
@@ -226,7 +228,23 @@ export default function PostDetail() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} /><ReportAction targetType="post" targetId={post.id} entityName={post.title} /></div>
+          <div className="flex items-center gap-2"><span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{post.type}</span><SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} /><ReportAction targetType="post" targetId={post.id} entityName={post.title} />{isSiteAdmin && post.persisted && services && (
+            <button
+              onClick={async () => {
+                try {
+                  await services.moderation.moderatePost(post.id, 'soft_delete');
+                  navigate('/square');
+                } catch (err) {
+                  console.error('Remove post failed', err);
+                  setCommentError(err instanceof Error ? err.message : 'Remove failed.');
+                }
+              }}
+              className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700 hover:bg-red-200 dark:bg-red-500/15 dark:text-red-300"
+              title="Soft-delete this post (restorable from Admin → Deleted)"
+            >
+              <Trash2 size={12} /> Remove
+            </button>
+          )}</div>
         </div>
 
         {linkedEntity && (
