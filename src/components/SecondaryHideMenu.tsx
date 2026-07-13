@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { EyeOff, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { HideableType, useHiddenItems } from '../hooks/useHiddenItems';
 import { HideItemButton } from './HideItemButton';
 import { cn } from '../lib/utils';

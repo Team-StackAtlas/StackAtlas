@@ -60,6 +60,7 @@ export default function Admin() {
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `load` is redefined every render; including it would refetch on every render instead of only when services/tab change.
   }, [services, tab]);
 
   if (isBackendConfigured && !allowed) return <Navigate to="/map" replace />;

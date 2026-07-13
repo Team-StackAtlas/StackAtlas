@@ -36,7 +36,10 @@ export default function ModerationQueue() {
     }
   };
 
-  useEffect(() => { void loadQueue(); }, [isBackendConfigured, services]);
+  useEffect(() => {
+    void loadQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `loadQueue` is redefined every render; including it would refetch on every render instead of only when auth state changes.
+  }, [isBackendConfigured, services]);
 
   const visibleItems = useMemo(() => items.filter((item) => {
     if (filter === 'all') return true;

@@ -6,7 +6,7 @@ import { usePosts } from '../context/PostsContext';
 import PostCard from '../components/PostCard';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
 import { useSaved } from '../hooks/useSaved';
-import { useFollowing } from '../hooks/useFollowing';
+import { useFollowing, type FollowTarget } from '../hooks/useFollowing';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
 import { ReportAction } from '../components/ReportAction';
@@ -355,7 +355,7 @@ function EmptyState({ message }: { message: string }) {
   return <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800 dark:text-zinc-500">{message}</div>;
 }
 
-function FollowingManagement({ followedItems, followRequests, incomingRequests, onUnfollow, onResolveRequest }: { followedItems: { targetType: string; targetId: string }[]; followRequests: { targetId: string }[]; incomingRequests: FollowRequest[]; onUnfollow: (type: any, id: string) => void; onResolveRequest: (requesterId: string, approved: boolean) => void }) {
+function FollowingManagement({ followedItems, followRequests, incomingRequests, onUnfollow, onResolveRequest }: { followedItems: { targetType: FollowTarget; targetId: string }[]; followRequests: { targetId: string }[]; incomingRequests: FollowRequest[]; onUnfollow: (type: FollowTarget, id: string) => void; onResolveRequest: (requesterId: string, approved: boolean) => void }) {
   const sections = [
     ['Users', 'user', (id: string) => USERS.find((item) => item.id === id)?.username ?? id],
     ['Substances', 'substance', (id: string) => SUPPLEMENTS.find((item) => item.id === id)?.name ?? id],

@@ -57,10 +57,15 @@ export function useNotifications() {
 
   const refresh = useCallback(async () => {
     if (backed && services && user) {
-      setNotifications(mergeMockNotifications(await services.notifications.list(user.id)));
+      const remoteNotifications = await services.notifications.list(user.id);
+      await Promise.resolve().then(() => setNotifications(mergeMockNotifications(remoteNotifications)));
       const remoteSettings = await services.notifications.getSettings?.(user.id);
-      if (remoteSettings) setSettingsState({ ...DEFAULT_NOTIFICATION_SETTINGS, ...remoteSettings });
-    } else setNotifications(mergeMockNotifications(readLocal(user?.id)));
+      if (remoteSettings) {
+        await Promise.resolve().then(() => setSettingsState({ ...DEFAULT_NOTIFICATION_SETTINGS, ...remoteSettings }));
+      }
+    } else {
+      await Promise.resolve().then(() => setNotifications(mergeMockNotifications(readLocal(user?.id))));
+    }
   }, [backed, services, user]);
 
   useEffect(() => { refresh().catch(console.error); }, [refresh]);

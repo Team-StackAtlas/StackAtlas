@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Calendar as CalendarIcon, CheckCircle2, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useLogs } from '../context/LogContext';
 import { cn } from '../lib/utils';
 import { SUPPLEMENTS, STACKS } from '../data/mockData';

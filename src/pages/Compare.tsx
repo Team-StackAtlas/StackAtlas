@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
 import { ArrowLeft, CheckCircle, XCircle, Minus } from 'lucide-react';
+import type { Substance, Brand, Stack } from '../data/mockData';
+
+type ComparisonItem = Substance | Brand | Stack;
 
 export default function Compare() {
   const [searchParams] = useSearchParams();
@@ -11,20 +14,15 @@ export default function Compare() {
   const id1 = searchParams.get('id1');
   const id2 = searchParams.get('id2');
 
-  const [item1, setItem1] = useState<any>(null);
-  const [item2, setItem2] = useState<any>(null);
-
-  useEffect(() => {
+  const [item1, item2] = useMemo<[ComparisonItem | undefined, ComparisonItem | undefined]>(() => {
     if (type === 'substance') {
-      setItem1(SUPPLEMENTS.find(s => s.id === id1));
-      setItem2(SUPPLEMENTS.find(s => s.id === id2));
+      return [SUPPLEMENTS.find(s => s.id === id1), SUPPLEMENTS.find(s => s.id === id2)];
     } else if (type === 'stack') {
-      setItem1(STACKS.find(s => s.id === id1));
-      setItem2(STACKS.find(s => s.id === id2));
+      return [STACKS.find(s => s.id === id1), STACKS.find(s => s.id === id2)];
     } else if (type === 'brand') {
-      setItem1(BRANDS.find(b => b.id === id1));
-      setItem2(BRANDS.find(b => b.id === id2));
+      return [BRANDS.find(b => b.id === id1), BRANDS.find(b => b.id === id2)];
     }
+    return [undefined, undefined];
   }, [type, id1, id2, SUPPLEMENTS, STACKS, BRANDS]);
 
   if (!type || !id1 || !id2) {
@@ -35,7 +33,7 @@ export default function Compare() {
     return <div className="p-8 text-center text-slate-500">Loading comparison...</div>;
   }
 
-  const renderComparisonRow = (label: string, val1: any, val2: any, isBoolean = false) => {
+  const renderComparisonRow = (label: string, val1: string | number | boolean | null | undefined, val2: string | number | boolean | null | undefined, isBoolean = false) => {
     return (
       <div className="grid grid-cols-3 gap-4 py-4 border-b border-slate-200 dark:border-zinc-800">
         <div className="font-medium text-slate-500 dark:text-zinc-400 text-sm flex items-center">{label}</div>
@@ -77,11 +75,11 @@ export default function Compare() {
           <div className="font-medium text-slate-500 dark:text-zinc-400">Features</div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100">{item1.name}</h2>
-            {type === 'substance' && <p className="text-sm text-slate-500 dark:text-zinc-400">{item1.typeTags?.[0]}</p>}
+            {type === 'substance' && <p className="text-sm text-slate-500 dark:text-zinc-400">{(item1 as Substance).typeTags?.[0]}</p>}
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100">{item2.name}</h2>
-            {type === 'substance' && <p className="text-sm text-slate-500 dark:text-zinc-400">{item2.typeTags?.[0]}</p>}
+            {type === 'substance' && <p className="text-sm text-slate-500 dark:text-zinc-400">{(item2 as Substance).typeTags?.[0]}</p>}
           </div>
         </div>
 
@@ -90,29 +88,29 @@ export default function Compare() {
           {type === 'substance' && (
             <>
               {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('Reported Dose Range', item1.averageDosage, item2.averageDosage)}
-              {renderComparisonRow('Length of Cycle', item1.lengthOfCycle, item2.lengthOfCycle)}
-              {renderComparisonRow('Risk Level', item1.riskLevel, item2.riskLevel)}
-              {renderComparisonRow('Classification', item1.classification, item2.classification)}
-              {renderComparisonRow('Tolerance Buildup', item1.toleranceBuildup, item2.toleranceBuildup)}
+              {renderComparisonRow('Reported Dose Range', (item1 as Substance).averageDosage, (item2 as Substance).averageDosage)}
+              {renderComparisonRow('Length of Cycle', (item1 as Substance).lengthOfCycle, (item2 as Substance).lengthOfCycle)}
+              {renderComparisonRow('Risk Level', (item1 as Substance).riskLevel, (item2 as Substance).riskLevel)}
+              {renderComparisonRow('Classification', (item1 as Substance).classification, (item2 as Substance).classification)}
+              {renderComparisonRow('Tolerance Buildup', (item1 as Substance).toleranceBuildup, (item2 as Substance).toleranceBuildup)}
             </>
           )}
 
           {type === 'brand' && (
             <>
               {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('User Rating', item1.userRating ? `${item1.userRating}/5` : null, item2.userRating ? `${item2.userRating}/5` : null)}
-              {renderComparisonRow('Shipping Reliability', item1.shippingReliability ? `${item1.shippingReliability}/5` : null, item2.shippingReliability ? `${item2.shippingReliability}/5` : null)}
-              {renderComparisonRow('Contamination Reports', item1.contaminationReports, item2.contaminationReports)}
-              {renderComparisonRow('Third-Party Tested', item1.thirdPartyTestingLinks?.length > 0, item2.thirdPartyTestingLinks?.length > 0, true)}
+              {renderComparisonRow('User Rating', (item1 as Brand).userRating ? `${(item1 as Brand).userRating}/5` : null, (item2 as Brand).userRating ? `${(item2 as Brand).userRating}/5` : null)}
+              {renderComparisonRow('Shipping Reliability', (item1 as Brand).shippingReliability ? `${(item1 as Brand).shippingReliability}/5` : null, (item2 as Brand).shippingReliability ? `${(item2 as Brand).shippingReliability}/5` : null)}
+              {renderComparisonRow('Contamination Reports', (item1 as Brand).contaminationReports, (item2 as Brand).contaminationReports)}
+              {renderComparisonRow('Third-Party Tested', (item1 as Brand).thirdPartyTestingLinks?.length > 0, (item2 as Brand).thirdPartyTestingLinks?.length > 0, true)}
             </>
           )}
 
           {type === 'stack' && (
             <>
               {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('Substances', item1.substances?.map((s: any) => s.name).join(', '), item2.substances?.map((s: any) => s.name).join(', '))}
-              {renderComparisonRow('Creator ID', item1.creatorId, item2.creatorId)}
+              {renderComparisonRow('Substances', (item1 as Stack).substances?.map((s) => s.name).join(', '), (item2 as Stack).substances?.map((s) => s.name).join(', '))}
+              {renderComparisonRow('Creator ID', (item1 as Stack).creatorId, (item2 as Stack).creatorId)}
             </>
           )}
         </div>
