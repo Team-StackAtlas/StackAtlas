@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Search, Activity, ShieldAlert, Star, Settings2, Plus } from 'lucide-react';
 import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
@@ -65,7 +65,11 @@ export default function Map() {
   
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
   const [activeTab, setActiveTab] = useState<'Substances' | 'Brands' | 'Stacks'>('Substances');
-  const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const [activeCategoryGroup, setActiveCategoryGroup] = useState<string | null>(() => {
+    const requested = searchParams.get('category');
+    return requested && BEARING_CATEGORIES.some(category => category.name === requested) ? requested : null;
+  });
   const [activeBearings, setActiveBearings] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
