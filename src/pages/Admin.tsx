@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import AdminResearch from './AdminResearch';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabase/client';
+import QuarterControls from '../components/admin/QuarterControls';
+import SectionErrorBoundary from '../components/admin/SectionErrorBoundary';
 import type { ModerationQueueItem, ProfileDTO } from '../services/types';
 
 type Tab = 'review' | 'suggest' | 'users' | 'deleted' | 'quarters' | 'research' | 'log';
@@ -238,10 +241,9 @@ export default function Admin() {
         </section>
       )}
       {tab === 'quarters' && (
-        <Empty
-          title="Quarters"
-          text="Site admins can moderate Quarter messages and members through the Quarter Controls in Comms; private DM bodies are not shown here."
-        />
+        <SectionErrorBoundary>
+          <QuarterControls client={supabase} isAdmin={allowed} />
+        </SectionErrorBoundary>
       )}
       {tab === 'research' && <AdminResearch profile={profile} user={user} />}
       {tab === 'log' && (
@@ -342,14 +344,5 @@ function QueueTable({
         </table>
       </div>
     </div>
-  );
-}
-
-function Empty({ title, text }: { title: string; text: string }) {
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="font-bold">{title}</h2>
-      <p className="mt-1 text-sm text-slate-500">{text}</p>
-    </section>
   );
 }
