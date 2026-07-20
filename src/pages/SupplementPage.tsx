@@ -34,6 +34,7 @@ import { listApprovedFindings, type PublicFinding } from '../services/research';
 import { studyTypeLabel } from '../components/admin/adminLabels';
 import { EmptyState } from '../components/EmptyState';
 import { EntityNotFound } from '../components/EntityNotFound';
+import { GlossaryText } from '../components/GlossaryText';
 import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
 
 // 'mixed' reads as "Mixed results" here (not admin's shorter "Mixed") per the
@@ -197,7 +198,7 @@ export default function SupplementPage() {
             )}
 
             <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-zinc-400 leading-relaxed">
-              {supplement.description}
+              <GlossaryText>{supplement.description}</GlossaryText>
             </p>
           </div>
 
@@ -351,7 +352,7 @@ export default function SupplementPage() {
             {supplement.healthRisks.map((risk, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-zinc-300">
                 <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500" />
-                {risk}
+                <span><GlossaryText>{risk}</GlossaryText></span>
               </li>
             ))}
           </ul>
