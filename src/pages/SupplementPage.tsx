@@ -34,6 +34,7 @@ import { listApprovedFindings, type PublicFinding } from '../services/research';
 import { studyTypeLabel } from '../components/admin/adminLabels';
 import { EmptyState } from '../components/EmptyState';
 import { EntityNotFound } from '../components/EntityNotFound';
+import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
 
 // 'mixed' reads as "Mixed results" here (not admin's shorter "Mixed") per the
 // public copy spec, so this map isn't reused from adminLabels.ts.
@@ -174,9 +175,11 @@ export default function SupplementPage() {
               <div className="mt-3 flex gap-2 flex-wrap">
                 {supplement.typeTags.map((tag, i) => {
                   const typeInfo = TYPE_TAGS.find(t => t.full === tag);
+                  const TagIcon = TYPE_TAG_ICONS[tag];
                   return typeInfo ? (
                     <span key={`type-${i}`} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-sm font-medium text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700" title={tag}>
-                      {typeInfo.emoji} {typeInfo.label}
+                      {TagIcon && <TagIcon size={14} className="text-slate-400 dark:text-zinc-500" />}
+                      {typeInfo.label}
                     </span>
                   ) : null;
                 })}

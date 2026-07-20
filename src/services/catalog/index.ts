@@ -108,9 +108,11 @@ function mapSubstances(rows: any[], brandIdToSlug: Map<string, string>, substanc
       subjectiveEffects,
       toleranceBuildup: row.tolerance_buildup ?? '',
       possiblePairings,
-      // risk_level is nullable in Supabase; default to a cautious middle value
-      // rather than implying "Low" when the importer hasn't set it yet.
-      riskLevel: (row.risk_level as Substance['riskLevel']) ?? 'Moderate',
+      // risk_level is nullable in Supabase. Leave it undefined when unset rather
+      // than fabricating a value — showing "Moderate" for a substance the
+      // importer never assessed (e.g. aged garlic) is misleading. The substance
+      // page simply hides the risk tile when this is absent.
+      riskLevel: (row.risk_level as Substance['riskLevel']) ?? undefined,
       markers: markers.length > 0 ? markers : undefined,
       origin: row.origin ?? undefined,
       howObtained: row.how_obtained ?? undefined,

@@ -119,7 +119,7 @@ export interface Substance {
   subjectiveEffects: string[];
   toleranceBuildup: string;
   possiblePairings: string[];
-  riskLevel: 'Low' | 'Moderate' | 'High';
+  riskLevel?: 'Low' | 'Moderate' | 'High';
   markers?: string[];
   clinicalBaseline?: { dosage: string; links: string[] };
   globalAverage?: string;
