@@ -318,7 +318,7 @@ export default function SupplementPage() {
       {(supplement.origin || supplement.howObtained || supplement.formula) && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Info size={20} className="text-slate-500" />
+            <Info size={20} className="text-slate-400 dark:text-zinc-500" />
             Origin & Sourcing
           </h3>
           <dl className="space-y-3 text-sm">
@@ -334,12 +334,13 @@ export default function SupplementPage() {
                 <dd className="text-slate-700 dark:text-zinc-300"><GlossaryText>{supplement.howObtained}</GlossaryText></dd>
               </div>
             )}
+            {supplement.formula && (
+              <div>
+                <dt className="text-xs text-slate-500 dark:text-zinc-500 mb-0.5">Molecular formula</dt>
+                <dd className="font-mono text-slate-700 dark:text-zinc-300">{supplement.formula}</dd>
+              </div>
+            )}
           </dl>
-          {supplement.formula && (
-            <p className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/50 font-mono text-xs text-slate-500 dark:text-zinc-400">
-              {supplement.formula}
-            </p>
-          )}
         </div>
       )}
 
@@ -366,7 +367,7 @@ export default function SupplementPage() {
       {findings.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
           <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Microscope size={20} className="text-indigo-500" />
+            <Microscope size={20} className="text-slate-400 dark:text-zinc-500" />
             Research Findings
           </h3>
           <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
@@ -434,7 +435,7 @@ export default function SupplementPage() {
       {supplement.subjectiveEffects.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Activity size={20} className="text-emerald-500" />
+            <Activity size={20} className="text-slate-400 dark:text-zinc-500" />
             Subjective Effects
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -451,7 +452,7 @@ export default function SupplementPage() {
       {supplement.possiblePairings.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Beaker size={20} className="text-blue-500" />
+            <Beaker size={20} className="text-slate-400 dark:text-zinc-500" />
             Possible Pairings
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -478,8 +479,8 @@ export default function SupplementPage() {
       {/* Brands */}
       <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-          <Package size={20} className="text-indigo-500" />
-          Brand Reliability Database
+          <Package size={20} className="text-slate-400 dark:text-zinc-500" />
+          Brand Reliability
         </h3>
         {relatedBrands.length > 0 ? (
           <div className="space-y-4">
