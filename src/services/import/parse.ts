@@ -22,6 +22,8 @@ import { hashText } from './hash';
 import { extractMarkdownSource, type SubstanceCatalogEntry } from './markdown';
 import { slugify } from './validate';
 import { extractZip, ZipLimitError } from './zip';
+import { parseCsvRows } from './parse-csv';
+import { convertResearchPackage, isResearchPackageEntry } from './research-package';
 
 const KNOWN_TOP_LEVEL_KEYS = new Set<string>([
   'kind',
@@ -143,56 +145,6 @@ export function parseDataPackJson(text: string): { pack: DataPack | null; issues
 /** Tokenizes CSV text into rows of raw (untrimmed) cell strings. Handles
  * quoted fields, escaped ("") quotes, and both \n and \r\n line endings.
  * Fully blank lines are dropped. */
-function parseCsvRows(text: string): string[][] {
-  const rows: string[][] = [];
-  let cell = '';
-  let row: string[] = [];
-  let quoted = false;
-  const input = text.replace(/^\uFEFF/, ''); // strip BOM
-
-  const pushCell = () => {
-    row.push(cell);
-    cell = '';
-  };
-  const pushRow = () => {
-    if (row.length > 1 || row[0] !== '') rows.push(row);
-    row = [];
-  };
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-    const next = input[i + 1];
-    if (quoted) {
-      if (char === '"' && next === '"') {
-        cell += '"';
-        i += 1;
-      } else if (char === '"') {
-        quoted = false;
-      } else {
-        cell += char;
-      }
-      continue;
-    }
-    if (char === '"') {
-      quoted = true;
-    } else if (char === ',') {
-      pushCell();
-    } else if (char === '\r') {
-      if (next === '\n') continue; // let the \n branch close the row
-      pushCell();
-      pushRow();
-    } else if (char === '\n') {
-      pushCell();
-      pushRow();
-    } else {
-      cell += char;
-    }
-  }
-  pushCell();
-  pushRow();
-  return rows;
-}
-
 type CsvField =
   | 'title'
   | 'substances'
@@ -564,6 +516,37 @@ export async function parseImportFiles(
     files.push({ path, name, kind, status: 'parsed', entityCounts: entityCounts(result.pack) });
   };
 
+  // Convert a set of research-package entries (from a zip or loose drops) as a
+  // group and record each consumed file. Returns the set of paths consumed so
+  // the per-file loop skips them.
+  const recordPackage = (
+    entries: { path: string; name: string; ext: string; content: string }[],
+  ): Set<string> => {
+    const result = convertResearchPackage(entries);
+    if (!result.pack) return new Set();
+    appendPack(combined, result.pack);
+    result.issues.forEach((issue) => issues.push(issue));
+    const byFile: Record<string, Partial<Record<EntityKind, number>>> = {
+      'substances.json': { substances: result.pack.substances?.length ?? 0 },
+      'brands.json': { brands: result.pack.brands?.length ?? 0 },
+      'products.json': {},
+      'evidence.json': { sources: result.pack.sources?.length ?? 0 },
+      'source_ledger.csv': { sources: result.pack.sources?.length ?? 0 },
+    };
+    entries
+      .filter((e) => result.handled.has(e.path))
+      .forEach((e) =>
+        files.push({
+          path: e.path,
+          name: e.name,
+          kind: e.ext === '.csv' ? 'csv' : 'json',
+          status: 'parsed',
+          entityCounts: byFile[e.name.toLowerCase().split('/').pop() ?? ''],
+        }),
+      );
+    return result.handled;
+  };
+
   const recordMarkdown = async (path: string, name: string, text: string) => {
     try {
       const { source, ambiguous } = extractMarkdownSource(name, text, catalog);
@@ -592,8 +575,35 @@ export async function parseImportFiles(
     }
   };
 
+  // Loose research-package files dropped without a zip are gathered and
+  // converted as one group so products still merge into their brand.
+  const looseFiles: File[] = [];
+  const loosePackageEntries: { path: string; name: string; ext: string; content: string }[] = [];
   for (const file of inputFiles) {
     const lower = file.name.toLowerCase();
+    const candidate = !lower.endsWith('.zip') && (lower.endsWith('.json') || lower.endsWith('.csv')) && isResearchPackageEntry(file.name);
+    if (candidate) {
+      const content = await file.text();
+      // A research-package JSON file is a bare array; a hand-authored DataPack
+      // named the same is an object — send that to the normal parser instead.
+      const looksLikePackage = lower.endsWith('.csv') || /^\s*\[/.test(content);
+      if (looksLikePackage) {
+        loosePackageEntries.push({
+          path: file.name,
+          name: file.name,
+          ext: lower.endsWith('.csv') ? '.csv' : '.json',
+          content,
+        });
+        continue;
+      }
+    }
+    looseFiles.push(file);
+  }
+  const handledLoose = recordPackage(loosePackageEntries);
+
+  for (const file of looseFiles) {
+    const lower = file.name.toLowerCase();
+    if (handledLoose.has(file.name)) continue;
 
     if (lower.endsWith('.zip')) {
       try {
@@ -607,7 +617,13 @@ export async function parseImportFiles(
             message: entry.reason,
           });
         }
+        // An advanced research package (substances.json/brands.json/
+        // products.json/evidence.json/source_ledger.csv) is converted as a
+        // group first — products must merge into their brand across files —
+        // then its files are skipped by the per-file loop below.
+        const handledInZip = recordPackage(extraction.entries);
         for (const entry of extraction.entries) {
+          if (handledInZip.has(entry.path)) continue;
           if (entry.ext === '.md' || entry.ext === '.markdown') {
             await recordMarkdown(entry.path, entry.name, entry.content);
           } else if (entry.ext === '.json') {

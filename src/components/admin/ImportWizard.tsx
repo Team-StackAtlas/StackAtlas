@@ -237,6 +237,7 @@ export default function ImportWizard({
               Upload research files or a ZIP archive, or drag them here
             </p>
             <p className="mt-1 text-xs text-slate-400">Accepts .json, .csv, .md, .markdown, and .zip — drop several at once.</p>
+            <p className="mt-0.5 text-xs text-slate-400">Data packs and research-agent packages (substances / brands / products / evidence / source_ledger) are both recognized automatically.</p>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="mt-3 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-slate-900"
