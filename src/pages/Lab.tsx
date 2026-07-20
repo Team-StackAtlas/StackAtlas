@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { GitCompare, Layers, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BookOpen, GitCompare, Layers, Search } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useCatalog } from '../context/CatalogContext';
 import { Modal } from '../components/ui/Modal';
@@ -100,6 +101,23 @@ export default function Lab() {
           </button>
         ))}
       </div>
+
+      <Link
+        to="/glossary"
+        className="mt-3 flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all group text-left shadow-sm"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-110">
+          <BookOpen size={20} className="text-emerald-500 dark:text-emerald-400" />
+        </div>
+        <div>
+          <span className="block text-sm font-semibold text-slate-700 dark:text-zinc-200 group-hover:text-slate-900 dark:group-hover:text-zinc-50 transition-colors">
+            Glossary
+          </span>
+          <span className="text-xs text-slate-500 dark:text-zinc-500">
+            Plain-language definitions for supplement and research terms.
+          </span>
+        </div>
+      </Link>
 
       {/* Base-item picker */}
       <Modal

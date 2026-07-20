@@ -5,15 +5,17 @@ import ImportWizard from '../components/admin/ImportWizard';
 import SourceLibrary from '../components/admin/SourceLibrary';
 import FindingsList from '../components/admin/FindingsList';
 import ImportHistory from '../components/admin/ImportHistory';
+import GlossaryManager from '../components/admin/GlossaryManager';
 import SectionErrorBoundary from '../components/admin/SectionErrorBoundary';
 import type { ProfileDTO, SessionUser } from '../services/types';
 
-type Tab = 'import' | 'library' | 'findings' | 'history';
+type Tab = 'import' | 'library' | 'findings' | 'history' | 'glossary';
 const TABS: [Tab, string][] = [
   ['import', 'Import'],
   ['library', 'Source Library'],
   ['findings', 'Findings'],
   ['history', 'Import History'],
+  ['glossary', 'Glossary'],
 ];
 
 function isAdmin(profile: ProfileDTO | null) {
@@ -95,6 +97,11 @@ export default function AdminResearch({
         {tab === 'history' && (
           <SectionErrorBoundary>
             <ImportHistory client={supabase} isOwner={owner} />
+          </SectionErrorBoundary>
+        )}
+        {tab === 'glossary' && (
+          <SectionErrorBoundary>
+            <GlossaryManager client={supabase} isAdmin={allowed} />
           </SectionErrorBoundary>
         )}
       </section>

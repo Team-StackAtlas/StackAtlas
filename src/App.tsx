@@ -28,6 +28,7 @@ const Create = lazy(() => import('./pages/Create'));
 const Compare = lazy(() => import('./pages/Compare'));
 const Library = lazy(() => import('./pages/Library'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Glossary = lazy(() => import('./pages/Glossary'));
 const AlbumDetail = lazy(() => import('./pages/AlbumDetail'));
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="profile/:username" element={<Profile />} />
               <Route path="library" element={<Library />} />
               <Route path="admin" element={<Admin />} />
+              <Route path="glossary" element={<Glossary />} />
               <Route path="library/albums/:id" element={<AlbumDetail />} />
               <Route path="post/:id" element={<PostDetail />} />
               <Route path="substance/:id" element={<SupplementPage />} />
