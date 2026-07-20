@@ -55,13 +55,13 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
           ) : null;
         })}
         {supplement.markers?.slice(0, 1).map(marker => (
-          <span key={marker} className="rounded-md px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-slate-400 ring-1 ring-inset ring-slate-200 dark:text-zinc-500 dark:ring-zinc-800">
+          <span key={marker} title={marker} className="inline-block max-w-[150px] truncate rounded-md px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-slate-400 ring-1 ring-inset ring-slate-200 dark:text-zinc-500 dark:ring-zinc-800">
             {marker}
           </span>
         ))}
       </div>
 
-      <p className="line-clamp-2 flex-1 text-[12.5px] leading-relaxed text-slate-600 dark:text-zinc-400">
+      <p className="line-clamp-2 flex-1 text-[12.5px] leading-snug text-slate-600 dark:text-zinc-400">
         {supplement.description}
       </p>
 
