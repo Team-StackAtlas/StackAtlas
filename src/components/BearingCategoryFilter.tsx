@@ -1,6 +1,23 @@
-import { ChevronRight, X } from 'lucide-react';
+import { Activity, Bandage, Bone, ChevronRight, Flame, HeartPulse, Hourglass, Moon, Sparkles, Stethoscope, Smile, Tag, X, type LucideIcon, Brain, Zap } from 'lucide-react';
 import { BEARING_CATEGORIES } from '../lib/bearings';
 import { cn } from '../lib/utils';
+
+const DEFAULT_CATEGORY_ICON = Tag;
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  'Cognition': Brain,
+  'Recovery': Moon,
+  'Performance': Zap,
+  'Longevity': Hourglass,
+  'Mood & Stress': Smile,
+  'Metabolic Health': Flame,
+  'Hormonal Health': Activity,
+  'Digestive Health': Stethoscope,
+  'Heart Health': HeartPulse,
+  'Pain & Injury': Bandage,
+  'Joint & Mobility': Bone,
+  'Beauty & Skin': Sparkles,
+};
 
 export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCategoryChange, onBearingToggle, onReset }: {
   selectedCategory: string | null;
@@ -15,9 +32,12 @@ export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCa
       <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
         {BEARING_CATEGORIES.map(item => {
           const selected = item.name === selectedCategory;
+          const Icon = CATEGORY_ICONS[item.name] ?? DEFAULT_CATEGORY_ICON;
           return (
             <button key={item.name} type="button" onClick={() => onCategoryChange(item.name)} className={cn('flex min-h-24 w-72 shrink-0 items-center gap-3 rounded-2xl border bg-white p-4 text-left transition-all dark:bg-zinc-900 sm:w-80', selected ? 'border-emerald-300 ring-2 ring-emerald-100 dark:border-emerald-500/50 dark:ring-emerald-500/10' : 'border-slate-200 hover:border-slate-300 dark:border-zinc-800 dark:hover:border-zinc-700')}>
-              <span className="h-12 w-12 shrink-0 rounded-xl border border-slate-200 bg-slate-50 dark:border-zinc-700 dark:bg-zinc-950" aria-hidden="true" />
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10" aria-hidden="true">
+                <Icon size={22} className="text-emerald-600 dark:text-emerald-400" />
+              </span>
               <span className="min-w-0 flex-1"><span className="block font-bold text-slate-900 dark:text-zinc-100">{item.name}</span><span className="mt-1 block text-sm leading-snug text-slate-500 dark:text-zinc-400">{item.description}</span></span>
               <ChevronRight size={18} className={cn('shrink-0 text-slate-400', selected && 'text-emerald-500')} />
             </button>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, Activity, ShieldAlert, Star, Settings2, Plus } from 'lucide-react';
+import { Search, Activity, ShieldAlert, Star, Settings2, Plus, Pill, Syringe, Droplet, SprayCan, type LucideIcon } from 'lucide-react';
 import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -21,6 +21,13 @@ type RecentSearch = { id: string; name: string; type: SearchableType; timestamp:
 type SearchResult = RecentSearch & { description: string; path: string; matchedOn: string; tags: string[] };
 
 const RECENT_SEARCHES_STORAGE_KEY = 'stackatlas.recentSearches';
+
+const ADMINISTRATION_ICONS: Record<string, LucideIcon> = {
+  'Oral': Pill,
+  'Injectable': Syringe,
+  'Topical': SprayCan,
+  'Sublingual': Droplet,
+};
 
 function normalizeSearchText(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -477,8 +484,13 @@ export default function Map() {
                     </div>
                     <div className="flex gap-1.5">
                       {supplement.administration.map(admin => {
-                        const emoji = admin.split(' ')[0];
-                        return <span key={admin} className="text-base bg-slate-50 dark:bg-zinc-800/50 rounded-md p-1" title={admin}>{emoji}</span>;
+                        const label = admin.split(' ').slice(1).join(' ');
+                        const Icon = ADMINISTRATION_ICONS[label];
+                        return (
+                          <span key={admin} className="flex items-center justify-center rounded-md bg-slate-50 p-1.5 dark:bg-zinc-800/50" title={label}>
+                            {Icon ? <Icon size={14} className="text-slate-500 dark:text-zinc-400" /> : null}
+                          </span>
+                        );
                       })}
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Flame, Clock, ArrowBigUp, Layers, Plus, Settings2 } from 'lucide-react';
+import { Search, Flame, Clock, ArrowBigUp, Layers, Plus, Settings2, Users } from 'lucide-react';
 import { BRANDS, STACKS, SUPPLEMENTS, Post, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS } from '../data/mockData';
 import { usePosts } from '../context/PostsContext';
 import { cn } from '../lib/utils';
@@ -15,6 +15,7 @@ import { useRequireAccountAction } from '../hooks/useRequireAccountAction';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
 import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
 import { getPostCommentCount } from '../lib/comments';
+import { EmptyState } from '../components/EmptyState';
 
 export default function Square() {
   const { scope } = useUserScope();
@@ -253,7 +254,27 @@ export default function Square() {
           <PostCard key={post.id} post={post} />
         ))}
         {sortedPosts.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900">{feedType === 'Following' ? (following.length === 0 ? 'Follow users, substances, brands, stacks, or public albums to build your Following feed.' : 'No followed items match this filter yet.') : 'No posts match these filters.'}</div>
+          feedType === 'Following' ? (
+            following.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title="Your Following feed is empty"
+                description="Follow users, substances, brands, stacks, or public albums to see their activity here."
+              />
+            ) : (
+              <EmptyState
+                icon={Layers}
+                title="No followed items match this filter"
+                description="Try a different filter, or follow more to broaden your feed."
+              />
+            )
+          ) : (
+            <EmptyState
+              icon={Layers}
+              title="No posts match these filters"
+              description="Adjust your filters or check back later for new discussion."
+            />
+          )
         )}
       </div>
 

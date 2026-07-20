@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Edit2, Plus } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit2, Plus, NotebookPen } from 'lucide-react';
 import { useLogs, type PrivateNote } from '../context/LogContext';
 import { SUPPLEMENTS, STACKS } from '../data/mockData';
+import { EmptyState } from '../components/EmptyState';
 
 export default function LogNotes() {
   const navigate = useNavigate();
@@ -82,15 +83,12 @@ export default function LogNotes() {
         {view === 'list' ? (
           <div className="space-y-4">
             {sortedNotes.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 dark:text-zinc-400">
-                <p>No private notes yet.</p>
-                <button 
-                  onClick={() => setView('form')}
-                  className="mt-4 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl font-medium"
-                >
-                  Create your first note
-                </button>
-              </div>
+              <EmptyState
+                icon={NotebookPen}
+                title="No private notes yet"
+                description="Keep private notes on substances, stacks, or your own protocol. Only you can see them."
+                action={{ label: 'Create your first note', onClick: () => setView('form') }}
+              />
             ) : (
               sortedNotes.map(note => {
                 const substance = SUPPLEMENTS.find(s => s.id === note.linkedSubstanceId);

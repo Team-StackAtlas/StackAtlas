@@ -6,6 +6,7 @@ import { usePosts } from '../context/PostsContext';
 import { useAuth } from '../context/AuthContext';
 import { useSaved, type SavedItem as HookSavedItem } from '../hooks/useSaved';
 import { useLibrary } from '../hooks/useLibrary';
+import { EmptyState } from '../components/EmptyState';
 import type { SavedItem, SavedItemType } from '../services/types';
 
 type Filter = 'all' | 'dispatch' | 'signal' | 'source' | 'album';
@@ -59,7 +60,16 @@ export default function Library() {
 
 
   if (status !== 'authenticated' && status !== 'unconfigured') {
-    return <div className="mx-auto max-w-3xl p-6 text-sm text-slate-500">Sign in to view your private Library.</div>;
+    return (
+      <div className="mx-auto max-w-3xl px-4 pt-16">
+        <EmptyState
+          icon={Bookmark}
+          title="Your Library is private"
+          description="Sign in to save substances, stacks, and posts, and to organize them into albums."
+          action={{ label: 'Sign in', to: `/login?returnTo=${encodeURIComponent('/library')}` }}
+        />
+      </div>
+    );
   }
 
   return (
