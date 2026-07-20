@@ -17,6 +17,13 @@ import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
 import { getPostCommentCount } from '../lib/comments';
 import { EmptyState } from '../components/EmptyState';
 
+const SORT_OPTIONS = [
+  { value: 'Highest Quality', icon: ArrowBigUp },
+  { value: 'Most Detailed', icon: Layers },
+  { value: 'Recent', icon: Clock },
+  { value: 'Trending', icon: Flame },
+] as const;
+
 export default function Square() {
   const { scope } = useUserScope();
   const { activeTypes, activeAdmins, activeClassifications } = useFilters();
@@ -42,6 +49,7 @@ export default function Square() {
   const [activeBearings, setActiveBearings] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending'>('Recent');
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
   const activeCategoryBearings = activeCategoryGroup ? BEARING_CATEGORIES.find(category => category.name === activeCategoryGroup)?.bearings ?? [] : [];
 
@@ -97,7 +105,7 @@ export default function Square() {
         if (!supplement.typeTags.some(t => activeTypes.includes(t))) return false;
         if (!activeClassifications.includes(supplement.classification)) return false;
         if (!supplement.administration.some(a => activeAdmins.includes(a))) return false;
-        
+
       }
     }
 
@@ -112,12 +120,21 @@ export default function Square() {
     return true;
   };
 
-
+  const matchesQuery = (p: Post) => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return true;
+    return (
+      p.title.toLowerCase().includes(needle) ||
+      p.content.toLowerCase().includes(needle) ||
+      p.author.username.toLowerCase().includes(needle) ||
+      (p.author.displayName?.toLowerCase().includes(needle) ?? false)
+    );
+  };
 
   const { posts: allPosts } = usePosts();
   const postsMatchingFilters = allPosts.filter(passesFeedFilters);
   const hiddenPostsCount = postsMatchingFilters.filter(isPostHiddenByPreferences).length;
-  const filteredPosts = postsMatchingFilters.filter(post => !isPostHiddenByPreferences(post));
+  const filteredPosts = postsMatchingFilters.filter(post => !isPostHiddenByPreferences(post)).filter(matchesQuery);
 
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortOption === 'Highest Quality') return b.qualityScore - a.qualityScore;
@@ -133,159 +150,171 @@ export default function Square() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8 transition-colors duration-200">
-      {/* Feed Type Tabs */}
-      <div className="sticky top-14 md:top-0 z-40 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800">
-        <div className="flex w-full">
-          <button
-            onClick={() => setFeedType('For You')}
-            className={cn(
-              "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
-              feedType === 'For You' 
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400" 
-                : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
-            )}
-          >
-            For You
-          </button>
-          <button
-            onClick={() => { if (user || requireAccount()) setFeedType('Following'); }}
-            className={cn(
-              "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
-              feedType === 'Following' 
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400" 
-                : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
-            )}
-          >
-            Following
-          </button>
-        </div>
+      {/* Editorial intro */}
+      <div className="mx-auto w-full max-w-2xl px-4 pt-5 pb-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500">The Square</p>
+        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-slate-500 dark:text-zinc-400">
+          Considered dispatches and signals — dosing logs, outcomes, and open questions from people running real protocols.
+        </p>
       </div>
 
-      {/* Search Bar & Create Post */}
-      <div className="p-4 sticky top-[104px] md:top-[46px] z-30 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800 flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
-          <input
-            type="search"
-            placeholder="Search communities..."
-            className="w-full h-10 pl-10 pr-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-sm"
-          />
+      {/* Command bar: feed tabs, search, create */}
+      <div className="sticky top-14 md:top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
+        <div className="mx-auto w-full max-w-2xl px-4">
+          <div className="flex items-center justify-between gap-3 pt-3">
+            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-zinc-800 dark:bg-zinc-900/70">
+              {(['For You', 'Following'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => { if (tab === 'Following' && !user) { if (requireAccount()) setFeedType('Following'); return; } setFeedType(tab); }}
+                  className={cn(
+                    'rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors',
+                    feedType === tab
+                      ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
+                      : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200',
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <Link to="/create" className="hidden md:inline-flex items-center gap-2 h-9 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm shrink-0">
+              <Plus size={16} />
+              Create
+            </Link>
+          </div>
+
+          <div className="flex gap-2 py-3">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search the Square…"
+                className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm focus:outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/15 focus:bg-white dark:focus:bg-zinc-900 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+              />
+            </div>
+            <button
+              onClick={() => setIsAdvancedSearchOpen(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 transition-colors shrink-0"
+              aria-label="Advanced filters"
+            >
+              <Settings2 size={18} />
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={() => setIsAdvancedSearchOpen(true)}
-          className="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm shrink-0"
-        >
-          <Settings2 size={18} />
-        </button>
-        <Link to="/create" className="hidden md:flex items-center gap-2 h-10 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-sm transition-colors shadow-sm shrink-0">
-          <Plus size={18} />
-          Create Post
-        </Link>
       </div>
 
       {!substanceId && !bearingParam && (
-        <BearingCategoryFilter
-          selectedCategory={activeCategoryGroup}
-          selectedBearings={activeBearings}
-          onCategoryChange={(category) => { setActiveCategoryGroup(category); setActiveBearings([]); }}
-          onBearingToggle={(bearing) => setActiveBearings((current) => current.includes(bearing) ? current.filter(item => item !== bearing) : [...current, bearing])}
-          onReset={() => { setActiveCategoryGroup(null); setActiveBearings([]); }}
-        />
+        <div className="pt-4">
+          <BearingCategoryFilter
+            selectedCategory={activeCategoryGroup}
+            selectedBearings={activeBearings}
+            onCategoryChange={(category) => { setActiveCategoryGroup(category); setActiveBearings([]); }}
+            onBearingToggle={(bearing) => setActiveBearings((current) => current.includes(bearing) ? current.filter(item => item !== bearing) : [...current, bearing])}
+            onReset={() => { setActiveCategoryGroup(null); setActiveBearings([]); }}
+          />
+        </div>
       )}
 
       {/* Bearing Filter Display */}
       {bearingParam && (
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500 dark:text-zinc-400">Filtering by bearing:</span>
-            <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 text-sm font-medium border border-slate-200 dark:border-zinc-700">
+        <div className="mx-auto w-full max-w-2xl px-4 pt-4 pb-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-slate-500 dark:text-zinc-400">Filtering by bearing</span>
+            <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-200 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
               {bearingParam}
             </span>
-            <Link to="/square" className="text-sm text-emerald-600 dark:text-emerald-500 hover:underline ml-2">
-              Clear Filter
+            <Link to="/square" className="text-sm font-medium text-emerald-600 dark:text-emerald-500 hover:underline ml-1">
+              Clear
             </Link>
           </div>
         </div>
       )}
 
-      {/* Sorting Options */}
-      <div className="px-4 pb-4">
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-1 shadow-sm overflow-x-auto hide-scrollbar">
-          {['Highest Quality', 'Most Detailed', 'Recent', 'Trending'].map((option) => (
-            <button
-              key={option}
-              onClick={() => setSortOption(option as 'Highest Quality' | 'Most Detailed' | 'Recent' | 'Trending')}
-              className={cn(
-                "flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                sortOption === option 
-                  ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 shadow-sm" 
-                  : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
-              )}
-            >
-              {option === 'Highest Quality' && <ArrowBigUp size={14} />}
-              {option === 'Most Detailed' && <Layers size={14} />}
-              {option === 'Recent' && <Clock size={14} />}
-              {option === 'Trending' && <Flame size={14} className={sortOption === 'Trending' ? "text-emerald-500" : ""} />}
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-
-
-      {feedType === 'Following' && (
-        <div className="px-4 pb-4">
-          <div className="flex gap-2 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-            {(['All', 'Users', 'Substances', 'Brands', 'Stacks', 'Albums'] as const).map((filter) => (
-              <button key={filter} onClick={() => setFollowingFilter(filter)} className={cn("whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium", followingFilter === filter ? "bg-slate-100 text-slate-900 dark:bg-zinc-800 dark:text-zinc-100" : "text-slate-500 dark:text-zinc-400")}>{filter}</button>
+      {/* Content Area */}
+      <div className="flex-1 mx-auto w-full max-w-2xl px-4 pt-4">
+        <div className="mb-4 space-y-3">
+          <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
+            {sortedPosts.length.toLocaleString()} {sortedPosts.length === 1 ? 'post' : 'posts'}
+          </p>
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 overflow-x-auto hide-scrollbar">
+            {SORT_OPTIONS.map(({ value, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => setSortOption(value)}
+                className={cn(
+                  'flex-1 whitespace-nowrap flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                  sortOption === value
+                    ? 'bg-slate-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200',
+                )}
+              >
+                <Icon size={14} />
+                {value}
+              </button>
             ))}
           </div>
-        </div>
-      )}
 
-      {/* Content Area */}
-      <div className="flex-1 px-4 space-y-4 max-w-2xl mx-auto w-full">
-        {hiddenPostsCount > 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-500 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-            Some posts were hidden by your preferences.
-          </div>
-        )}
-        {sortedPosts.map(post => (
-          <PostCard key={post.id} post={post} />
-        ))}
-        {sortedPosts.length === 0 && (
-          feedType === 'Following' ? (
-            following.length === 0 ? (
+          {feedType === 'Following' && (
+            <div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 hide-scrollbar">
+              {(['All', 'Users', 'Substances', 'Brands', 'Stacks', 'Albums'] as const).map((filter) => (
+                <button key={filter} onClick={() => setFollowingFilter(filter)} className={cn('whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors', followingFilter === filter ? 'bg-slate-100 text-slate-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200')}>{filter}</button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          {hiddenPostsCount > 0 && (
+            <div className="rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-500 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
+              Some posts were hidden by your preferences.
+            </div>
+          )}
+          {sortedPosts.map(post => (
+            <PostCard key={post.id} post={post} />
+          ))}
+          {sortedPosts.length === 0 && (
+            query.trim() ? (
               <EmptyState
-                icon={Users}
-                title="Your Following feed is empty"
-                description="Follow users, substances, brands, stacks, or public albums to see their activity here."
+                icon={Search}
+                title="Nothing matches your search"
+                description="Try different terms, or clear the search to see the full feed."
               />
+            ) : feedType === 'Following' ? (
+              following.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  title="Your Following feed is empty"
+                  description="Follow users, substances, brands, stacks, or public albums to see their activity here."
+                />
+              ) : (
+                <EmptyState
+                  icon={Layers}
+                  title="No followed items match this filter"
+                  description="Try a different filter, or follow more to broaden your feed."
+                />
+              )
             ) : (
               <EmptyState
                 icon={Layers}
-                title="No followed items match this filter"
-                description="Try a different filter, or follow more to broaden your feed."
+                title="No posts match these filters"
+                description="Adjust your filters or check back later for new discussion."
               />
             )
-          ) : (
-            <EmptyState
-              icon={Layers}
-              title="No posts match these filters"
-              description="Adjust your filters or check back later for new discussion."
-            />
-          )
-        )}
+          )}
+        </div>
       </div>
 
       {/* Floating Action Button (Mobile) */}
-      <Link to="/create" className="md:hidden fixed bottom-20 right-4 h-14 w-14 flex items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 transition-colors z-40">
+      <Link to="/create" className="md:hidden fixed bottom-20 right-4 h-14 w-14 flex items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-500 transition-colors z-40">
         <Plus size={24} />
       </Link>
 
-      <AdvancedSearchModal 
-        isOpen={isAdvancedSearchOpen} 
-        onClose={() => setIsAdvancedSearchOpen(false)} 
+      <AdvancedSearchModal
+        isOpen={isAdvancedSearchOpen}
+        onClose={() => setIsAdvancedSearchOpen(false)}
       />
     </div>
   );
