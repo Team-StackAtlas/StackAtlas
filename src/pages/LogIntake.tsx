@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Trash2 } from 'lucide-react';
 import { useLogs } from '../context/LogContext';
 import { cn } from '../lib/utils';
 import { SUPPLEMENTS, STACKS } from '../data/mockData';
+import { EmptyState } from '../components/EmptyState';
 
 export default function LogIntake() {
   const navigate = useNavigate();
@@ -77,15 +78,12 @@ export default function LogIntake() {
         {view === 'list' ? (
           <div className="space-y-4">
             {sortedLogs.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 dark:text-zinc-400">
-                <p>No intake logs yet.</p>
-                <button 
-                  onClick={() => setView('form')}
-                  className="mt-4 px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl font-medium"
-                >
-                  Create your first log
-                </button>
-              </div>
+              <EmptyState
+                icon={ClipboardList}
+                title="No intake logs yet"
+                description="Track what you take and when to keep a private record over time."
+                action={{ label: 'Create your first log', onClick: () => setView('form') }}
+              />
             ) : (
               sortedLogs.map(log => {
                 const substance = SUPPLEMENTS.find(s => s.id === log.substanceId);

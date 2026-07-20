@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Search } from 'lucide-react';
 import { supabase } from '../services/supabase/client';
 import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
+import { EmptyState } from '../components/EmptyState';
 
 export default function Glossary() {
   const [terms, setTerms] = useState<GlossaryTerm[]>([]);
@@ -94,9 +95,11 @@ export default function Glossary() {
           )}
 
           {!loading && loaded && filtered.length === 0 && (
-            <p className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-              {terms.length === 0 ? 'No glossary terms yet.' : 'No terms match this search.'}
-            </p>
+            <EmptyState
+              icon={BookOpen}
+              title={terms.length === 0 ? 'No glossary terms yet' : 'No terms match this search'}
+              description={terms.length === 0 ? 'Defined terms will appear here as they are added.' : 'Try a different search term.'}
+            />
           )}
 
           <div className="space-y-3">

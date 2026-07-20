@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, MessageSquare, Mic, Paperclip, Plus, Search, Send, Users } from 'lucide-react';
 import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
+import { EmptyState } from '../components/EmptyState';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_SECONDS = 60;
@@ -370,9 +371,11 @@ export default function Comms() {
           {tab === 'messages' && (
             <div className="space-y-2">
               {conversations.length === 0 && (
-                <p className="text-sm text-slate-500">
-                  No conversations yet. Find someone via search to start one.
-                </p>
+                <EmptyState
+                  icon={MessageSquare}
+                  title="No conversations yet"
+                  description="Search for someone above to start a private conversation."
+                />
               )}
               {conversations.map((conversation) => {
                 const other = comms.getUser(

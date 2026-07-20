@@ -17,6 +17,7 @@ import {
   Edit3,
   Info,
   Microscope,
+  MessageSquare,
 } from 'lucide-react';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
@@ -31,6 +32,7 @@ import { HideItemButton } from '../components/HideItemButton';
 import { supabase } from '../services/supabase/client';
 import { listApprovedFindings, type PublicFinding } from '../services/research';
 import { studyTypeLabel } from '../components/admin/adminLabels';
+import { EmptyState } from '../components/EmptyState';
 
 // 'mixed' reads as "Mixed results" here (not admin's shorter "Mixed") per the
 // public copy spec, so this map isn't reused from adminLabels.ts.
@@ -549,12 +551,12 @@ export default function SupplementPage() {
               <PostCard key={post.id} post={post} />
             ))
           ) : (
-            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 border-dashed p-12 text-center bg-white dark:bg-transparent">
-              <p className="text-slate-500 dark:text-zinc-500">No discussions yet. Be the first to share your experience!</p>
-              <button className="mt-4 rounded-lg bg-slate-900 dark:bg-zinc-800 px-4 py-2 text-sm font-medium text-white dark:text-zinc-200 hover:bg-slate-800 dark:hover:bg-zinc-700 transition-colors">
-                Create Post
-              </button>
-            </div>
+            <EmptyState
+              icon={MessageSquare}
+              title="No discussions yet"
+              description="Be the first to share your experience with this substance."
+              action={{ label: 'Create Post', to: '/create' }}
+            />
           )}
         </div>
       </div>

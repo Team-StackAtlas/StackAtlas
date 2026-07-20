@@ -10,6 +10,7 @@ import { useFollowing, type FollowTarget } from '../hooks/useFollowing';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
 import { ReportAction } from '../components/ReportAction';
+import { EmptyState } from '../components/EmptyState';
 import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 
@@ -322,17 +323,17 @@ export default function Profile() {
 
       <div className="space-y-4">
         {!canViewProtectedProfile ? (
-          <EmptyState message="This account is private. Follow this user and wait for approval to view their posts and stacks." />
+          <EmptyState description="This account is private. Follow this user and wait for approval to view their posts and stacks." />
         ) : activeTab === 'stacks' ? (
-          publishedStacks.length ? publishedStacks.map((stack) => <Link key={stack.id} to={`/stack/${stack.id}`} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h3 className="font-bold">{stack.name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{stack.description}</p></Link>) : <EmptyState message="No published stacks." />
+          publishedStacks.length ? publishedStacks.map((stack) => <Link key={stack.id} to={`/stack/${stack.id}`} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h3 className="font-bold">{stack.name}</h3><p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{stack.description}</p></Link>) : <EmptyState description="No published stacks." />
         ) : activeTab === 'saved' && isOwnProfile ? (
-          savedItems.length ? <div className="grid gap-3 sm:grid-cols-2">{savedItems.map((item) => <div key={`${item.type}-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><Bookmark size={16} className="text-emerald-500" /><h3 className="mt-2 font-semibold">{item.id}</h3><p className="text-xs text-slate-500">{item.type}</p></div>)}</div> : <EmptyState message="No saved items found. Saved items are private." />
+          savedItems.length ? <div className="grid gap-3 sm:grid-cols-2">{savedItems.map((item) => <div key={`${item.type}-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><Bookmark size={16} className="text-emerald-500" /><h3 className="mt-2 font-semibold">{item.id}</h3><p className="text-xs text-slate-500">{item.type}</p></div>)}</div> : <EmptyState description="No saved items found. Saved items are private." />
         ) : activeTab === 'likes' && isOwnProfile ? (
-          <EmptyState message="Liked posts are private. No liked posts found." />
+          <EmptyState description="Liked posts are private. No liked posts found." />
         ) : activeTab === 'hidden' && isOwnProfile ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><EyeOff size={18} /> Hidden Items</h2>
-            {hiddenItemsCount === 0 ? <EmptyState message="No hidden items yet. Hidden items are private." /> : hiddenGroups.map((group) => {
+            {hiddenItemsCount === 0 ? <EmptyState description="No hidden items yet. Hidden items are private." /> : hiddenGroups.map((group) => {
               const groupItems: HiddenItem[] = hiddenItems[group.key];
               return <section key={group.key} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</h3>{groupItems.length ? groupItems.map((item) => <div key={`${item.type}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{item.name}</span><button onClick={() => unhideItem(item.type, item.id)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Unhide</button></div>) : <p className="text-sm text-slate-500">None hidden.</p>}</section>;
             })}
@@ -340,20 +341,17 @@ export default function Profile() {
         ) : activeTab === 'following' && isOwnProfile ? (
           <FollowingManagement followedItems={followedItems} followRequests={followRequests} incomingRequests={incomingRequests} onUnfollow={toggleFollow} onResolveRequest={resolveFollowRequest} />
         ) : activeTab === 'reports' && isOwnProfile ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">My reports</h2><p className="mb-4 text-sm text-slate-500">Private admin notes and punishment details are not shown.</p>{ownReports.length ? ownReports.map((report) => <div key={report.id} className="mb-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50"><strong>{report.targetType}</strong> {report.targetLabel}<span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs capitalize dark:bg-zinc-800">{report.status.replace('_', ' ')}</span><p className="text-xs text-slate-500">Submitted {new Date(report.createdAt).toLocaleString()}</p></div>) : <EmptyState message="No submitted reports." />}</div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">My reports</h2><p className="mb-4 text-sm text-slate-500">Private admin notes and punishment details are not shown.</p>{ownReports.length ? ownReports.map((report) => <div key={report.id} className="mb-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50"><strong>{report.targetType}</strong> {report.targetLabel}<span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs capitalize dark:bg-zinc-800">{report.status.replace('_', ' ')}</span><p className="text-xs text-slate-500">Submitted {new Date(report.createdAt).toLocaleString()}</p></div>) : <EmptyState description="No submitted reports." />}</div>
         ) : filteredPosts.length ? (
           filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
-          <EmptyState message="No published Dispatches or Signals found." />
+          <EmptyState description="No published Dispatches or Signals found." />
         )}
       </div>
     </div>
   );
 }
 
-function EmptyState({ message }: { message: string }) {
-  return <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800 dark:text-zinc-500">{message}</div>;
-}
 
 function FollowingManagement({ followedItems, followRequests, incomingRequests, onUnfollow, onResolveRequest }: { followedItems: { targetType: FollowTarget; targetId: string }[]; followRequests: { targetId: string }[]; incomingRequests: FollowRequest[]; onUnfollow: (type: FollowTarget, id: string) => void; onResolveRequest: (requesterId: string, approved: boolean) => void }) {
   const sections = [
