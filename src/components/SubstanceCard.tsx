@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Pill, Syringe, Droplet, SprayCan, type LucideIcon } from 'lucide-react';
 import { TYPE_TAGS, type Substance } from '../data/mockData';
+import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
 import { cn } from '../lib/utils';
 import AccessBadge from './AccessBadge';
 import { SecondaryHideMenu } from './SecondaryHideMenu';
@@ -48,9 +49,11 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
         <div className="flex flex-wrap items-center gap-1.5">
           {supplement.typeTags.slice(0, 2).map(tag => {
             const typeInfo = TYPE_TAGS.find(t => t.full === tag);
+            const TagIcon = TYPE_TAG_ICONS[tag];
             return typeInfo ? (
               <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-zinc-800 dark:text-zinc-400" title={tag}>
-                {typeInfo.emoji} {typeInfo.label}
+                {TagIcon && <TagIcon size={12} className="text-slate-400 dark:text-zinc-500" />}
+                {typeInfo.label}
               </span>
             ) : null;
           })}

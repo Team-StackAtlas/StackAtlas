@@ -33,7 +33,7 @@ function normalizeSearchText(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-function searchMatches(query: string, fields: string[]) {
+function searchMatches(query: string, fields: (string | undefined)[]) {
   const normalizedQuery = normalizeSearchText(query);
   if (!normalizedQuery) return false;
   const haystack = normalizeSearchText(fields.filter(Boolean).join(' '));
@@ -215,14 +215,18 @@ export default function Map() {
       if (!selected.some(bearing => entityBearings.includes(bearing))) return false;
     }
 
-    // Type Filtering
-    if (!s.typeTags.some(t => activeTypes.includes(t))) return false;
+    // Type Filtering — only exclude a substance that HAS type tags none of
+    // which are active. Substances with no type tags (e.g. bulk-imported
+    // catalog rows) are never hidden by this filter.
+    if (s.typeTags.length > 0 && !s.typeTags.some(t => activeTypes.includes(t))) return false;
 
     // Classification Filtering
     if (!activeClassifications.includes(s.classification)) return false;
 
-    // Administration Filtering
-    if (!s.administration.some(a => activeAdmins.includes(a))) return false;
+    // Administration Filtering — same rule: a substance with no recorded
+    // administration method isn't hidden (most imported catalog substances
+    // don't carry one yet).
+    if (s.administration.length > 0 && !s.administration.some(a => activeAdmins.includes(a))) return false;
 
     // Search Query Filtering (debounced)
     if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
