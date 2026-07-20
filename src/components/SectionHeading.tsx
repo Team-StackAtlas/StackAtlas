@@ -12,8 +12,9 @@ export function SectionHeading({ label, count, action }: {
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
-        {count.toLocaleString()} {count === 1 ? label : `${label}s`}
+      <p className="text-sm text-slate-500 dark:text-zinc-400">
+        <span className="font-semibold text-slate-900 dark:text-zinc-100">{count.toLocaleString()}</span>{' '}
+        {count === 1 ? label : `${label}s`}
       </p>
       {action}
     </div>

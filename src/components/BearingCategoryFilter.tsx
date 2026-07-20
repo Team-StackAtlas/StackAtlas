@@ -29,17 +29,17 @@ export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCa
   const category = BEARING_CATEGORIES.find(item => item.name === selectedCategory);
   return (
     <div className="px-4 pb-3">
-      <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+      <div className="flex gap-2.5 overflow-x-auto pb-2 hide-scrollbar">
         {BEARING_CATEGORIES.map(item => {
           const selected = item.name === selectedCategory;
           const Icon = CATEGORY_ICONS[item.name] ?? DEFAULT_CATEGORY_ICON;
           return (
-            <button key={item.name} type="button" onClick={() => onCategoryChange(item.name)} className={cn('flex min-h-24 w-72 shrink-0 items-center gap-3 rounded-2xl border bg-white p-4 text-left transition-all dark:bg-zinc-900 sm:w-80', selected ? 'border-emerald-300 ring-2 ring-emerald-100 dark:border-emerald-500/50 dark:ring-emerald-500/10' : 'border-slate-200 hover:border-slate-300 dark:border-zinc-800 dark:hover:border-zinc-700')}>
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10" aria-hidden="true">
-                <Icon size={22} className="text-emerald-600 dark:text-emerald-400" />
+            <button key={item.name} type="button" onClick={() => onCategoryChange(item.name)} aria-pressed={selected} className={cn('group flex w-56 shrink-0 items-center gap-2.5 rounded-xl border bg-white p-2.5 text-left transition-all sm:w-60 dark:bg-zinc-900', selected ? 'border-emerald-300 bg-emerald-50/40 shadow-sm shadow-emerald-900/5 dark:border-emerald-500/50 dark:bg-emerald-500/5' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm hover:shadow-slate-900/5 dark:border-zinc-800 dark:hover:border-zinc-700')}>
+              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors', selected ? 'bg-emerald-500 text-white dark:bg-emerald-500/90' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:group-hover:bg-emerald-500/20')} aria-hidden="true">
+                <Icon size={18} />
               </span>
-              <span className="min-w-0 flex-1"><span className="block font-bold text-slate-900 dark:text-zinc-100">{item.name}</span><span className="mt-1 block text-sm leading-snug text-slate-500 dark:text-zinc-400">{item.description}</span></span>
-              <ChevronRight size={18} className={cn('shrink-0 text-slate-400', selected && 'text-emerald-500')} />
+              <span className="min-w-0 flex-1"><span className={cn('block truncate text-sm font-semibold', selected ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-900 dark:text-zinc-100')}>{item.name}</span><span className="mt-0.5 line-clamp-1 block text-[11.5px] leading-snug text-slate-500 dark:text-zinc-400">{item.description}</span></span>
+              <ChevronRight size={16} className={cn('shrink-0 transition-colors', selected ? 'text-emerald-500' : 'text-slate-300 group-hover:text-slate-400 dark:text-zinc-600')} />
             </button>
           );
         })}
