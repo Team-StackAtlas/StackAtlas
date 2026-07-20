@@ -1,17 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Pill, Syringe, Droplet, SprayCan, type LucideIcon } from 'lucide-react';
 import { TYPE_TAGS, type Substance } from '../data/mockData';
 import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
+import { ADMINISTRATION_META } from '../lib/administrationIcons';
 import { cn } from '../lib/utils';
 import AccessBadge from './AccessBadge';
 import { SecondaryHideMenu } from './SecondaryHideMenu';
-
-const ADMINISTRATION_ICONS: Record<string, LucideIcon> = {
-  'Oral': Pill,
-  'Injectable': Syringe,
-  'Topical': SprayCan,
-  'Sublingual': Droplet,
-};
 
 /**
  * Browse-grid card for a substance: name, classification, a couple of type
@@ -81,10 +74,10 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
         </div>
         <div className="flex gap-1.5">
           {supplement.administration.map(admin => {
-            const label = admin.split(' ').slice(1).join(' ');
-            const Icon = ADMINISTRATION_ICONS[label];
+            const meta = ADMINISTRATION_META[admin];
+            const Icon = meta?.icon;
             return (
-              <span key={admin} className="flex items-center justify-center rounded-md bg-slate-50 p-1.5 dark:bg-zinc-800/50" title={label}>
+              <span key={admin} className="flex items-center justify-center rounded-md bg-slate-50 p-1.5 dark:bg-zinc-800/50" title={meta?.label ?? admin}>
                 {Icon ? <Icon size={14} className="text-slate-500 dark:text-zinc-400" /> : null}
               </span>
             );

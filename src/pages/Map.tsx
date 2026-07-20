@@ -12,6 +12,7 @@ import CreateStackModal from '../components/CreateStackModal';
 import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
 import { SectionHeading } from '../components/SectionHeading';
 import { SubstanceCard } from '../components/SubstanceCard';
+import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
 import { EmptyState } from '../components/EmptyState';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
@@ -448,6 +449,7 @@ export default function Map() {
               {TYPE_TAGS.map(type => {
                 const isActive = activeTypes.includes(type.full);
                 const isPrioritized = prioritizedTypes.includes(type.full);
+                const TypeIcon = TYPE_TAG_ICONS[type.full];
                 return (
                   <button
                     key={type.full}
@@ -463,7 +465,7 @@ export default function Map() {
                         : "bg-slate-50/50 dark:bg-zinc-900/30 text-slate-400 dark:text-zinc-600 border-slate-200 dark:border-zinc-800/50 opacity-60"
                     )}
                   >
-                    <span>{type.emoji}</span>
+                    {TypeIcon && <TypeIcon size={13} />}
                     <span>{type.label}</span>
                     {isPrioritized && <Star size={10} className="fill-current ml-0.5" />}
                   </button>
