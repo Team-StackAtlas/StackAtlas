@@ -323,13 +323,13 @@ export default function SupplementPage() {
             {supplement.origin && (
               <div>
                 <dt className="text-xs text-slate-500 dark:text-zinc-500 mb-0.5">Origin</dt>
-                <dd className="text-slate-700 dark:text-zinc-300">{supplement.origin}</dd>
+                <dd className="text-slate-700 dark:text-zinc-300"><GlossaryText>{supplement.origin}</GlossaryText></dd>
               </div>
             )}
             {supplement.howObtained && (
               <div>
                 <dt className="text-xs text-slate-500 dark:text-zinc-500 mb-0.5">How it's obtained</dt>
-                <dd className="text-slate-700 dark:text-zinc-300">{supplement.howObtained}</dd>
+                <dd className="text-slate-700 dark:text-zinc-300"><GlossaryText>{supplement.howObtained}</GlossaryText></dd>
               </div>
             )}
           </dl>
@@ -397,12 +397,12 @@ export default function SupplementPage() {
                       {FINDING_DIRECTION_LABELS[finding.direction]}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-zinc-300">{finding.summary}</p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-zinc-300"><GlossaryText>{finding.summary}</GlossaryText></p>
                   {metaParts.length > 0 && (
                     <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">{metaParts.join(' · ')}</p>
                   )}
                   {finding.limitations && (
-                    <p className="mt-1 text-xs italic text-slate-400 dark:text-zinc-500">Limitations: {finding.limitations}</p>
+                    <p className="mt-1 text-xs italic text-slate-400 dark:text-zinc-500">Limitations: <GlossaryText>{finding.limitations}</GlossaryText></p>
                   )}
                   {finding.source && (
                     <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
