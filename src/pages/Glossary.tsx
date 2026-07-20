@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Search } from 'lucide-react';
 import { supabase } from '../services/supabase/client';
 import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
+import { GlossaryText } from '../components/GlossaryText';
 import { EmptyState } from '../components/EmptyState';
 
 export default function Glossary() {
@@ -11,6 +12,8 @@ export default function Glossary() {
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const activeTerm = searchParams.get('term');
 
   useEffect(() => {
     if (!supabase) return;
@@ -34,6 +37,14 @@ export default function Glossary() {
       cancelled = true;
     };
   }, []);
+
+  // When arriving via a "Full entry" link (?term=slug), scroll the entry into
+  // view once the list has rendered.
+  useEffect(() => {
+    if (!activeTerm || !loaded) return;
+    const el = document.getElementById(`term-${activeTerm}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeTerm, loaded]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -106,7 +117,12 @@ export default function Glossary() {
             {filtered.map((entry) => (
               <div
                 key={entry.id}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
+                id={`term-${entry.slug}`}
+                className={`scroll-mt-24 rounded-2xl border bg-white p-4 shadow-sm transition-colors dark:bg-zinc-900/50 ${
+                  activeTerm === entry.slug
+                    ? 'border-emerald-400 ring-2 ring-emerald-400/40 dark:border-emerald-500'
+                    : 'border-slate-200 dark:border-zinc-800'
+                }`}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-semibold text-slate-900 dark:text-white">{entry.term}</h3>
@@ -117,7 +133,7 @@ export default function Glossary() {
                   )}
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-zinc-300">
-                  {entry.definition}
+                  <GlossaryText skipSlug={entry.slug}>{entry.definition}</GlossaryText>
                 </p>
               </div>
             ))}

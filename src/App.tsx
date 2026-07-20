@@ -7,6 +7,7 @@ import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
 import { CatalogProvider } from './context/CatalogContext';
 import { PostsProvider } from './context/PostsContext';
+import { GlossaryProvider } from './context/GlossaryContext';
 
 // Route-level code splitting: each page loads on demand.
 const Map = lazy(() => import('./pages/Map'));
@@ -38,6 +39,7 @@ export default function App() {
       <FilterProvider>
         <MockRoleProvider>
         <CatalogProvider>
+        <GlossaryProvider>
         <PostsProvider>
         <BrowserRouter>
           <Suspense fallback={<div className="flex h-screen items-center justify-center text-sm text-slate-400">Loading…</div>}>
@@ -73,6 +75,7 @@ export default function App() {
           </Suspense>
         </BrowserRouter>
         </PostsProvider>
+        </GlossaryProvider>
         </CatalogProvider>
         </MockRoleProvider>
       </FilterProvider>

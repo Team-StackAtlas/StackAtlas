@@ -300,7 +300,7 @@ export default function Map() {
           : 'Try a different search term, or clear your filters to see more.'
       }
       action={hasActiveFilters ? { label: 'Clear filters', onClick: clearFilters } : undefined}
-      className="md:col-span-2 lg:col-span-3"
+      className="sm:col-span-2 lg:col-span-3 xl:col-span-4"
     />
   );
 
@@ -488,7 +488,7 @@ export default function Map() {
         {activeTab === 'Substances' && (
           <>
             <SectionHeading label="substance" count={filteredSupplements.length} action={syncIndicator} />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
               {visibleSupplements.map(supplement => (
                 <SubstanceCard
                   key={supplement.id}
@@ -509,7 +509,7 @@ export default function Map() {
         {activeTab === 'Brands' && (
           <>
             <SectionHeading label="brand" count={filteredBrands.length} action={syncIndicator} />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
               {visibleBrands.map(brand => (
                 <Link
                   key={brand.id}
@@ -568,7 +568,7 @@ export default function Map() {
                 </div>
               }
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
               {visibleStacks.map(stack => {
                 const creator = USERS.find(u => u.id === stack.creatorId);
                 return (
