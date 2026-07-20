@@ -25,6 +25,8 @@ import {
   quarterSetMemberRole,
   quarterRemoveMember,
   quarterModerateMessage,
+  uploadCommsImageOrFile,
+  getCommsAttachmentDownloadUrl,
   type CommsConversationDTO,
   type CommsMessageDTO,
   type CommsProfileDTO,
@@ -32,6 +34,7 @@ import {
   type CommsQuarterMemberDTO,
   type CommsQuarterMessageDTO,
   type CommsQuarterInviteDTO,
+  type CommsAttachmentDTO,
 } from '../services/comms';
 import {
   useMockComms,
@@ -64,6 +67,18 @@ function toCommsUser(profile: CommsProfileDTO): CommsUser {
     username: profile.username,
     displayName: profile.displayName ?? profile.username,
     avatarInitial: avatarInitial(profile.username),
+  };
+}
+
+function toCommsAttachment(attachment: CommsAttachmentDTO): CommsAttachment {
+  return {
+    id: attachment.id,
+    type: attachment.mimeType.startsWith('image/') ? 'image' : 'file',
+    name: attachment.fileName,
+    url: attachment.url ?? '',
+    mimeType: attachment.mimeType,
+    size: attachment.fileSize,
+    storagePath: attachment.storagePath,
   };
 }
 
@@ -240,6 +255,7 @@ export function useComms(searchQuery: string) {
       createdAt: m.createdAt,
       readBy: [],
       reactions: {},
+      attachments: m.attachments.map(toCommsAttachment),
       persisted: true,
     }));
     const quarterMessages: CommsMessage[] = realQuarterMessages.map((m) => ({
@@ -253,6 +269,7 @@ export function useComms(searchQuery: string) {
       readBy: [],
       reactions: {},
       deleted: m.deleted,
+      attachments: m.deleted ? [] : m.attachments.map(toCommsAttachment),
       persisted: true,
     }));
     return [...dmMessages, ...quarterMessages];
@@ -316,6 +333,54 @@ export function useComms(searchQuery: string) {
       setRealMessages((current) => [...current, message]);
     },
     [usingReal, mock, user],
+  );
+
+  // Persisted-only: creates the message (body may be empty -- an
+  // attachment-only send is allowed) then uploads the file against that
+  // message's id, patching the attachment onto the already-inserted local
+  // message once the upload completes.
+  const sendAttachment = useCallback(
+    async (target: { conversationId?: string; quarterId?: string }, file: File, body: string) => {
+      if (!usingReal || !user) return;
+      if (target.quarterId) {
+        const quarterId = target.quarterId;
+        const message = await sendQuarterMessage(supabase!, quarterId, user.id, body.trim());
+        setRealQuarterMessages((current) => [...current, message]);
+        const attachment = await uploadCommsImageOrFile(supabase!, {
+          scope: { type: 'quarter', id: quarterId },
+          messageId: message.id,
+          file,
+        });
+        setRealQuarterMessages((current) =>
+          current.map((m) => (m.id === message.id ? { ...m, attachments: [...m.attachments, attachment] } : m)),
+        );
+        return;
+      }
+      if (!target.conversationId) return;
+      const conversationId = target.conversationId;
+      const message = await sendCommsMessage(supabase!, conversationId, user.id, body.trim());
+      setRealMessages((current) => [...current, message]);
+      const attachment = await uploadCommsImageOrFile(supabase!, {
+        scope: { type: 'dm', id: conversationId },
+        messageId: message.id,
+        file,
+      });
+      setRealMessages((current) =>
+        current.map((m) => (m.id === message.id ? { ...m, attachments: [...m.attachments, attachment] } : m)),
+      );
+    },
+    [usingReal, user],
+  );
+
+  // Persisted-only: fetches a fresh signed URL for a non-image attachment's
+  // storage path (see toCommsAttachment -- non-image attachments carry no
+  // eager url) so the UI can open/download it on click.
+  const getAttachmentDownloadUrl = useCallback(
+    (storagePath: string) => {
+      if (!usingReal || !supabase) return Promise.reject(new Error('Attachments are not available.'));
+      return getCommsAttachmentDownloadUrl(supabase, storagePath);
+    },
+    [usingReal],
   );
 
   const markQuarterRead = useCallback(
@@ -565,6 +630,8 @@ export function useComms(searchQuery: string) {
     unreadQuarterCount,
     counts,
     sendMessage,
+    sendAttachment,
+    getAttachmentDownloadUrl,
     markConversationRead,
     markQuarterRead,
     acceptRequest,
