@@ -71,9 +71,9 @@ export default function Lab() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8 px-4 pt-6 max-w-3xl mx-auto w-full transition-colors duration-200">
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Compare</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Tools</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
-          Pick a starting item, then choose what to compare it against.
+          Compare substances, brands, and stacks side by side, or look up a term.
         </p>
       </div>
 
@@ -100,24 +100,24 @@ export default function Lab() {
             </div>
           </button>
         ))}
-      </div>
 
-      <Link
-        to="/glossary"
-        className="mt-3 flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all group text-left shadow-sm"
-      >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-110">
-          <BookOpen size={20} className="text-emerald-500 dark:text-emerald-400" />
-        </div>
-        <div>
-          <span className="block text-sm font-semibold text-slate-700 dark:text-zinc-200 group-hover:text-slate-900 dark:group-hover:text-zinc-50 transition-colors">
-            Glossary
-          </span>
-          <span className="text-xs text-slate-500 dark:text-zinc-500">
-            Plain-language definitions for supplement and research terms.
-          </span>
-        </div>
-      </Link>
+        <Link
+          to="/glossary"
+          className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all group text-left shadow-sm"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-110">
+            <BookOpen size={20} className="text-emerald-500 dark:text-emerald-400" />
+          </div>
+          <div>
+            <span className="block text-sm font-semibold text-slate-700 dark:text-zinc-200 group-hover:text-slate-900 dark:group-hover:text-zinc-50 transition-colors">
+              Glossary
+            </span>
+            <span className="text-xs text-slate-500 dark:text-zinc-500">
+              Plain-language definitions for supplement and research terms.
+            </span>
+          </div>
+        </Link>
+      </div>
 
       {/* Base-item picker */}
       <Modal
