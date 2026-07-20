@@ -236,8 +236,8 @@ export default function SupplementPage() {
       </div>
 
       {/* Key Facts */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <FactTile icon={<Activity size={16} />} label="Reported Dose Range" className="col-span-2">
+      <div className="space-y-4">
+        <FactTile icon={<Activity size={16} />} label="Reported Dose Range">
           <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">
             {supplement.clinicalBaseline?.dosage || supplement.averageDosage}
           </p>
@@ -274,26 +274,27 @@ export default function SupplementPage() {
           <Sources targetType="substance" targetId={supplement.id} section="dosage" />
         </FactTile>
 
+        <div className="flex flex-wrap gap-4">
         {supplement.halfLife && (
-          <FactTile icon={<Timer size={16} />} label="Half-life">
+          <FactTile icon={<Timer size={16} />} label="Half-life" className="min-w-[150px] flex-1">
             <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{supplement.halfLife}</p>
           </FactTile>
         )}
 
         {supplement.lengthOfCycle && (
-          <FactTile icon={<Repeat size={16} />} label="Cycle Length">
+          <FactTile icon={<Repeat size={16} />} label="Cycle Length" className="min-w-[150px] flex-1">
             <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{supplement.lengthOfCycle}</p>
           </FactTile>
         )}
 
         {supplement.toleranceBuildup && (
-          <FactTile icon={<Beaker size={16} />} label="Tolerance Buildup">
+          <FactTile icon={<Beaker size={16} />} label="Tolerance Buildup" className="min-w-[150px] flex-1">
             <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{supplement.toleranceBuildup}</p>
           </FactTile>
         )}
 
         {supplement.riskLevel && (
-          <FactTile icon={<AlertTriangle size={16} />} label="Risk Level">
+          <FactTile icon={<AlertTriangle size={16} />} label="Risk Level" className="min-w-[150px] flex-1">
             <span className={`inline-flex rounded-md px-2 py-0.5 text-sm font-semibold ${RISK_LEVEL_STYLES[supplement.riskLevel]}`}>
               {supplement.riskLevel}
             </span>
@@ -301,7 +302,7 @@ export default function SupplementPage() {
         )}
 
         {popularBrand && (
-          <FactTile icon={<Star size={16} />} label="Most Popular Brand">
+          <FactTile icon={<Star size={16} />} label="Most Popular Brand" className="min-w-[150px] flex-1">
             <Link
               to={`/brand/${popularBrand.id}`}
               className="text-lg font-semibold text-slate-900 dark:text-zinc-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
@@ -310,6 +311,7 @@ export default function SupplementPage() {
             </Link>
           </FactTile>
         )}
+        </div>
       </div>
 
       {/* Origin & Sourcing */}

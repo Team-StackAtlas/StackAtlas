@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import RequireAuth from './components/RequireAuth';
@@ -42,7 +43,11 @@ export default function App() {
         <GlossaryProvider>
         <PostsProvider>
         <BrowserRouter>
-          <Suspense fallback={<div className="flex h-screen items-center justify-center text-sm text-slate-400">Loading…</div>}>
+          <Suspense fallback={
+            <div className="flex h-screen items-center justify-center" role="status" aria-label="Loading">
+              <Loader2 className="animate-spin text-emerald-500" size={28} />
+            </div>
+          }>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/onboarding" element={<Onboarding />} />
