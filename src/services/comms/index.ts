@@ -41,6 +41,7 @@ export interface CommsMessageDTO {
   senderId: string;
   body: string;
   createdAt: string;
+  attachments: CommsAttachmentDTO[];
 }
 
 export interface CommsLoadResult {
@@ -48,6 +49,122 @@ export interface CommsLoadResult {
   messages: CommsMessageDTO[];
   profiles: CommsProfileDTO[];
   lastReadAt: Record<string, string | null>;
+}
+
+// An uploaded image/file attachment on a persisted DM or Quarter message.
+// `url` is an eagerly-created signed URL for images (safe to render
+// directly in an <img>); for non-image files it's left null and a signed
+// URL is fetched on demand via getCommsAttachmentDownloadUrl when the user
+// clicks the download link, since it's not needed just to render the chip.
+export interface CommsAttachmentDTO {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  storagePath: string;
+  url: string | null;
+}
+
+const COMMS_MEDIA_BUCKET = 'comms-media';
+const SIGNED_URL_TTL_SECONDS = 3600;
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'text/plain',
+];
+
+function extensionFromFile(file: File): string {
+  const dot = file.name.lastIndexOf('.');
+  if (dot > 0 && dot < file.name.length - 1) return file.name.slice(dot + 1).toLowerCase();
+  const byMimeType: Record<string, string> = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'application/pdf': 'pdf',
+    'text/plain': 'txt',
+  };
+  return byMimeType[file.type] ?? 'bin';
+}
+
+async function toAttachmentDTOs(client: SupabaseClient, rows: any[]): Promise<CommsAttachmentDTO[]> {
+  return Promise.all(
+    rows.map(async (row: any) => {
+      let url: string | null = null;
+      if ((row.mime_type as string).startsWith('image/')) {
+        const { data, error } = await client.storage
+          .from(COMMS_MEDIA_BUCKET)
+          .createSignedUrl(row.storage_path, SIGNED_URL_TTL_SECONDS);
+        if (!error) url = data.signedUrl;
+      }
+      return {
+        id: row.id,
+        fileName: row.file_name,
+        mimeType: row.mime_type,
+        fileSize: row.file_size,
+        storagePath: row.storage_path,
+        url,
+      };
+    }),
+  );
+}
+
+// Fetches a fresh signed URL for a single attachment's storage path. Used
+// for the non-image "download on click" path (see CommsAttachmentDTO).
+export async function getCommsAttachmentDownloadUrl(client: SupabaseClient, storagePath: string): Promise<string> {
+  const { data, error } = await client.storage
+    .from(COMMS_MEDIA_BUCKET)
+    .createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+// Uploads a File to the private comms-media bucket under the dm/{id}/ or
+// quarter/{id}/ prefix the storage.objects policies key off of, then
+// inserts the attachment row against the already-created message. Validated
+// client-side against the same size/mime allow-list the bucket and the
+// message_attachments/quarter_message_attachments check constraints enforce
+// server-side, so a rejected upload fails fast with a clear message instead
+// of a raw storage/DB error.
+export async function uploadCommsImageOrFile(
+  client: SupabaseClient,
+  params: { scope: { type: 'dm' | 'quarter'; id: string }; messageId: string; file: File },
+): Promise<CommsAttachmentDTO> {
+  const { scope, messageId, file } = params;
+  if (file.size > MAX_ATTACHMENT_SIZE) {
+    throw new Error('Files must be 10 MB or smaller.');
+  }
+  if (!ALLOWED_ATTACHMENT_MIME_TYPES.includes(file.type)) {
+    throw new Error('Allowed attachments are PDF, text, and image files only.');
+  }
+
+  const storagePath = `${scope.type}/${scope.id}/${crypto.randomUUID()}.${extensionFromFile(file)}`;
+  const { error: uploadError } = await client.storage
+    .from(COMMS_MEDIA_BUCKET)
+    .upload(storagePath, file, { contentType: file.type });
+  if (uploadError) throw uploadError;
+
+  const table = scope.type === 'dm' ? 'message_attachments' : 'quarter_message_attachments';
+  const idColumn = scope.type === 'dm' ? 'message_id' : 'quarter_message_id';
+  const { data, error } = await client
+    .from(table)
+    .insert({
+      [idColumn]: messageId,
+      storage_path: storagePath,
+      file_name: file.name,
+      mime_type: file.type,
+      file_size: file.size,
+    })
+    .select('id, storage_path, file_name, mime_type, file_size')
+    .single();
+  if (error) throw error;
+
+  const [attachment] = await toAttachmentDTOs(client, [data]);
+  return attachment;
 }
 
 export async function searchProfiles(
@@ -129,12 +246,29 @@ export async function loadComms(client: SupabaseClient, viewerId: string): Promi
     otherUserId: otherByConversation.get(row.id) ?? '',
   }));
 
+  const messageIds = (messageResult.data ?? []).map((row: any) => row.id as string);
+  const attachmentsResult = messageIds.length
+    ? await client
+        .from('message_attachments')
+        .select('id, message_id, storage_path, file_name, mime_type, file_size')
+        .in('message_id', messageIds)
+    : { data: [] as any[], error: null };
+  if (attachmentsResult.error) throw attachmentsResult.error;
+  const attachmentDTOs = await toAttachmentDTOs(client, attachmentsResult.data ?? []);
+  const attachmentsByMessage = new Map<string, CommsAttachmentDTO[]>();
+  (attachmentsResult.data ?? []).forEach((row: any, index: number) => {
+    const list = attachmentsByMessage.get(row.message_id) ?? [];
+    list.push(attachmentDTOs[index]);
+    attachmentsByMessage.set(row.message_id, list);
+  });
+
   const messages: CommsMessageDTO[] = (messageResult.data ?? []).map((row: any) => ({
     id: row.id,
     conversationId: row.conversation_id,
     senderId: row.sender_id,
     body: row.body,
     createdAt: row.created_at,
+    attachments: attachmentsByMessage.get(row.id) ?? [],
   }));
 
   return { conversations, messages, profiles: Array.from(profilesById.values()), lastReadAt };
@@ -158,6 +292,7 @@ export async function sendCommsMessage(
     senderId: data.sender_id,
     body: data.body,
     createdAt: data.created_at,
+    attachments: [],
   };
 }
 
@@ -207,6 +342,7 @@ export interface CommsQuarterMessageDTO {
   body: string;
   createdAt: string;
   deleted: boolean;
+  attachments: CommsAttachmentDTO[];
 }
 
 export interface CommsQuarterInviteDTO {
@@ -311,6 +447,22 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
     role: roleByQuarter.get(row.id) ?? 'quarter_member',
   }));
 
+  const quarterMessageIds = (messagesResult.data ?? []).map((row: any) => row.id as string);
+  const quarterAttachmentsResult = quarterMessageIds.length
+    ? await client
+        .from('quarter_message_attachments')
+        .select('id, quarter_message_id, storage_path, file_name, mime_type, file_size')
+        .in('quarter_message_id', quarterMessageIds)
+    : { data: [] as any[], error: null };
+  if (quarterAttachmentsResult.error) throw quarterAttachmentsResult.error;
+  const quarterAttachmentDTOs = await toAttachmentDTOs(client, quarterAttachmentsResult.data ?? []);
+  const attachmentsByQuarterMessage = new Map<string, CommsAttachmentDTO[]>();
+  (quarterAttachmentsResult.data ?? []).forEach((row: any, index: number) => {
+    const list = attachmentsByQuarterMessage.get(row.quarter_message_id) ?? [];
+    list.push(quarterAttachmentDTOs[index]);
+    attachmentsByQuarterMessage.set(row.quarter_message_id, list);
+  });
+
   const messages: CommsQuarterMessageDTO[] = (messagesResult.data ?? []).map((row: any) => ({
     id: row.id,
     quarterId: row.quarter_id,
@@ -318,6 +470,7 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
     body: row.body,
     createdAt: row.created_at,
     deleted: row.deleted_at != null,
+    attachments: attachmentsByQuarterMessage.get(row.id) ?? [],
   }));
 
   return { quarters, members, messages, profiles: Array.from(profilesById.values()), lastReadAt, invites };
@@ -342,6 +495,7 @@ export async function sendQuarterMessage(
     body: data.body,
     createdAt: data.created_at,
     deleted: data.deleted_at != null,
+    attachments: [],
   };
 }
 

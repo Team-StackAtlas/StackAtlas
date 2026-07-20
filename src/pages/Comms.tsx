@@ -6,6 +6,15 @@ import { ReportAction } from '../components/ReportAction';
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_SECONDS = 60;
 const SAFE_FILES = ['application/pdf', 'text/plain', 'image/png', 'image/jpeg', 'image/webp'];
+const MAX_PERSISTED_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const PERSISTED_ATTACHMENT_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'text/plain',
+];
 
 type Tab = 'messages' | 'requests' | 'quarters';
 
@@ -34,6 +43,8 @@ export default function Comms() {
   const [recording, setRecording] = useState(false);
   const recordTimer = useRef<number | undefined>(undefined);
   const [controlsError, setControlsError] = useState('');
+  const [attachError, setAttachError] = useState('');
+  const [attachSending, setAttachSending] = useState(false);
 
   // Phase 3 in-quarter governance controls (persisted quarters only): runs
   // an owner/moderator action, optionally confirming first, and surfaces a
@@ -67,6 +78,9 @@ export default function Comms() {
   // Attachments/voice aren't part of DM or Quarter persistence; only mock threads keep them.
   const showRichComposer =
     tab === 'quarters' ? !activeQuarter?.persisted : !activeConversation?.persisted;
+  // Image/file attachments on persisted DMs and Quarters (voice stays out of scope, hidden either way).
+  const showPersistedAttach =
+    tab === 'quarters' ? !!activeQuarter?.persisted : !!activeConversation?.persisted;
 
   useEffect(() => {
     if (tab === 'messages' && activeConversation) comms.markConversationRead(activeConversation.id);
@@ -112,6 +126,54 @@ export default function Comms() {
     };
   };
 
+  // Persisted DMs/Quarters only: uploads an image/file attachment, sending
+  // the current draft (possibly empty -- attachment-only messages are
+  // allowed) as the message body.
+  const sendPersistedAttachment = async (file: File) => {
+    setAttachError('');
+    if (file.size > MAX_PERSISTED_ATTACHMENT_SIZE) {
+      setAttachError('Files must be 10 MB or smaller.');
+      return;
+    }
+    if (!PERSISTED_ATTACHMENT_TYPES.includes(file.type)) {
+      setAttachError('Allowed attachments are PDF, text, and image files only.');
+      return;
+    }
+    const target =
+      tab === 'quarters' && activeQuarter
+        ? { quarterId: activeQuarter.id }
+        : activeConversation
+          ? { conversationId: activeConversation.id }
+          : null;
+    if (!target) return;
+    setAttachSending(true);
+    try {
+      await comms.sendAttachment(target, file, draft);
+      setDraft('');
+    } catch (err) {
+      setAttachError(err instanceof Error ? err.message : 'Failed to send attachment.');
+    } finally {
+      setAttachSending(false);
+    }
+  };
+
+  // Persisted non-image attachments carry no eager signed url (see
+  // toCommsAttachment in useComms.ts); fetch one on click. Mock/image
+  // attachments already have a ready-to-use url and open directly.
+  const downloadAttachment = async (attachment: CommsAttachment) => {
+    if (attachment.url) {
+      window.open(attachment.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!attachment.storagePath) return;
+    try {
+      const url = await comms.getAttachmentDownloadUrl(attachment.storagePath);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      setAttachError('Failed to load attachment.');
+    }
+  };
+
   const startVoice = () => {
     setError('');
     setRecording(true);
@@ -139,6 +201,8 @@ export default function Comms() {
     const latestMine = mine && activeMessages[activeMessages.length - 1]?.id === message.id;
     // Reactions aren't part of DM or Quarter persistence; only mock (non-persisted) threads keep them.
     const hideReactions = message.persisted === true;
+    // Persisted messages carry an `attachments` array (possibly empty); mock messages carry a single `attachment`.
+    const attachments = message.attachments ?? (message.attachment ? [message.attachment] : []);
     return (
       <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
         <div
@@ -147,30 +211,44 @@ export default function Comms() {
           <div className="mb-1 text-[11px] opacity-70">
             {sender?.username} · {formatTime(message.createdAt)}
           </div>
-          {message.deleted ? <em>Message unavailable</em> : <p>{message.body}</p>}
-          {message.attachment?.type === 'image' && (
-            <a href={message.attachment.url} target="_blank" rel="noreferrer">
-              <img
-                src={message.attachment.url}
-                alt={message.attachment.name}
-                className="mt-2 max-h-48 rounded-xl object-cover"
-              />
-            </a>
-          )}
-          {message.attachment?.type === 'voice' && (
-            <div className="mt-2">
-              <audio controls src={message.attachment.url} className="max-w-full" />
-              <div className="text-[11px] opacity-70">{message.attachment.durationSeconds}s</div>
-            </div>
-          )}
-          {message.attachment?.type === 'file' && (
-            <a
-              href={message.attachment.url}
-              className="mt-2 block rounded-lg bg-white/20 p-2 text-xs underline"
-            >
-              {message.attachment.name} · {bytes(message.attachment.size)}
-            </a>
-          )}
+          {message.deleted ? <em>Message unavailable</em> : message.body && <p>{message.body}</p>}
+          {attachments.map((attachment) => {
+            if (attachment.type === 'image') {
+              return attachment.url ? (
+                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer">
+                  <img
+                    src={attachment.url}
+                    alt={attachment.name}
+                    className="mt-2 max-h-48 rounded-xl object-cover"
+                  />
+                </a>
+              ) : (
+                <p key={attachment.id} className="mt-2 text-xs italic opacity-70">
+                  Image unavailable
+                </p>
+              );
+            }
+            if (attachment.type === 'voice') {
+              return (
+                <div key={attachment.id} className="mt-2">
+                  <audio controls src={attachment.url} className="max-w-full" />
+                  {attachment.durationSeconds != null && (
+                    <div className="text-[11px] opacity-70">{attachment.durationSeconds}s</div>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <button
+                key={attachment.id}
+                type="button"
+                onClick={() => void downloadAttachment(attachment)}
+                className="mt-2 block rounded-lg bg-white/20 p-2 text-left text-xs underline"
+              >
+                {attachment.name} · {bytes(attachment.size)}
+              </button>
+            );
+          })}
           <div className="mt-2 flex items-center gap-2 text-xs">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
             {message.scope === 'quarter' && !activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
@@ -588,6 +666,11 @@ export default function Comms() {
                 {error}
               </p>
             )}
+            {attachError && (
+              <p className="mb-2 rounded-lg bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+                {attachError}
+              </p>
+            )}
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -595,6 +678,22 @@ export default function Comms() {
               className="h-20 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
+              {showPersistedAttach && (
+                <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800 aria-disabled:opacity-50">
+                  <Paperclip className="inline" size={15} /> {attachSending ? 'Uploading…' : 'Attach'}
+                  <input
+                    hidden
+                    type="file"
+                    disabled={attachSending}
+                    accept={PERSISTED_ATTACHMENT_TYPES.join(',')}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = '';
+                      if (file) void sendPersistedAttachment(file);
+                    }}
+                  />
+                </label>
+              )}
               {showRichComposer && (
                 <>
                   <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">

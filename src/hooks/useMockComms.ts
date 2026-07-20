@@ -23,6 +23,14 @@ export interface CommsAttachment {
   mimeType: string;
   size: number;
   durationSeconds?: number;
+  /**
+   * Storage path for a persisted (Supabase-backed) attachment whose `url`
+   * hasn't been eagerly signed (non-image files -- see
+   * src/services/comms/index.ts). Used to fetch a signed download URL on
+   * click. Unset for mock attachments, which always carry a ready-to-use
+   * blob `url`.
+   */
+  storagePath?: string;
 }
 
 export interface CommsMessage {
@@ -36,6 +44,8 @@ export interface CommsMessage {
   createdAt: string;
   readBy: string[];
   attachment?: CommsAttachment;
+  /** Persisted (Supabase-backed) messages can carry more than one attachment; unset for mock messages, which use `attachment` above. */
+  attachments?: CommsAttachment[];
   reactions: Record<string, string[]>;
   deleted?: boolean;
   /** Set on messages backed by Supabase (see src/hooks/useComms.ts); unset for mock messages. */
