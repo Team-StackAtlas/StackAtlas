@@ -9,6 +9,7 @@ import AccessBadge from '../components/AccessBadge';
 import { CompareModal } from '../components/CompareModal';
 import { HideItemButton } from '../components/HideItemButton';
 import { EntityNotFound } from '../components/EntityNotFound';
+import { GlossaryText } from '../components/GlossaryText';
 import { useFollowing } from '../hooks/useFollowing';
 import { useCatalog } from '../context/CatalogContext';
 
@@ -75,7 +76,7 @@ export default function StackPage() {
 
           <div className="max-w-2xl mb-6">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-1">Purpose</h3>
-            <p className="text-lg text-slate-600 dark:text-zinc-400">{stack.description}</p>
+            <p className="text-lg text-slate-600 dark:text-zinc-400"><GlossaryText>{stack.description}</GlossaryText></p>
             <Sources targetType="stack" targetId={stack.id} section="stack_description" />
           </div>
 

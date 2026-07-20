@@ -9,6 +9,7 @@ import StarRating from '../components/StarRating';
 import { CompareModal } from '../components/CompareModal';
 import { HideItemButton } from '../components/HideItemButton';
 import { EntityNotFound } from '../components/EntityNotFound';
+import { GlossaryText } from '../components/GlossaryText';
 import { useFollowing } from '../hooks/useFollowing';
 import { useBrandRatings } from '../hooks/useBrandRatings';
 import { useCatalog } from '../context/CatalogContext';
@@ -87,7 +88,7 @@ export default function BrandPage() {
           )}
 
           <div className="text-lg text-slate-600 dark:text-zinc-400 max-w-2xl mb-4">
-            {brand.description || ''}
+            <GlossaryText>{brand.description || ''}</GlossaryText>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
