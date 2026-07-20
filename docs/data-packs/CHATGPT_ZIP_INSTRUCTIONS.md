@@ -123,8 +123,20 @@ Then:
   `meta_analysis`, `animal`, `in_vitro`, `mechanistic`, `official_document`,
   `other`), `limitations`
 
-## File type 2 — CSV source list (`.csv`)
+## File type 2 — CSV (`.csv`)
 
+Two CSV shapes are accepted; the importer auto-detects by the header row.
+
+**Substance-catalog CSV** — a header containing `canonical_name` (and/or
+`catalog_id`+`category`) is imported directly as substances: `canonical_name`
+→ name/slug, `aliases`/`category`/`subcategory`/`origin_type` populate the
+aliases, tags, and a generated description, and the legal/category columns are
+mapped to a classification tier. This lets a raw catalog export import without
+hand-conversion. Prefer a JSON pack when you can, because it lets you supply a
+real `description`, `classification`, `risk_level`, etc. directly rather than
+having them derived.
+
+**Sources CSV** — anything else is treated as a source list.
 Sources only — no findings, no substances definitions. First row is the header.
 Recognized columns (any subset, any order):
 
