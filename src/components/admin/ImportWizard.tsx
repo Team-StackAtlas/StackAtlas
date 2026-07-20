@@ -7,7 +7,7 @@ import {
   fetchSubstanceCatalog,
   parseDataPackJson,
   parseImportFiles,
-  parseSourcesCsv,
+  parseCsv,
   runImport,
   validatePack,
   type DataPack,
@@ -140,7 +140,7 @@ export default function ImportWizard({
 
   const handleParsePasted = () => {
     if (!pastedText.trim()) return;
-    const result = pastedFormat === 'json' ? parseDataPackJson(pastedText) : parseSourcesCsv(pastedText);
+    const result = pastedFormat === 'json' ? parseDataPackJson(pastedText) : parseCsv(pastedText);
     applyParseResult(result, `pasted ${pastedFormat === 'json' ? 'JSON' : 'CSV'}`);
   };
 

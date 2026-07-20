@@ -18,7 +18,7 @@ stacks, and findings; the other formats feed the sources side of the pipeline.
 | Format | What it becomes |
 |---|---|
 | `.json` | A full data pack (this document's main subject) |
-| `.csv` | A list of research sources, one per row (§ Sources CSV columns: `title,source_type,url,pmid,doi,year,journal_or_site,authors,abstract,substances,notes`; multiple substance slugs separated by `;`) |
+| `.csv` | Either a **sources** list (columns `title,source_type,url,pmid,doi,year,journal_or_site,authors,abstract,substances,notes`; substance slugs separated by `;`) **or** a **substance-catalog** export (header containing `canonical_name`/`category`/…). The importer auto-detects which by the header row: a catalog CSV becomes substances, everything else is treated as sources. A raw catalog CSV therefore imports directly, no hand-conversion needed. |
 | `.md` / `.markdown` | One research **source** per file — the document text is stored verbatim, metadata (title/url/year/authors/source_type) is read from optional frontmatter or the first heading, and headings that exactly match a substance name link automatically (ambiguous matches are flagged for manual linking, never guessed) |
 | `.zip` | Unpacked in the browser and every supported file inside is processed as above |
 

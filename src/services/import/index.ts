@@ -3,7 +3,15 @@
 // individual modules.
 
 export * from './types';
-export { parseDataPackJson, parseSourcesCsv, parseImportFiles, type ParseImportFilesResult } from './parse';
+export {
+  parseDataPackJson,
+  parseSourcesCsv,
+  parseCsv,
+  parseSubstanceCatalogCsv,
+  isSubstanceCatalogCsv,
+  parseImportFiles,
+  type ParseImportFilesResult,
+} from './parse';
 export { validatePack, slugify, sourceKeyVariants } from './validate';
 export {
   fetchExistingKeys,
