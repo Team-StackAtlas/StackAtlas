@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Search, Activity, ShieldAlert, Star, Settings2, Plus, Pill, Syringe, Droplet, SprayCan, type LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, Activity, ShieldAlert, Star, Settings2, Plus, Loader2 } from 'lucide-react';
 import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -7,10 +7,12 @@ import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
 import { useFollowing } from '../hooks/useFollowing';
 import { useCatalog } from '../context/CatalogContext';
-import AccessBadge from '../components/AccessBadge';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
 import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
+import { SectionHeading } from '../components/SectionHeading';
+import { SubstanceCard } from '../components/SubstanceCard';
+import { EmptyState } from '../components/EmptyState';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
@@ -21,13 +23,11 @@ type RecentSearch = { id: string; name: string; type: SearchableType; timestamp:
 type SearchResult = RecentSearch & { description: string; path: string; matchedOn: string; tags: string[] };
 
 const RECENT_SEARCHES_STORAGE_KEY = 'stackatlas.recentSearches';
-
-const ADMINISTRATION_ICONS: Record<string, LucideIcon> = {
-  'Oral': Pill,
-  'Injectable': Syringe,
-  'Topical': SprayCan,
-  'Sublingual': Droplet,
-};
+// Client-side "Load more" batch size. Keeps the initial render light even
+// when the catalog holds hundreds of substances, while still showing the
+// full ~17-item seed catalog in one page.
+const PAGE_SIZE = 30;
+const SEARCH_DEBOUNCE_MS = 200;
 
 function normalizeSearchText(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -51,8 +51,22 @@ function readRecentSearches(): RecentSearch[] {
   }
 }
 
+function LoadMoreButton({ remaining, onClick }: { remaining: number; onClick: () => void }) {
+  return (
+    <div className="flex justify-center pt-2">
+      <button
+        type="button"
+        onClick={onClick}
+        className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+      >
+        Load {Math.min(PAGE_SIZE, remaining)} more &middot; {remaining} remaining
+      </button>
+    </div>
+  );
+}
+
 export default function Map() {
-  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
+  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS, loading: catalogLoading } = useCatalog();
   const { scope } = useUserScope();
   const {
     activeTypes,
@@ -69,7 +83,7 @@ export default function Map() {
   const { user } = useAuth();
   const isAdminLike = user?.role === 'Admin' || user?.role === 'Developer';
   const { isHidden, hasHiddenTag } = useHiddenItems();
-  
+
   const [feedType, setFeedType] = useState<'For You' | 'Following'>('For You');
   const [activeTab, setActiveTab] = useState<'Substances' | 'Brands' | 'Stacks'>('Substances');
   const [searchParams] = useSearchParams();
@@ -79,13 +93,34 @@ export default function Map() {
   });
   const [activeBearings, setActiveBearings] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => readRecentSearches());
-  
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [isCreateStackOpen, setIsCreateStackOpen] = useState(false);
 
   const activeCategoryBearings = activeCategoryGroup ? BEARING_CATEGORIES.find(category => category.name === activeCategoryGroup)?.bearings ?? [] : [];
+
+  // Debounce the query that drives grid filtering so filtering doesn't run on
+  // every keystroke against a catalog that can hold hundreds of substances.
+  // The quick-jump dropdown below still uses the live `searchQuery`.
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedQuery(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
+
+  // Reset how many cards are shown whenever the active tab or any filter
+  // changes, so "Load more" always starts back at the first page. Adjusted
+  // during render (React's recommended pattern) rather than in an effect, to
+  // avoid an extra post-commit render on every filter change.
+  const filterKey = [activeTab, feedType, debouncedQuery, activeCategoryGroup, activeBearings.join(','), activeTypes.join(','), activeClassifications.join(','), activeAdmins.join(',')].join('|');
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey);
+    setVisibleCount(PAGE_SIZE);
+  }
 
   const handleSearchClick = (item: { id: string; name: string; type: SearchableType }) => {
     const recentItem: RecentSearch = { ...item, timestamp: new Date().toISOString() };
@@ -189,8 +224,8 @@ export default function Map() {
     // Administration Filtering
     if (!s.administration.some(a => activeAdmins.includes(a))) return false;
 
-    // Search Query Filtering
-    if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
+    // Search Query Filtering (debounced)
+    if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
 
     return true;
   }).sort((a, b) => {
@@ -216,7 +251,7 @@ export default function Map() {
       const entityBearings = getFilterBearings([...(b.markers || [])]);
       if (entityBearings.length > 0 && !selected.some(bearing => entityBearings.includes(bearing))) return false;
     }
-    if (searchQuery && !searchMatches(searchQuery, [b.name, b.description || '', ...(b.products || []), ...(b.markers || [])])) return false;
+    if (debouncedQuery && !searchMatches(debouncedQuery, [b.name, b.description || '', ...(b.products || []), ...(b.markers || [])])) return false;
     return true;
   });
 
@@ -228,9 +263,41 @@ export default function Map() {
       const entityBearings = getFilterBearings([...(s.markers || [])]);
       if (entityBearings.length > 0 && !selected.some(bearing => entityBearings.includes(bearing))) return false;
     }
-    if (searchQuery && !searchMatches(searchQuery, [s.name, s.description, ...(s.markers || []), ...s.substances.map(substance => substance.name)])) return false;
+    if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, s.description, ...(s.markers || []), ...s.substances.map(substance => substance.name)])) return false;
     return true;
   });
+  const approvedStacks = filteredStacks.filter(s => s.status === 'approved');
+
+  const visibleSupplements = filteredSupplements.slice(0, visibleCount);
+  const visibleBrands = filteredBrands.slice(0, visibleCount);
+  const visibleStacks = approvedStacks.slice(0, visibleCount);
+
+  const hasActiveFilters = Boolean(debouncedQuery) || Boolean(activeCategoryGroup);
+  const clearFilters = () => {
+    setSearchQuery('');
+    setActiveCategoryGroup(null);
+    setActiveBearings([]);
+  };
+
+  const syncIndicator = catalogLoading ? (
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-zinc-500">
+      <Loader2 size={12} className="animate-spin" /> Syncing catalog&hellip;
+    </span>
+  ) : undefined;
+
+  const emptyStateFor = (kind: 'substances' | 'brands' | 'stacks') => (
+    <EmptyState
+      icon={Search}
+      title={`No ${kind} match${feedType === 'Following' ? " what you're following" : ' these filters'}`}
+      description={
+        feedType === 'Following'
+          ? `Follow ${kind} to see them here, or switch to For You to browse the full catalog.`
+          : 'Try a different search term, or clear your filters to see more.'
+      }
+      action={hasActiveFilters ? { label: 'Clear filters', onClick: clearFilters } : undefined}
+      className="md:col-span-2 lg:col-span-3"
+    />
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8 transition-colors duration-200">
@@ -241,8 +308,8 @@ export default function Map() {
             onClick={() => setFeedType('For You')}
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
-              feedType === 'For You' 
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400" 
+              feedType === 'For You'
+                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
                 : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
             )}
           >
@@ -252,8 +319,8 @@ export default function Map() {
             onClick={() => setFeedType('Following')}
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
-              feedType === 'Following' 
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400" 
+              feedType === 'Following'
+                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
                 : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
             )}
           >
@@ -385,8 +452,8 @@ export default function Map() {
                     title="Click to filter. Right-click to prioritize and sort matching results first."
                     className={cn(
                       "whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all border flex items-center gap-1.5",
-                      isActive 
-                        ? isPrioritized 
+                      isActive
+                        ? isPrioritized
                           ? "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 shadow-sm"
                           : "bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-slate-300 dark:border-zinc-600 shadow-sm"
                         : "bg-slate-50/50 dark:bg-zinc-900/30 text-slate-400 dark:text-zinc-600 border-slate-200 dark:border-zinc-800/50 opacity-60"
@@ -411,186 +478,145 @@ export default function Map() {
       )}
 
       {/* Content Area */}
-      <div className="flex-1 px-4 space-y-4">
-        {activeTab === 'Stacks' && (
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setIsCreateStackOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors shadow-sm"
-            >
-              <Plus size={16} />
-              Create Stack
-            </button>
-          </div>
-        )}
-
+      <div className="flex-1 px-4 pb-2 space-y-4">
         {activeTab === 'Substances' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredSupplements.map(supplement => {
-              const isPrioritized = supplement.typeTags.some(t => prioritizedTypes.includes(t));
-              return (
-                <Link 
+          <>
+            <SectionHeading label="substance" count={filteredSupplements.length} action={syncIndicator} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {visibleSupplements.map(supplement => (
+                <SubstanceCard
                   key={supplement.id}
-                  to={`/substance/${supplement.id}`}
+                  supplement={supplement}
+                  isPrioritized={supplement.typeTags.some(t => prioritizedTypes.includes(t))}
+                  isHiddenByUser={isAdminLike && isHidden('substance', supplement.id)}
                   onClick={() => handleSearchClick({ id: supplement.id, name: supplement.name, type: 'substance' })}
-                  className={cn(
-                    "block p-5 rounded-2xl border transition-all group flex flex-col h-full",
-                    isPrioritized 
-                      ? "bg-emerald-50/30 dark:bg-emerald-900/10 border-emerald-200/50 dark:border-emerald-800/30 hover:border-emerald-300 dark:hover:border-emerald-700/50 shadow-sm" 
-                      : "bg-white dark:bg-zinc-900/50 border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 shadow-sm"
-                  )}
-                >
-                  <div className="flex flex-col mb-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
-                        {supplement.name}
-                      </h3>
-                      <div className="flex gap-1 shrink-0 ml-3 items-start">
-                        <AccessBadge classification={supplement.classification} />
-                        <SecondaryHideMenu id={supplement.id} name={supplement.name} type="substance" />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {supplement.typeTags.slice(0, 2).map(tag => {
-                        const typeInfo = TYPE_TAGS.find(t => t.full === tag);
-                        return typeInfo ? (
-                          <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-zinc-800 dark:text-zinc-400" title={tag}>
-                            {typeInfo.emoji} {typeInfo.label}
-                          </span>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                  
-                  <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600 dark:text-zinc-400">
-                    {supplement.description}
-                  </p>
-                  {supplement.markers && supplement.markers.length > 0 && (
-                    <div className="mb-3 flex flex-wrap gap-1.5">
-                      {supplement.markers.slice(0, 2).map(marker => (
-                        <span key={marker} className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-800/60 dark:text-zinc-500">
-                          {marker}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {isAdminLike && isHidden('substance', supplement.id) && (
-                    <span className="mb-3 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
-                  )}
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
-                    <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-zinc-600">
-                      {supplement.classification}
-                    </div>
-                    <div className="flex gap-1.5">
-                      {supplement.administration.map(admin => {
-                        const label = admin.split(' ').slice(1).join(' ');
-                        const Icon = ADMINISTRATION_ICONS[label];
-                        return (
-                          <span key={admin} className="flex items-center justify-center rounded-md bg-slate-50 p-1.5 dark:bg-zinc-800/50" title={label}>
-                            {Icon ? <Icon size={14} className="text-slate-500 dark:text-zinc-400" /> : null}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-            {filteredSupplements.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 md:col-span-2 lg:col-span-3">No substances match these filters.</div>}
-          </div>
+                />
+              ))}
+              {filteredSupplements.length === 0 && emptyStateFor('substances')}
+            </div>
+            {visibleSupplements.length < filteredSupplements.length && (
+              <LoadMoreButton remaining={filteredSupplements.length - visibleSupplements.length} onClick={() => setVisibleCount(c => c + PAGE_SIZE)} />
+            )}
+          </>
         )}
 
         {activeTab === 'Brands' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBrands.map(brand => (
-              <Link 
-                key={brand.id} 
-                to={`/brand/${brand.id}`}
-                onClick={() => handleSearchClick({ id: brand.id, name: brand.name, type: 'brand' })}
-                className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{brand.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-xs font-medium text-amber-500 dark:text-amber-400">
-                      <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
-                      {brand.userRating}
+          <>
+            <SectionHeading label="brand" count={filteredBrands.length} action={syncIndicator} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {visibleBrands.map(brand => (
+                <Link
+                  key={brand.id}
+                  to={`/brand/${brand.id}`}
+                  onClick={() => handleSearchClick({ id: brand.id, name: brand.name, type: 'brand' })}
+                  className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{brand.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-xs font-medium text-amber-500 dark:text-amber-400">
+                        <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
+                        {brand.userRating}
+                      </div>
+                      <SecondaryHideMenu id={brand.id} name={brand.name} type="brand" />
                     </div>
-                    <SecondaryHideMenu id={brand.id} name={brand.name} type="brand" />
                   </div>
-                </div>
-                {isAdminLike && isHidden('brand', brand.id) && (
-                  <span className="mb-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
-                )}
-                <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-zinc-400">
-                  <div className="flex items-center gap-1">
-                    <Activity size={14} />
-                    Shipping: {brand.shippingReliability}/5
+                  {isAdminLike && isHidden('brand', brand.id) && (
+                    <span className="mb-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-zinc-400">
+                    <div className="flex items-center gap-1">
+                      <Activity size={14} />
+                      Shipping: {brand.shippingReliability}/5
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ShieldAlert size={14} className={brand.contaminationReports > 0 ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"} />
+                      {brand.contaminationReports} Reports
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <ShieldAlert size={14} className={brand.contaminationReports > 0 ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"} />
-                    {brand.contaminationReports} Reports
-                  </div>
-                </div>
-              </Link>
-            ))}
-            {filteredBrands.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 md:col-span-2 lg:col-span-3">No brands match these filters.</div>}
-          </div>
+                </Link>
+              ))}
+              {filteredBrands.length === 0 && emptyStateFor('brands')}
+            </div>
+            {visibleBrands.length < filteredBrands.length && (
+              <LoadMoreButton remaining={filteredBrands.length - visibleBrands.length} onClick={() => setVisibleCount(c => c + PAGE_SIZE)} />
+            )}
+          </>
         )}
 
         {activeTab === 'Stacks' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredStacks.filter(s => s.status === 'approved').map(stack => {
-              const creator = USERS.find(u => u.id === stack.creatorId);
-              return (
-                <Link 
-                  key={stack.id}
-                  to={`/stack/${stack.id}`}
-                  onClick={() => handleSearchClick({ id: stack.id, name: stack.name, type: 'stack' })}
-                  className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm flex flex-col h-full"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      {stack.name}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      {stack.status === 'pending' && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                          Pending Review
-                        </span>
-                      )}
-                      <SecondaryHideMenu id={stack.id} name={stack.name} type="stack" />
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mb-3 flex-1">
-                    {stack.description}
-                  </p>
-                  {isAdminLike && isHidden('stack', stack.id) && (
-                    <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
-                  )}
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
-                    <div className="text-xs text-slate-500 dark:text-zinc-500">
-                      {stack.substances.length} substances
-                    </div>
-                    {creator && (
-                      <div className="text-xs text-slate-500 dark:text-zinc-400">
-                        by <span className="font-medium text-slate-700 dark:text-zinc-300">@{creator.username}</span>
+          <>
+            <SectionHeading
+              label="stack"
+              count={approvedStacks.length}
+              action={
+                <div className="flex items-center gap-3">
+                  {syncIndicator}
+                  <button
+                    onClick={() => setIsCreateStackOpen(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors shadow-sm"
+                  >
+                    <Plus size={16} />
+                    Create Stack
+                  </button>
+                </div>
+              }
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {visibleStacks.map(stack => {
+                const creator = USERS.find(u => u.id === stack.creatorId);
+                return (
+                  <Link
+                    key={stack.id}
+                    to={`/stack/${stack.id}`}
+                    onClick={() => handleSearchClick({ id: stack.id, name: stack.name, type: 'stack' })}
+                    className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm flex flex-col h-full"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {stack.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {stack.status === 'pending' && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                            Pending Review
+                          </span>
+                        )}
+                        <SecondaryHideMenu id={stack.id} name={stack.name} type="stack" />
                       </div>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mb-3 flex-1">
+                      {stack.description}
+                    </p>
+                    {isAdminLike && isHidden('stack', stack.id) && (
+                      <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                     )}
-                  </div>
-                </Link>
-              );
-            })}
-            {filteredStacks.filter(s => s.status === 'approved').length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 md:col-span-2 lg:col-span-3">No stacks match these filters.</div>}
-          </div>
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
+                      <div className="text-xs text-slate-500 dark:text-zinc-500">
+                        {stack.substances.length} substances
+                      </div>
+                      {creator && (
+                        <div className="text-xs text-slate-500 dark:text-zinc-400">
+                          by <span className="font-medium text-slate-700 dark:text-zinc-300">@{creator.username}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+              {approvedStacks.length === 0 && emptyStateFor('stacks')}
+            </div>
+            {visibleStacks.length < approvedStacks.length && (
+              <LoadMoreButton remaining={approvedStacks.length - visibleStacks.length} onClick={() => setVisibleCount(c => c + PAGE_SIZE)} />
+            )}
+          </>
         )}
       </div>
 
       {/* Advanced Search Modal */}
-      <AdvancedSearchModal 
-        isOpen={isAdvancedSearchOpen} 
-        onClose={() => setIsAdvancedSearchOpen(false)} 
+      <AdvancedSearchModal
+        isOpen={isAdvancedSearchOpen}
+        onClose={() => setIsAdvancedSearchOpen(false)}
       />
 
       <CreateStackModal
