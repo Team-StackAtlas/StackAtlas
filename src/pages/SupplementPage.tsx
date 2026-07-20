@@ -33,6 +33,7 @@ import { supabase } from '../services/supabase/client';
 import { listApprovedFindings, type PublicFinding } from '../services/research';
 import { studyTypeLabel } from '../components/admin/adminLabels';
 import { EmptyState } from '../components/EmptyState';
+import { EntityNotFound } from '../components/EntityNotFound';
 
 // 'mixed' reads as "Mixed results" here (not admin's shorter "Mixed") per the
 // public copy spec, so this map isn't reused from adminLabels.ts.
@@ -112,7 +113,7 @@ export default function SupplementPage() {
   };
 
   if (!supplement) {
-    return <div className="text-center py-20 text-zinc-400">Substance not found.</div>;
+    return <EntityNotFound label="Substance" />;
   }
 
   const popularBrand = BRANDS.find(b => b.id === supplement.mostPopularBrandId);
@@ -135,7 +136,7 @@ export default function SupplementPage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto w-full pb-8">
       <Link
-        to="/"
+        to="/map"
         className="flex w-fit items-center gap-1 text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 transition-colors"
       >
         <ArrowLeft size={16} />
@@ -185,7 +186,7 @@ export default function SupplementPage() {
             {supplement.markers && supplement.markers.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {supplement.markers.map((marker, i) => (
-                  <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-xs font-medium text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">
+                  <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-xs font-medium text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
                     {marker}
                   </span>
                 ))}

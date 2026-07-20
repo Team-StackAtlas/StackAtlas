@@ -8,6 +8,7 @@ import Sources from '../components/Sources';
 import AccessBadge from '../components/AccessBadge';
 import { CompareModal } from '../components/CompareModal';
 import { HideItemButton } from '../components/HideItemButton';
+import { EntityNotFound } from '../components/EntityNotFound';
 import { useFollowing } from '../hooks/useFollowing';
 import { useCatalog } from '../context/CatalogContext';
 
@@ -22,7 +23,7 @@ export default function StackPage() {
   const { isFollowing, toggleFollow } = useFollowing();
 
   if (!stack) {
-    return <div className="text-center py-20 text-zinc-400">Stack not found.</div>;
+    return <EntityNotFound label="Stack" />;
   }
 
   const relatedPosts = allPosts.filter(p => p.stackId === stack.id);

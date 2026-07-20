@@ -8,6 +8,7 @@ import Sources from '../components/Sources';
 import StarRating from '../components/StarRating';
 import { CompareModal } from '../components/CompareModal';
 import { HideItemButton } from '../components/HideItemButton';
+import { EntityNotFound } from '../components/EntityNotFound';
 import { useFollowing } from '../hooks/useFollowing';
 import { useBrandRatings } from '../hooks/useBrandRatings';
 import { useCatalog } from '../context/CatalogContext';
@@ -24,7 +25,7 @@ export default function BrandPage() {
   const { setRating, getSummary } = useBrandRatings();
 
   if (!brand) {
-    return <div className="text-center py-20 text-zinc-400">Brand not found.</div>;
+    return <EntityNotFound label="Brand" />;
   }
 
   const ratingSummary = getSummary(brand.id);
@@ -78,7 +79,7 @@ export default function BrandPage() {
           {brand.markers && brand.markers.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
               {brand.markers.map((marker, i) => (
-                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-xs font-medium text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">
+                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-xs font-medium text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
                   {marker}
                 </span>
               ))}
