@@ -44,8 +44,8 @@ export default function Admin() {
   >([]);
   const [message, setMessage] = useState('');
 
-  const allowed = isAdmin(profile) || true; // TEMP screenshot bypass — revert before finishing
-  const isOwner = profile?.siteRole === 'site_owner' || true; // TEMP screenshot bypass — revert before finishing
+  const allowed = isAdmin(profile);
+  const isOwner = profile?.siteRole === 'site_owner';
 
   const load = async () => {
     if (!services || tab === 'research') return;
