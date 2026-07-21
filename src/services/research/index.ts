@@ -94,3 +94,67 @@ export async function listApprovedFindings(
       : null,
   }));
 }
+
+// ---------------------------------------------------------------------------
+// Sources linked to a substance (research on file), public read via
+// supabase/migrations/20260721030000_public_substance_sources.sql. Distinct
+// from findings: these are the bibliographic records attached to the substance
+// through research_source_substances, whether or not a finding cites them.
+// ---------------------------------------------------------------------------
+
+export interface PublicSource {
+  id: string;
+  title: string;
+  url: string | null;
+  doi: string | null;
+  pmid: string | null;
+  publication: string | null;
+  year: number | null;
+  sourceType: string | null;
+}
+
+interface RawLinkedSourceRow {
+  research_sources: (RawSourceRow & { id: string }) | null;
+}
+
+/** Bibliographic href for a source, preferring an explicit URL, then DOI, then PMID. */
+export function sourceHref(source: Pick<PublicSource, 'url' | 'doi' | 'pmid'>): string | null {
+  if (source.url) return source.url;
+  if (source.doi) return `https://doi.org/${source.doi}`;
+  if (source.pmid) return `https://pubmed.ncbi.nlm.nih.gov/${source.pmid}/`;
+  return null;
+}
+
+export async function listSubstanceSources(
+  client: SupabaseClient,
+  substanceSlug: string,
+): Promise<PublicSource[]> {
+  const { data, error } = await client
+    .from('research_source_substances')
+    .select(
+      'research_sources!inner(id, title, url, doi, pmid, journal_or_site, year, source_type), substances!inner(slug)',
+    )
+    .eq('substances.slug', substanceSlug);
+  if (error) throw error;
+
+  const seen = new Set<string>();
+  const out: PublicSource[] = [];
+  for (const row of (data ?? []) as unknown as RawLinkedSourceRow[]) {
+    const rs = row.research_sources;
+    if (!rs || seen.has(rs.id)) continue;
+    seen.add(rs.id);
+    out.push({
+      id: rs.id,
+      title: rs.title,
+      url: rs.url ?? null,
+      doi: rs.doi ?? null,
+      pmid: rs.pmid ?? null,
+      publication: rs.journal_or_site ?? null,
+      year: rs.year ?? null,
+      sourceType: rs.source_type ?? null,
+    });
+  }
+  // Newest first, then alphabetical for undated rows.
+  out.sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.title.localeCompare(b.title));
+  return out;
+}

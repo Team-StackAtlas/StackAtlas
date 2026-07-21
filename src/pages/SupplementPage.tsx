@@ -18,6 +18,8 @@ import {
   Info,
   Microscope,
   MessageSquare,
+  FileText,
+  ExternalLink,
 } from 'lucide-react';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
@@ -30,8 +32,8 @@ import { getCanonicalCategories } from '../lib/bearings';
 import { CompareModal } from '../components/CompareModal';
 import { HideItemButton } from '../components/HideItemButton';
 import { supabase } from '../services/supabase/client';
-import { listApprovedFindings, type PublicFinding } from '../services/research';
-import { studyTypeLabel } from '../components/admin/adminLabels';
+import { listApprovedFindings, listSubstanceSources, sourceHref, type PublicFinding, type PublicSource } from '../services/research';
+import { studyTypeLabel, sourceTypeLabel } from '../components/admin/adminLabels';
 import { EmptyState } from '../components/EmptyState';
 import { EntityNotFound } from '../components/EntityNotFound';
 import { GlossaryText } from '../components/GlossaryText';
@@ -78,6 +80,7 @@ export default function SupplementPage() {
   const { services, isBackendConfigured } = useAuth();
   const [followerCount, setFollowerCount] = useState(0);
   const [findings, setFindings] = useState<PublicFinding[]>([]);
+  const [sources, setSources] = useState<PublicSource[]>([]);
 
   useEffect(() => {
     if (!supplement) return;
@@ -98,6 +101,14 @@ export default function SupplementPage() {
       .catch((err) => {
         console.error(err);
         if (!cancelled) setFindings([]);
+      });
+    listSubstanceSources(supabase, supplement.id)
+      .then((rows) => {
+        if (!cancelled) setSources(rows);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!cancelled) setSources([]);
       });
     return () => {
       cancelled = true;
@@ -428,6 +439,46 @@ export default function SupplementPage() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Research on file — sources linked to this substance */}
+      {sources.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
+          <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+            <FileText size={20} className="text-slate-400 dark:text-zinc-500" />
+            Sources
+            <span className="text-sm font-normal text-slate-400 dark:text-zinc-500">({sources.length})</span>
+          </h3>
+          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
+            Research and reference material on file for this substance. Listing a source is not an endorsement.
+          </p>
+          <ul className="space-y-2.5">
+            {sources.map((source) => {
+              const href = sourceHref(source);
+              return (
+                <li key={source.id} className="flex items-start gap-2 text-sm">
+                  <ExternalLink size={14} className="mt-0.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                  <span className="text-slate-600 dark:text-zinc-300">
+                    {href ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+                        {source.title}
+                      </a>
+                    ) : (
+                      <span className="font-medium">{source.title}</span>
+                    )}
+                    {source.publication && <span className="text-slate-400 dark:text-zinc-500"> — {source.publication}</span>}
+                    {source.year != null && <span className="text-slate-400 dark:text-zinc-500"> ({source.year})</span>}
+                    {source.sourceType && (
+                      <span className="ml-1.5 inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        {sourceTypeLabel(source.sourceType)}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
