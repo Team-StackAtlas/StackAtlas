@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Moon, Sun, Activity, AlertTriangle, Dumbbell, Droplet, Calendar as CalendarIcon, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Activity, AlertTriangle, Dumbbell, Droplet, Calendar as CalendarIcon, Angry, Frown, Meh, Smile, Laugh, type LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 type LogType = 'sleep' | 'mood' | 'symptoms' | 'side_effects' | 'workout' | 'bloodwork';
@@ -99,18 +99,18 @@ export default function LogEntry() {
               <label className="text-sm font-medium text-slate-700 dark:text-zinc-300 block">How are you feeling?</label>
               <div className="flex justify-between gap-2">
                 {[
-                  { emoji: '😢', label: 'Awful' },
-                  { emoji: '😕', label: 'Bad' },
-                  { emoji: '😐', label: 'Okay' },
-                  { emoji: '🙂', label: 'Good' },
-                  { emoji: '😁', label: 'Great' }
+                  { icon: Angry, label: 'Awful', color: 'text-red-500 dark:text-red-400' },
+                  { icon: Frown, label: 'Bad', color: 'text-orange-500 dark:text-orange-400' },
+                  { icon: Meh, label: 'Okay', color: 'text-slate-400 dark:text-zinc-500' },
+                  { icon: Smile, label: 'Good', color: 'text-emerald-500 dark:text-emerald-400' },
+                  { icon: Laugh, label: 'Great', color: 'text-emerald-600 dark:text-emerald-400' },
                 ].map(m => (
                   <button
                     key={m.label}
                     type="button"
                     className="flex flex-col items-center gap-2 p-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors focus:ring-2 focus:ring-amber-500 flex-1"
                   >
-                    <span className="text-2xl">{m.emoji}</span>
+                    <m.icon size={26} className={m.color} />
                     <span className="text-xs font-medium text-slate-600 dark:text-zinc-400">{m.label}</span>
                   </button>
                 ))}
