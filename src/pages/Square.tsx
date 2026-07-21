@@ -209,6 +209,7 @@ export default function Square() {
       {!substanceId && !bearingParam && (
         <div className="pt-4">
           <BearingCategoryFilter
+            compact
             selectedCategory={activeCategoryGroup}
             selectedBearings={activeBearings}
             onCategoryChange={(category) => { setActiveCategoryGroup(category); setActiveBearings([]); }}

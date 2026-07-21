@@ -557,7 +557,7 @@ export default function Create() {
               <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">Pick a format — you'll add the substance, dose, and bearings on the next step.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <button type="button" onClick={() => setActiveType('Dispatch')} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500/60">
+              <button type="button" onClick={() => setActiveType('Dispatch')} className="group flex min-h-[260px] flex-col rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500/60">
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-105">
                   <ClipboardList size={22} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
@@ -570,7 +570,7 @@ export default function Create() {
                   Start a Dispatch <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
                 </span>
               </button>
-              <button type="button" onClick={() => setActiveType('Signal')} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500/60">
+              <button type="button" onClick={() => setActiveType('Signal')} className="group flex min-h-[260px] flex-col rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500/60">
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 transition-transform group-hover:scale-105">
                   <Radio size={22} className="text-blue-600 dark:text-blue-400" />
                 </div>
