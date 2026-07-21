@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronDown, HelpCircle, Search, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, ClipboardList, HelpCircle, Radio, Search, X, ArrowRight } from 'lucide-react';
 import { SUPPLEMENTS, BRANDS, Post, Domain } from '../data/mockData';
 import { usePosts } from '../context/PostsContext';
 import { cn } from '../lib/utils';
@@ -551,14 +551,38 @@ export default function Create() {
 
       <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
         {!activeType ? (
-          <div className="mx-auto mt-10 flex min-h-[50vh] max-w-2xl flex-col items-stretch justify-center gap-6 sm:flex-row">
-            <div role="button" tabIndex={0} onClick={() => setActiveType('Dispatch')} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setActiveType('Dispatch'); }} className="group flex flex-1 cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 text-center transition-all hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500">
-              <h2 className="mb-3 inline-flex items-center gap-2 text-2xl font-bold text-slate-800 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">Dispatch <InfoTooltip label="Dispatch details" text="Dispatches help StackAtlas turn real user experiences into useful community data. Use them when you can share what you took, dose, frequency, duration, and enough context for others to compare." /></h2>
-              <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400">Log a structured experience with what you took, how much, how often, and what happened.</p>
+          <div className="mx-auto mt-8 max-w-2xl">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What are you sharing?</h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">Pick a format — you'll add the substance, dose, and bearings on the next step.</p>
             </div>
-            <div role="button" tabIndex={0} onClick={() => setActiveType('Signal')} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') setActiveType('Signal'); }} className="group flex flex-1 cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-slate-200 bg-white p-8 text-center transition-all hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500">
-              <h2 className="mb-3 inline-flex items-center gap-2 text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600 dark:text-zinc-100 dark:group-hover:text-blue-400">Signal <InfoTooltip label="Signal details" text="Signals are freeform community posts. They can be general, or linked to a substance, brand, or stack if you want the post connected to something specific." /></h2>
-              <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-400">Ask a question, share an observation, or start a discussion.</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <button type="button" onClick={() => setActiveType('Dispatch')} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500/60">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-105">
+                  <ClipboardList size={22} className="text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h3 className="flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-zinc-100">
+                  Dispatch
+                  <InfoTooltip label="Dispatch details" text="Dispatches help StackAtlas turn real user experiences into useful community data. Use them when you can share what you took, dose, frequency, duration, and enough context for others to compare." />
+                </h3>
+                <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">A structured log — what you took, dose, frequency, duration, and what happened.</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                  Start a Dispatch <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </button>
+              <button type="button" onClick={() => setActiveType('Signal')} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition-all hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500/60">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 transition-transform group-hover:scale-105">
+                  <Radio size={22} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-zinc-100">
+                  Signal
+                  <InfoTooltip label="Signal details" text="Signals are freeform community posts. They can be general, or linked to a substance, brand, or stack if you want the post connected to something specific." />
+                </h3>
+                <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">A question, an observation, or a discussion — optionally tied to a substance or brand.</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  Start a Signal <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </button>
             </div>
           </div>
         ) : activeType === 'Dispatch' ? (
