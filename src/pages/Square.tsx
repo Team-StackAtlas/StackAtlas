@@ -102,10 +102,12 @@ export default function Square() {
         // Scope ceiling by classification
         if (!visibleClassifications.includes(supplement.classification)) return false;
 
-        // Advanced Search Filtering
-        if (!supplement.typeTags.some(t => activeTypes.includes(t))) return false;
-        if (!activeClassifications.includes(supplement.classification)) return false;
-        if (!supplement.administration.some(a => activeAdmins.includes(a))) return false;
+        // Advanced Search Filtering — positive model: an empty selection means
+        // "no filter" (matches Map's behavior since the filter defaults went
+        // empty; the old subtractive checks hid every substance Dispatch).
+        if (activeTypes.length > 0 && !supplement.typeTags.some(t => activeTypes.includes(t))) return false;
+        if (activeClassifications.length > 0 && !activeClassifications.includes(supplement.classification)) return false;
+        if (activeAdmins.length > 0 && !supplement.administration.some(a => activeAdmins.includes(a))) return false;
 
       }
     }
@@ -137,7 +139,28 @@ export default function Square() {
   const hiddenPostsCount = postsMatchingFilters.filter(isPostHiddenByPreferences).length;
   const filteredPosts = postsMatchingFilters.filter(post => !isPostHiddenByPreferences(post)).filter(matchesQuery);
 
+  // Goals picked at onboarding shape the For You feed: posts whose bearings
+  // (or category) map into a chosen goal category rank ahead of the rest,
+  // with the selected sort ordering within each tier. Explicit filters
+  // (substance/bearing links) and the Following feed stay untouched.
+  const goalBearings = new Set(
+    scope.goals.flatMap(goal => BEARING_CATEGORIES.find(category => category.name === goal)?.bearings ?? []),
+  );
+  const applyGoalBoost = feedType === 'For You' && goalBearings.size > 0 && !substanceId && !bearingParam;
+  const goalScoreByPost = new Map<string, number>(
+    applyGoalBoost
+      ? filteredPosts.map(post => [
+          post.id,
+          getFilterBearings([...(post.bearings ?? []), post.category]).filter(bearing => goalBearings.has(bearing)).length,
+        ])
+      : [],
+  );
+
   const sortedPosts = [...filteredPosts].sort((a, b) => {
+    if (applyGoalBoost) {
+      const goalDiff = (goalScoreByPost.get(b.id) ?? 0) - (goalScoreByPost.get(a.id) ?? 0);
+      if (goalDiff !== 0) return goalDiff;
+    }
     if (sortOption === 'Highest Quality') return b.qualityScore - a.qualityScore;
     if (sortOption === 'Most Detailed') return b.content.length - a.content.length;
     if (sortOption === 'Recent') {
