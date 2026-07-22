@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { TypeTag, Classification, CLASSIFICATIONS, AdministrationMethod, TYPE_TAGS } from '../data/mockData';
-
-const ADMIN_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injectable', '🧴 Topical', '👅 Sublingual'];
+import { TypeTag, Classification, AdministrationMethod } from '../data/mockData';
 
 interface FilterContextType {
   activeTypes: TypeTag[];
@@ -21,10 +19,13 @@ interface FilterContextType {
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 export function FilterProvider({ children }: { children: ReactNode }) {
-  const [activeTypes, setActiveTypes] = useState<TypeTag[]>(TYPE_TAGS.map(t => t.full));
+  // Positive-filter model: an EMPTY set means "no filter, show everything".
+  // Selecting a chip narrows results TO that value (and the chip reads as
+  // active), which matches what people expect when they click "Supplement".
+  const [activeTypes, setActiveTypes] = useState<TypeTag[]>([]);
   const [prioritizedTypes, setPrioritizedTypes] = useState<TypeTag[]>([]);
-  const [activeAdmins, setActiveAdmins] = useState<AdministrationMethod[]>(ADMIN_METHODS);
-  const [activeClassifications, setActiveClassifications] = useState<Classification[]>(CLASSIFICATIONS);
+  const [activeAdmins, setActiveAdmins] = useState<AdministrationMethod[]>([]);
+  const [activeClassifications, setActiveClassifications] = useState<Classification[]>([]);
 
   const toggleType = (type: TypeTag) => {
     setActiveTypes(prev =>

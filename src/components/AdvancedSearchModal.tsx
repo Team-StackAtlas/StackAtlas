@@ -16,9 +16,13 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
   const {
     activeAdmins,
     activeClassifications,
+    setActiveAdmins,
+    setActiveClassifications,
     toggleAdmin,
     toggleClassification
   } = useFilters();
+
+  const hasSelection = activeAdmins.length > 0 || activeClassifications.length > 0;
 
   return (
     <Modal
@@ -95,12 +99,19 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
           </div>
         </div>
 
-      <div className="flex justify-end border-t border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+        <button
+          onClick={() => { setActiveAdmins([]); setActiveClassifications([]); }}
+          disabled={!hasSelection}
+          className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-40 dark:text-zinc-400 dark:hover:bg-zinc-800"
+        >
+          Clear all
+        </button>
         <button
           onClick={onClose}
           className="rounded-xl bg-emerald-500 px-6 py-2 font-medium text-white shadow-sm transition-colors hover:bg-emerald-600"
         >
-          Apply Filters
+          {hasSelection ? 'Apply Filters' : 'Done'}
         </button>
       </div>
     </Modal>

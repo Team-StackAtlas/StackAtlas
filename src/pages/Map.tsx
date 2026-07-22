@@ -116,6 +116,7 @@ export default function Map() {
   // changes, so "Load more" always starts back at the first page. Adjusted
   // during render (React's recommended pattern) rather than in an effect, to
   // avoid an extra post-commit render on every filter change.
+  const advancedFilterCount = activeClassifications.length + activeAdmins.length;
   const filterKey = [activeTab, feedType, debouncedQuery, activeCategoryGroup, activeBearings.join(','), activeTypes.join(','), activeClassifications.join(','), activeAdmins.join(',')].join('|');
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
   if (filterKey !== lastFilterKey) {
@@ -217,18 +218,13 @@ export default function Map() {
       if (!selected.some(bearing => entityBearings.includes(bearing))) return false;
     }
 
-    // Type Filtering — only exclude a substance that HAS type tags none of
-    // which are active. Substances with no type tags (e.g. bulk-imported
-    // catalog rows) are never hidden by this filter.
-    if (s.typeTags.length > 0 && !s.typeTags.some(t => activeTypes.includes(t))) return false;
+    // Positive filters: an empty selection means "no filter". A non-empty
+    // selection narrows to substances that match at least one chosen value.
+    if (activeTypes.length > 0 && !s.typeTags.some(t => activeTypes.includes(t))) return false;
 
-    // Classification Filtering
-    if (!activeClassifications.includes(s.classification)) return false;
+    if (activeClassifications.length > 0 && !activeClassifications.includes(s.classification)) return false;
 
-    // Administration Filtering — same rule: a substance with no recorded
-    // administration method isn't hidden (most imported catalog substances
-    // don't carry one yet).
-    if (s.administration.length > 0 && !s.administration.some(a => activeAdmins.includes(a))) return false;
+    if (activeAdmins.length > 0 && !s.administration.some(a => activeAdmins.includes(a))) return false;
 
     // Search Query Filtering (debounced)
     if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, ...(s.aliases || []), s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
@@ -462,8 +458,8 @@ export default function Map() {
                       isActive
                         ? isPrioritized
                           ? "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 shadow-sm"
-                          : "bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-slate-300 dark:border-zinc-600 shadow-sm"
-                        : "bg-slate-50/50 dark:bg-zinc-900/30 text-slate-400 dark:text-zinc-600 border-slate-200 dark:border-zinc-800/50 opacity-60"
+                          : "bg-emerald-500 text-white border-emerald-500 shadow-sm dark:bg-emerald-500 dark:border-emerald-500"
+                        : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:border-slate-300 hover:bg-slate-50 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
                     )}
                   >
                     {TypeIcon && <TypeIcon size={13} />}
@@ -475,10 +471,20 @@ export default function Map() {
             </div>
             <button
               onClick={() => setIsAdvancedSearchOpen(true)}
-              className="ml-2 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all border bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center gap-1.5 shadow-sm"
+              className={cn(
+                'ml-2 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all border flex items-center gap-1.5 shadow-sm',
+                advancedFilterCount > 0
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700',
+              )}
             >
               <Settings2 size={14} />
               Advanced Search
+              {advancedFilterCount > 0 && (
+                <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-white/25 px-1 text-[10px] font-bold">
+                  {advancedFilterCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
