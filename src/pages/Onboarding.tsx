@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ShieldAlert, Info, Check, ChevronRight, Target } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Info, ChevronRight, Target } from 'lucide-react';
 import { useUserScope, AccessLevel } from '../context/UserScopeContext';
 import { Classification } from '../data/mockData';
-import { BEARING_CATEGORIES } from '../lib/bearings';
 import { cn } from '../lib/utils';
 import AccessBadge from '../components/AccessBadge';
+import { GoalsPicker } from '../components/GoalsPicker';
 
 const SCOPES: {
   level: AccessLevel;
@@ -97,37 +97,8 @@ export default function Onboarding() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {BEARING_CATEGORIES.map((category) => {
-              const active = selectedGoals.includes(category.name);
-              return (
-                <button
-                  key={category.name}
-                  onClick={() => toggleGoal(category.name)}
-                  className={cn(
-                    'flex items-start gap-3 rounded-2xl border p-4 text-left transition-all',
-                    active
-                      ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500 dark:bg-emerald-500/10'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/60',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
-                      active
-                        ? 'border-emerald-500 bg-emerald-500 text-white'
-                        : 'border-slate-300 dark:border-zinc-600',
-                    )}
-                  >
-                    {active && <Check size={12} />}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-slate-900 dark:text-zinc-100">{category.name}</span>
-                    <span className="block text-xs text-slate-500 dark:text-zinc-400">{category.description}</span>
-                  </span>
-                </button>
-              );
-            })}
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <GoalsPicker selected={selectedGoals} onToggle={toggleGoal} />
           </div>
 
           <div className="mt-8 flex items-center justify-between">
