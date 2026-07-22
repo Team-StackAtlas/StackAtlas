@@ -154,41 +154,37 @@ export default function Square() {
       <div className="mx-auto flex w-full max-w-5xl flex-1 items-start gap-8">
       {/* Feed column */}
       <div className="min-w-0 flex-1 md:max-w-2xl">
-      {/* Editorial intro */}
-      <div className="w-full px-4 pt-5 pb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500">The Square</p>
-        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-slate-500 dark:text-zinc-400">
-          Considered dispatches and signals — dosing logs, outcomes, and open questions from people running real protocols.
-        </p>
-      </div>
-
-      {/* Command bar: feed tabs, search, create */}
+      {/* Command bar: x.com-style full-width underline tabs, then search. */}
       <div className="sticky top-14 md:top-0 z-40 border-b border-slate-200/70 bg-slate-50/90 backdrop-blur-md dark:border-zinc-800/70 dark:bg-zinc-950/90">
+        <div className="flex border-b border-slate-200/70 dark:border-zinc-800/70">
+          {(['For You', 'Following'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => { if (tab === 'Following' && !user) { if (requireAccount()) setFeedType('Following'); return; } setFeedType(tab); }}
+              className="group flex-1 transition-colors hover:bg-slate-100/70 dark:hover:bg-zinc-900/70"
+            >
+              <span
+                className={cn(
+                  'relative inline-flex items-center py-3.5 text-[15px]',
+                  feedType === tab
+                    ? 'font-bold text-slate-900 dark:text-zinc-100'
+                    : 'font-medium text-slate-500 group-hover:text-slate-700 dark:text-zinc-400 dark:group-hover:text-zinc-200',
+                )}
+              >
+                {tab}
+                {feedType === tab && (
+                  <span className="absolute inset-x-0 -bottom-px h-1 rounded-full bg-emerald-500" />
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
         <div className="w-full px-4">
-          <div className="flex items-center justify-between gap-3 pt-3">
-            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-zinc-800 dark:bg-zinc-900/70">
-              {(['For You', 'Following'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => { if (tab === 'Following' && !user) { if (requireAccount()) setFeedType('Following'); return; } setFeedType(tab); }}
-                  className={cn(
-                    'rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors',
-                    feedType === tab
-                      ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
-                      : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200',
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <Link to="/create" className="hidden md:inline-flex items-center gap-2 h-9 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm shrink-0">
+          <div className="flex gap-2 py-3">
+            <Link to="/create" aria-label="Create a post" className="hidden md:inline-flex items-center gap-2 h-10 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm shrink-0 order-last">
               <Plus size={16} />
               Create
             </Link>
-          </div>
-
-          <div className="flex gap-2 py-3">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
               <input
