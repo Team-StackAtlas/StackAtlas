@@ -79,6 +79,13 @@ function ExpandableValue({ text }: { text: string }) {
   );
 }
 
+/** Capitalizes the first letter so single-word and full-sentence effects
+ * read consistently in a list. */
+function sentenceCase(value: string): string {
+  const trimmed = value.trim();
+  return trimmed ? trimmed.charAt(0).toUpperCase() + trimmed.slice(1) : trimmed;
+}
+
 function FactTile({ icon, label, className = '', children }: { icon: ReactNode; label: string; className?: string; children: ReactNode }) {
   return (
     <div className={`rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4 shadow-sm ${className}`}>
@@ -479,17 +486,21 @@ export default function SupplementPage() {
       {/* Subjective Effects */}
       {supplement.subjectiveEffects.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Activity size={20} className="text-slate-400 dark:text-zinc-500" />
+          <h3 className="mb-1 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+            <Activity size={20} className="text-emerald-500" />
             Subjective Effects
           </h3>
-          <div className="flex flex-wrap gap-2">
+          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
+            Commonly reported first-hand experiences. Anecdotal, not medical claims.
+          </p>
+          <ul className="grid gap-2 sm:grid-cols-2">
             {supplement.subjectiveEffects.map((effect, i) => (
-              <span key={i} className="rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3 py-1 text-sm text-slate-700 dark:text-zinc-300">
-                {effect}
-              </span>
+              <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-zinc-300">
+                <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500" />
+                <span>{sentenceCase(effect)}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 
