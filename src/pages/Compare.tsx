@@ -110,7 +110,7 @@ export default function Compare() {
             <>
               {renderComparisonRow('Description', item1.description, item2.description)}
               {renderComparisonRow('Substances', (item1 as Stack).substances?.map((s) => s.name).join(', '), (item2 as Stack).substances?.map((s) => s.name).join(', '))}
-              {renderComparisonRow('Creator ID', (item1 as Stack).creatorId, (item2 as Stack).creatorId)}
+              {renderComparisonRow('Substance Count', (item1 as Stack).substances?.length ?? 0, (item2 as Stack).substances?.length ?? 0)}
             </>
           )}
         </div>
