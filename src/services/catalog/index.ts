@@ -23,6 +23,7 @@ const ADMINISTRATION_METHODS: AdministrationMethod[] = ['👄 Oral', '💉 Injec
 const SUBSTANCE_SELECT =
   'id, slug, name, classification, description, average_dosage, length_of_cycle, tolerance_buildup, ' +
   'risk_level, most_popular_brand_id, formula, origin, how_obtained, half_life, ' +
+  'substance_aliases(alias), ' +
   'substance_routes(category_routes(domain,category)), ' +
   'substance_type_tags(type_tags(label)), ' +
   'substance_administration_methods(administration_methods(label)), ' +
@@ -92,9 +93,14 @@ function mapSubstances(rows: any[], brandIdToSlug: Map<string, string>, substanc
       .map((p: any) => substanceIdToName.get(p.pairs_with_id))
       .filter((n: string | undefined): n is string => !!n);
 
+    const aliases = (row.substance_aliases ?? [])
+      .map((a: any) => a.alias)
+      .filter((a: unknown): a is string => typeof a === 'string' && a.trim() !== '');
+
     return {
       id: row.slug,
       name: row.name,
+      aliases: aliases.length > 0 ? aliases : undefined,
       formula: row.formula ?? undefined,
       description: row.description,
       paths,

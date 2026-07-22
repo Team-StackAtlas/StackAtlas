@@ -108,6 +108,8 @@ export interface Substance {
   classification: Classification;
   id: string;
   name: string;
+  /** Alternate names (chemical names, abbreviations, traditional names). */
+  aliases?: string[];
   paths: { domain: Domain; category: string }[];
   typeTags: TypeTag[];
   administration: AdministrationMethod[];

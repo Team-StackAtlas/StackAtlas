@@ -71,7 +71,7 @@ export function GlobalSearch() {
         title: 'Substances',
         icon: Beaker,
         items: substances
-          .filter((s) => matches(trimmed, s.name, s.description))
+          .filter((s) => matches(trimmed, s.name, s.description, ...(s.aliases ?? [])))
           .slice(0, 5)
           .map((s) => ({ key: `sub-${s.id}`, label: s.name, sublabel: s.classification, href: `/substance/${s.id}` })),
       },
