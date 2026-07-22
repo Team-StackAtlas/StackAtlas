@@ -178,7 +178,7 @@ export function GlobalSearch() {
                     <Search size={20} className="text-slate-400 dark:text-zinc-500" />
                   </div>
                   <p className="text-sm text-slate-500 dark:text-zinc-400">
-                    Type at least two characters to search substances, brands, stacks, and posts.
+                    Keep typing to search…
                   </p>
                 </div>
               )}

@@ -19,42 +19,14 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'Beauty & Skin': Sparkles,
 };
 
-export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCategoryChange, onBearingToggle, onReset, compact = false }: {
+export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCategoryChange, onBearingToggle, onReset }: {
   selectedCategory: string | null;
   selectedBearings: string[];
   onCategoryChange: (category: string) => void;
   onBearingToggle: (bearing: string) => void;
   onReset: () => void;
-  /** Compact chip row that fits a narrow centered column (used on the Square);
-   * default false renders the full-width scrolling cards (used on the Map). */
-  compact?: boolean;
 }) {
   const category = BEARING_CATEGORIES.find(item => item.name === selectedCategory);
-
-  if (compact) {
-    return (
-      <div className="mx-auto w-full max-w-2xl px-4 pb-2">
-        <div className="flex flex-wrap gap-2">
-          {BEARING_CATEGORIES.map(item => {
-            const selected = item.name === selectedCategory;
-            const Icon = CATEGORY_ICONS[item.name] ?? DEFAULT_CATEGORY_ICON;
-            return (
-              <button key={item.name} type="button" onClick={() => onCategoryChange(item.name)} aria-pressed={selected} className={cn('inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors', selected ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200')}>
-                <Icon size={15} className={selected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-zinc-500'} />
-                {item.name}
-              </button>
-            );
-          })}
-        </div>
-        {category && (
-          <div className="mt-3">
-            <div className="mb-2 flex items-center justify-between gap-3"><p className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Filter by {category.name}</p><button type="button" onClick={onReset} className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 hover:underline dark:text-emerald-400"><X size={14}/> Reset</button></div>
-            <div className="flex flex-wrap gap-2">{category.bearings.map(bearing => <button key={bearing} type="button" onClick={() => onBearingToggle(bearing)} className={cn('rounded-full border px-3 py-1.5 text-sm font-medium', selectedBearings.includes(bearing) ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800')}>{bearing}</button>)}</div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="px-4 pb-3">

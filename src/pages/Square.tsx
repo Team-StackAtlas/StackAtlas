@@ -159,7 +159,7 @@ export default function Square() {
       </div>
 
       {/* Command bar: feed tabs, search, create */}
-      <div className="sticky top-14 md:top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
+      <div className="sticky top-14 md:top-0 z-40 border-b border-slate-200/70 bg-slate-50/90 backdrop-blur-md dark:border-zinc-800/70 dark:bg-zinc-950/90">
         <div className="mx-auto w-full max-w-2xl px-4">
           <div className="flex items-center justify-between gap-3 pt-3">
             <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-zinc-800 dark:bg-zinc-900/70">
@@ -209,7 +209,6 @@ export default function Square() {
       {!substanceId && !bearingParam && (
         <div className="pt-4">
           <BearingCategoryFilter
-            compact
             selectedCategory={activeCategoryGroup}
             selectedBearings={activeBearings}
             onCategoryChange={(category) => { setActiveCategoryGroup(category); setActiveBearings([]); }}

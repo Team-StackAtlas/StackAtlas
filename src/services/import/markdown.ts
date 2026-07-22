@@ -11,6 +11,7 @@
 // a direction/dose/endpoint out of freeform text would be exactly that.
 
 import { RESEARCH_SOURCE_TYPES_V1, type ResearchSourceType, type SourcePackRow } from './types';
+import { mapSourceType } from './research-package';
 
 export interface SubstanceCatalogEntry {
   slug: string;
@@ -112,11 +113,15 @@ export function extractMarkdownSource(
   const urlMatch = frontmatter.url || frontmatter.source_url || URL_RE.exec(body)?.[0];
   const dateSource = frontmatter.date || frontmatter.accessed || frontmatter.published || body;
   const yearMatch = FOUR_DIGIT_YEAR_RE.exec(dateSource)?.[0];
+  // Prefer an explicit frontmatter source_type; otherwise infer a real
+  // category from the document's title and opening text instead of dumping
+  // every dropped file into "Other". mapSourceType returns 'other' only when
+  // nothing matches, so this is strictly better than the old default.
   const frontmatterSourceType = frontmatter.source_type;
   const sourceType: ResearchSourceType =
     frontmatterSourceType && VALID_SOURCE_TYPES.has(frontmatterSourceType)
       ? (frontmatterSourceType as ResearchSourceType)
-      : 'other';
+      : mapSourceType(`${title}\n${headingMatches.slice(0, 6).join('\n')}\n${body.slice(0, 1500)}`);
 
   const { matched, ambiguous } = matchSubstances([title, ...headingMatches], catalog);
 

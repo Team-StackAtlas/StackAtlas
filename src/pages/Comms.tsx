@@ -43,6 +43,13 @@ export default function Comms() {
   const [inviteUsername, setInviteUsername] = useState('');
   const [recording, setRecording] = useState(false);
   const recordTimer = useRef<number | undefined>(undefined);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  // Counts elapsed seconds while recording (ticked by recordTickInterval
+  // below) so the sent attachment can carry an approximate durationSeconds
+  // without reading the clock (Date.now) from an event-handler closure.
+  const recordSecondsRef = useRef(0);
+  const recordTickInterval = useRef<number | undefined>(undefined);
   const [controlsError, setControlsError] = useState('');
   const [attachError, setAttachError] = useState('');
   const [attachSending, setAttachSending] = useState(false);
@@ -65,11 +72,32 @@ export default function Comms() {
       !conversation.declined &&
       conversation.requestedBy !== comms.viewerId,
   );
+  // Requests the viewer sent that the other side hasn't accepted yet. These
+  // aren't "accepted" so they're excluded from `conversations`, and they
+  // aren't incoming so they're excluded from `requests` -- without this list
+  // clicking a search result to start a DM would create a conversation that
+  // shows up nowhere, looking like the click did nothing.
+  const pendingSentConversations = comms.conversations.filter(
+    (conversation) =>
+      !conversation.accepted &&
+      !conversation.declined &&
+      conversation.requestedBy === comms.viewerId,
+  );
   const activeConversation =
     conversations.find((conversation) => conversation.id === activeConversationId) ??
+    pendingSentConversations.find((conversation) => conversation.id === activeConversationId) ??
     conversations[0];
+  const isPendingSentConversation =
+    tab !== 'quarters' &&
+    !!activeConversation &&
+    !activeConversation.accepted &&
+    !activeConversation.declined;
   const activeQuarter =
     comms.quarters.find((quarter) => quarter.id === activeQuarterId) ?? comms.quarters[0];
+  // Whether the right-hand panel has an actual thread to show. When this is
+  // false (nothing selected/nothing exists yet) we show a placeholder
+  // instead of a live composer with no destination to send to.
+  const hasActiveThread = tab === 'quarters' ? !!activeQuarter : !!activeConversation;
   const activeMessages = comms.messages.filter(
     (message) => message.conversationId === activeConversation?.id,
   );
@@ -89,6 +117,15 @@ export default function Comms() {
     // mark read only when the selected thread changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, activeConversation?.id, activeQuarter?.id]);
+
+  // Release the microphone if the user navigates away mid-recording.
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(recordTimer.current);
+      window.clearInterval(recordTickInterval.current);
+      mediaRecorderRef.current?.stream.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   const matches = useMemo(
     () =>
@@ -175,24 +212,56 @@ export default function Comms() {
     }
   };
 
-  const startVoice = () => {
+  const startVoice = async () => {
     setError('');
-    setRecording(true);
-    recordTimer.current = window.setTimeout(() => stopVoice(), MAX_VOICE_SECONDS * 1000);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setError('Voice recording is not supported in this browser.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      mediaRecorderRef.current = recorder;
+      recordSecondsRef.current = 0;
+      recordTickInterval.current = window.setInterval(() => {
+        recordSecondsRef.current += 1;
+      }, 1000);
+      recorder.start();
+      setRecording(true);
+      recordTimer.current = window.setTimeout(() => stopVoice(), MAX_VOICE_SECONDS * 1000);
+    } catch {
+      setError('Microphone access was denied or unavailable.');
+    }
   };
 
   const stopVoice = () => {
     window.clearTimeout(recordTimer.current);
+    window.clearInterval(recordTickInterval.current);
+    const recorder = mediaRecorderRef.current;
     setRecording(false);
-    send({
-      id: `voice-${Date.now()}`,
-      type: 'voice',
-      name: 'voice-note.webm',
-      url: 'https://www.w3schools.com/html/horse.mp3',
-      mimeType: 'audio/webm',
-      size: 44000,
-      durationSeconds: 5,
-    });
+    if (!recorder) return;
+    recorder.onstop = () => {
+      const mimeType = recorder.mimeType || 'audio/webm';
+      const blob = new Blob(audioChunksRef.current, { type: mimeType });
+      const durationSeconds = Math.max(1, recordSecondsRef.current);
+      recorder.stream.getTracks().forEach((track) => track.stop());
+      mediaRecorderRef.current = null;
+      if (blob.size === 0) return;
+      send({
+        id: `voice-${Date.now()}`,
+        type: 'voice',
+        name: 'voice-note.webm',
+        url: URL.createObjectURL(blob),
+        mimeType,
+        size: blob.size,
+        durationSeconds,
+      });
+    };
+    recorder.stop();
   };
 
   const renderMessage = (message: CommsMessage) => {
@@ -408,6 +477,35 @@ export default function Comms() {
                   </button>
                 );
               })}
+              {pendingSentConversations.length > 0 && (
+                <div className="pt-2">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                    Pending
+                  </p>
+                  {pendingSentConversations.map((conversation) => {
+                    const other = comms.getUser(
+                      conversation.participantIds.find((id) => id !== comms.viewerId) || '',
+                    );
+                    return (
+                      <button
+                        key={conversation.id}
+                        onClick={() => setActiveConversationId(conversation.id)}
+                        className="w-full rounded-xl border border-dashed border-slate-300 p-3 text-left text-sm dark:border-zinc-700"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-zinc-800">
+                            {other?.avatarInitial}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <strong>@{other?.username}</strong>
+                            <p className="truncate text-slate-500">Request sent · awaiting response</p>
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -525,6 +623,17 @@ export default function Comms() {
         </aside>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          {!hasActiveThread && (
+            <EmptyState
+              icon={tab === 'quarters' ? Users : MessageSquare}
+              title={tab === 'quarters' ? 'Select a Quarter' : 'Select a conversation'}
+              description={
+                tab === 'quarters'
+                  ? 'Choose a Quarter from the list on the left, or create one to get started.'
+                  : 'Choose a conversation from the list on the left, or search above to start a new one.'
+              }
+            />
+          )}
           {tab !== 'quarters' && activeConversation && (
             <>
               <h2 className="font-bold">
@@ -537,8 +646,14 @@ export default function Comms() {
               </h2>
               <div className="mt-4 space-y-3">
                 {activeMessages.map(renderMessage)}
-                {activeConversation.typingUserIds.filter((id) => id !== comms.viewerId).length >
-                  0 && <p className="text-sm text-slate-500">typing...</p>}
+                {isPendingSentConversation && (
+                  <p className="text-sm text-slate-500">
+                    Message request sent. You&apos;ll be able to chat once they accept.
+                  </p>
+                )}
+                {!isPendingSentConversation &&
+                  activeConversation.typingUserIds.filter((id) => id !== comms.viewerId).length >
+                    0 && <p className="text-sm text-slate-500">typing...</p>}
               </div>
             </>
           )}
@@ -663,6 +778,7 @@ export default function Comms() {
             </>
           )}
 
+          {hasActiveThread && !isPendingSentConversation && (
           <div className="mt-5 border-t border-slate-200 pt-3 dark:border-zinc-800">
             {error && (
               <p className="mb-2 rounded-lg bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
@@ -677,7 +793,9 @@ export default function Comms() {
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Write a message. Use @username to mention someone."
+              placeholder={
+                tab === 'quarters' ? 'Write a message. Use @username to mention someone.' : 'Write a message…'
+              }
               className="h-20 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
             />
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -726,7 +844,7 @@ export default function Comms() {
                     />
                   </label>
                   <button
-                    onClick={recording ? stopVoice : startVoice}
+                    onClick={() => (recording ? stopVoice() : void startVoice())}
                     className={`rounded-lg px-3 py-2 text-sm ${recording ? 'bg-red-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
                   >
                     <Mic className="inline" size={15} /> {recording ? 'Stop recording' : 'Record voice'}
@@ -742,6 +860,7 @@ export default function Comms() {
               </button>
             </div>
           </div>
+          )}
         </div>
       </section>
     </div>
