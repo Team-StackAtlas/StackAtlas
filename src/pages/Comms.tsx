@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, MessageSquare, Mic, Paperclip, Plus, Search, Send, Users } from 'lucide-react';
+import { Crown, Image, MessageSquare, Mic, Paperclip, Plus, Search, Send, Shield, Users } from 'lucide-react';
 import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_SECONDS = 60;
-const SAFE_FILES = ['application/pdf', 'text/plain', 'image/png', 'image/jpeg', 'image/webp'];
+const SAFE_FILES = ['application/pdf', 'text/plain', 'image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_PERSISTED_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 const PERSISTED_ATTACHMENT_TYPES = [
   'image/png',
@@ -28,6 +28,33 @@ function formatTime(value: string) {
 function bytes(value: number) {
   if (value > 1024 * 1024) return `${(value / 1024 / 1024).toFixed(1)} MB`;
   return `${Math.round(value / 1024)} KB`;
+}
+
+type QuarterRole = 'quartermaster' | 'moderator' | null;
+
+/** A member's display role in a quarter: owner > moderator > plain member. */
+function quarterRoleOf(quarter: { ownerId: string; adminIds: string[] } | undefined, userId: string): QuarterRole {
+  if (!quarter) return null;
+  if (quarter.ownerId === userId) return 'quartermaster';
+  if (quarter.adminIds.includes(userId)) return 'moderator';
+  return null;
+}
+
+/** Little role badge shown next to quartermasters and moderators. */
+function QuarterRoleBadge({ role }: { role: QuarterRole }) {
+  if (!role) return null;
+  if (role === 'quartermaster') {
+    return (
+      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" title="Quartermaster (owner)">
+        <Crown size={10} /> Quartermaster
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" title="Moderator">
+      <Shield size={10} /> Mod
+    </span>
+  );
 }
 
 export default function Comms() {
@@ -147,7 +174,7 @@ export default function Comms() {
 
   const fileToAttachment = (file: File, type: CommsAttachment['type']): CommsAttachment | null => {
     if (type === 'image' && (!file.type.startsWith('image/') || file.size > MAX_IMAGE_SIZE)) {
-      setError('Images must be PNG, JPG, or WebP and 5 MB or smaller.');
+      setError('Images must be PNG, JPG, WebP, or GIF and 5 MB or smaller.');
       return null;
     }
     if (type === 'file' && !SAFE_FILES.includes(file.type)) {
@@ -278,8 +305,9 @@ export default function Comms() {
         <div
           className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm ${mine ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-zinc-100'}`}
         >
-          <div className="mb-1 text-[11px] opacity-70">
-            {sender?.username} · {formatTime(message.createdAt)}
+          <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="opacity-70">{sender?.username} · {formatTime(message.createdAt)}</span>
+            {message.scope === 'quarter' && <QuarterRoleBadge role={quarterRoleOf(activeQuarter, message.senderId)} />}
           </div>
           {message.deleted ? <em>Message unavailable</em> : message.body && <p>{message.body}</p>}
           {attachments.map((attachment) => {
@@ -682,7 +710,7 @@ export default function Comms() {
                   </button>
                 )}
               </div>
-              <div className="mt-4 rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><h3 className="mb-2 text-sm font-bold">Quarter Controls</h3><p className="mb-2 text-xs text-slate-500">Role: {activeQuarter.ownerId === comms.viewerId ? 'quarter_owner' : activeQuarter.adminIds.includes(comms.viewerId) ? 'quarter_moderator' : 'quarter_member'}</p>
+              <div className="mt-4 rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><h3 className="mb-2 text-sm font-bold">Quarter Controls</h3><p className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">Your role: {quarterRoleOf(activeQuarter, comms.viewerId) ? <QuarterRoleBadge role={quarterRoleOf(activeQuarter, comms.viewerId)} /> : 'Member'}</p>
               {controlsError && (
                 <p className="mb-2 rounded-lg bg-red-50 p-2 text-xs text-red-700 dark:bg-red-950/30 dark:text-red-300">
                   {controlsError}
@@ -695,8 +723,9 @@ export default function Comms() {
                   const targetIsMod = activeQuarter.adminIds.includes(id);
                   const username = comms.getUser(id)?.username;
                   return (
-                  <span key={id} className="rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-800">
-                    @{username}{' '}
+                  <span key={id} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 dark:bg-zinc-800">
+                    @{username}
+                    <QuarterRoleBadge role={quarterRoleOf(activeQuarter, id)} />{' '}
                     {!activeQuarter.persisted && (isOwner || isMod) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
                     {!activeQuarter.persisted && isOwner && id !== comms.viewerId && !targetIsMod && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
                     {!activeQuarter.persisted && isOwner && id !== comms.viewerId && targetIsMod && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
@@ -833,7 +862,7 @@ export default function Comms() {
                     <input
                       hidden
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         const att = file && fileToAttachment(file, 'image');
@@ -846,7 +875,7 @@ export default function Comms() {
                     <input
                       hidden
                       type="file"
-                      accept="application/pdf,text/plain,image/png,image/jpeg,image/webp"
+                      accept="application/pdf,text/plain,image/png,image/jpeg,image/webp,image/gif"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         const att = file && fileToAttachment(file, 'file');
