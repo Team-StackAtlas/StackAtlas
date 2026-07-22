@@ -5,12 +5,13 @@
 // carry the visual weight; list data (effects, risks, routes, components)
 // is split into shared-vs-unique chip groups instead of two blobs of prose.
 
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import {
   Activity,
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
   CheckCircle2,
   Hourglass,
@@ -18,9 +19,12 @@ import {
   Pill,
   Radio,
   Repeat,
+  Scale,
+  Search,
   ShieldAlert,
   Timer,
   Truck,
+  X,
   XCircle,
   type LucideIcon,
 } from 'lucide-react';
@@ -252,6 +256,192 @@ function ScorePair({ a, b, format }: { a: number; b: number; format?: (v: number
   return { a: cell(a, b), b: cell(b, a), same: a === b };
 }
 
+// --- picker (no comparison chosen yet) --------------------------------------
+
+const PICKER_TABS: { key: CompareType; label: string; noun: string }[] = [
+  { key: 'substance', label: 'Substances', noun: 'substance' },
+  { key: 'brand', label: 'Brands', noun: 'brand' },
+  { key: 'stack', label: 'Stacks', noun: 'stack' },
+];
+
+/** One filled/empty selection slot in the VS hero. */
+function PickerSlot({ item, type, placeholder, onClear }: { item: (Substance | Brand | Stack) | undefined; type: CompareType; placeholder: string; onClear: () => void }) {
+  if (!item) {
+    return (
+      <div className="flex h-full min-h-[92px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-4 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500">
+          <Search size={16} />
+        </span>
+        <span className="text-sm font-medium text-slate-400 dark:text-zinc-500">{placeholder}</span>
+      </div>
+    );
+  }
+  const substance = type === 'substance' ? (item as Substance) : null;
+  return (
+    <div className="flex h-full min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+      <span className="relative shrink-0">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-200">
+          {initials(item.name)}
+        </span>
+        {substance && (
+          <AccessBadge classification={substance.classification} className="absolute -bottom-1 -right-1 h-5 w-5 border-2 border-white dark:border-zinc-900" />
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-bold text-slate-900 dark:text-zinc-100">{item.name}</p>
+        {type === 'brand' && (
+          <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-zinc-400">
+            <StarRating value={(item as Brand).userRating} size={12} /> {(item as Brand).userRating.toFixed(1)}
+          </span>
+        )}
+        {type === 'stack' && <p className="text-xs text-slate-500 dark:text-zinc-400">{(item as Stack).substances.length} substances</p>}
+        {substance && <p className="truncate text-xs text-slate-500 dark:text-zinc-400">{substance.classification}</p>}
+      </div>
+      <button onClick={onClear} aria-label={`Remove ${item.name}`} className="shrink-0 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+        <X size={16} />
+      </button>
+    </div>
+  );
+}
+
+function ComparePicker({ initialType, initialId }: { initialType: CompareType | null; initialId: string | null }) {
+  const navigate = useNavigate();
+  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
+  const [tab, setTab] = useState<CompareType>(initialType ?? 'substance');
+  const [query, setQuery] = useState('');
+  const [pick1, setPick1] = useState<string | null>(initialType ? initialId : null);
+  const [pick2, setPick2] = useState<string | null>(null);
+
+  const pool: (Substance | Brand | Stack)[] = tab === 'substance' ? SUPPLEMENTS : tab === 'brand' ? BRANDS : STACKS;
+  const byId = (id: string | null) => (id ? pool.find((p) => p.id === id) : undefined);
+  const item1 = byId(pick1);
+  const item2 = byId(pick2);
+
+  const switchTab = (next: CompareType) => {
+    if (next === tab) return;
+    setTab(next);
+    setPick1(null);
+    setPick2(null);
+    setQuery('');
+  };
+
+  const choose = (id: string) => {
+    if (pick1 === id || pick2 === id) return;
+    if (!pick1) setPick1(id);
+    else if (!pick2) setPick2(id);
+    setQuery('');
+  };
+
+  const results = useMemo(() => {
+    const q = norm(query);
+    return pool
+      .filter((p) => p.id !== pick1 && p.id !== pick2)
+      .filter((p) => !q || norm(p.name).includes(q) || ('aliases' in p && (p.aliases ?? []).some((a) => norm(a).includes(q))))
+      .slice(0, 8);
+  }, [pool, query, pick1, pick2]);
+
+  const ready = pick1 && pick2;
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mb-6 text-center">
+        <span className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/20">
+          <Scale size={24} />
+        </span>
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Compare side by side</h1>
+        <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500 dark:text-zinc-400">
+          Pick two to see what differs and what they share — doses, effects, risks, and community activity.
+        </p>
+      </div>
+
+      {/* Type tabs */}
+      <div className="mb-5 flex justify-center">
+        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-zinc-800 dark:bg-zinc-900/70">
+          {PICKER_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => switchTab(t.key)}
+              className={cn(
+                'rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors',
+                tab === t.key
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-white'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200',
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* VS hero with the two slots */}
+      <div className="relative mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6">
+        <PickerSlot item={item1} type={tab} placeholder={`Choose a ${PICKER_TABS.find((t) => t.key === tab)!.noun}`} onClear={() => setPick1(null)} />
+        <PickerSlot item={item2} type={tab} placeholder={`Choose a ${PICKER_TABS.find((t) => t.key === tab)!.noun}`} onClear={() => setPick2(null)} />
+        <span className="absolute left-1/2 top-1/2 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-500 to-emerald-700 text-[11px] font-black text-white shadow-lg dark:border-zinc-950 sm:flex">
+          VS
+        </span>
+      </div>
+
+      {ready ? (
+        <button
+          onClick={() => navigate(`/compare?type=${tab}&id1=${pick1}&id2=${pick2}`)}
+          className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 font-bold text-white shadow-sm transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
+        >
+          Compare {item1!.name} vs {item2!.name}
+          <ArrowRight size={18} />
+        </button>
+      ) : (
+        <div className="mb-6">
+          <div className="relative">
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={`Search ${PICKER_TABS.find((t) => t.key === tab)!.label.toLowerCase()}…`}
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+            />
+          </div>
+          <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-800">
+            {results.length > 0 ? (
+              results.map((p) => {
+                const substance = tab === 'substance' ? (p as Substance) : null;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => choose(p.id)}
+                    className="flex w-full items-center gap-3 border-b border-slate-100 bg-white px-4 py-2.5 text-left transition-colors last:border-b-0 hover:bg-slate-50 dark:border-zinc-800/60 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/50"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-200">
+                      {initials(p.name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-slate-900 dark:text-zinc-100">{p.name}</span>
+                      <span className="block truncate text-xs text-slate-500 dark:text-zinc-400">
+                        {substance
+                          ? substance.classification
+                          : tab === 'brand'
+                            ? `${(p as Brand).userRating.toFixed(1)} ★`
+                            : `${(p as Stack).substances.length} substances`}
+                      </span>
+                    </span>
+                    <ArrowRight size={15} className="shrink-0 text-slate-300 dark:text-zinc-600" />
+                  </button>
+                );
+              })
+            ) : (
+              <p className="bg-white px-4 py-6 text-center text-sm text-slate-400 dark:bg-zinc-900/50 dark:text-zinc-500">No matches.</p>
+            )}
+          </div>
+          <p className="mt-2 text-center text-xs text-slate-400 dark:text-zinc-500">
+            {pick1 ? 'Pick one more to compare.' : 'Pick two to compare.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- page -------------------------------------------------------------------
 
 export default function Compare() {
@@ -271,7 +461,7 @@ export default function Compare() {
   }, [type, id1, id2, SUPPLEMENTS, STACKS, BRANDS]);
 
   if (!type || !id1 || !id2) {
-    return <div className="p-8 text-center text-slate-500 dark:text-zinc-400">Invalid comparison parameters.</div>;
+    return <ComparePicker initialType={type} initialId={id1} />;
   }
   if (!item1 || !item2) {
     return <div className="p-8 text-center text-slate-500 dark:text-zinc-400">Loading comparison…</div>;
