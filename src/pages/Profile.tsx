@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck } from 'lucide-react';
+import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck, Target } from 'lucide-react';
 import { BRANDS, getPosts, STACKS, SUPPLEMENTS, USERS } from '../data/mockData';
+import { useUserScope } from '../context/UserScopeContext';
+import { GoalsPicker } from '../components/GoalsPicker';
 import { usePosts } from '../context/PostsContext';
 import PostCard from '../components/PostCard';
 import { HiddenGroup, HiddenItem, useHiddenItems } from '../hooks/useHiddenItems';
@@ -39,6 +41,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { status, user, profile: authProfile, services, isBackendConfigured, refresh, signOut } = useAuth();
   const { toast } = useToast();
+  const { scope, updateScope } = useUserScope();
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
   const { following: followedItems, requests: followRequests, isFollowing, requestStatus, toggleFollow } = useFollowing();
@@ -314,6 +317,33 @@ export default function Profile() {
           </div>
           <button disabled={saving} className="rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>
         </form>
+      )}
+
+      {isOwnProfile && (
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="mb-1 flex items-center gap-2">
+            <Target size={18} className="text-emerald-500" />
+            <h2 className="text-lg font-bold">Your goals</h2>
+            {scope.goals.length > 0 && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                {scope.goals.length}
+              </span>
+            )}
+          </div>
+          <p className="mb-4 text-sm text-slate-500 dark:text-zinc-400">
+            We use these to rank substances and discussion for you across the Map and Square. Changes save instantly.
+          </p>
+          <GoalsPicker
+            selected={scope.goals}
+            onToggle={(name) =>
+              updateScope({
+                goals: scope.goals.includes(name)
+                  ? scope.goals.filter((g) => g !== name)
+                  : [...scope.goals, name],
+              })
+            }
+          />
+        </div>
       )}
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
