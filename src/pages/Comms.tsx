@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Crown, Image, MessageSquare, Mic, Paperclip, Plus, Search, Send, Shield, Users } from 'lucide-react';
+import { ArrowLeft, Crown, Image, Info, MessageSquare, Mic, Paperclip, Plus, Search, Send, Shield, Users } from 'lucide-react';
 import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
@@ -80,6 +80,12 @@ export default function Comms() {
   const [controlsError, setControlsError] = useState('');
   const [attachError, setAttachError] = useState('');
   const [attachSending, setAttachSending] = useState(false);
+  // Messenger shell state: on small screens the list and the thread swap in
+  // and out (WhatsApp/Instagram style); quarter details live behind an Info
+  // toggle instead of a permanent block above the messages.
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
+  const [showQuarterInfo, setShowQuarterInfo] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Phase 3 in-quarter governance controls (persisted quarters only): runs
   // an owner/moderator action, optionally confirming first, and surfaces a
@@ -144,6 +150,15 @@ export default function Comms() {
     // mark read only when the selected thread changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, activeConversation?.id, activeQuarter?.id]);
+
+  // Keep the newest message in view, like every messenger: jump on thread
+  // switch, follow along as messages arrive.
+  const activeMessageCount = tab === 'quarters'
+    ? comms.messages.filter((m) => m.quarterId === activeQuarter?.id).length
+    : comms.messages.filter((m) => m.conversationId === activeConversation?.id).length;
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: 'end' });
+  }, [tab, activeConversation?.id, activeQuarter?.id, activeMessageCount]);
 
   // Release the microphone if the user navigates away mid-recording.
   useEffect(() => {
@@ -291,7 +306,7 @@ export default function Comms() {
     recorder.stop();
   };
 
-  const renderMessage = (message: CommsMessage) => {
+  const renderMessage = (message: CommsMessage, index: number, list: CommsMessage[]) => {
     const mine = message.senderId === comms.viewerId;
     const sender = comms.getUser(message.senderId);
     const reactions = Object.entries(message.reactions).filter(([, users]) => users.length > 0);
@@ -300,15 +315,33 @@ export default function Comms() {
     const hideReactions = message.persisted === true;
     // Persisted messages carry an `attachments` array (possibly empty); mock messages carry a single `attachment`.
     const attachments = message.attachments ?? (message.attachment ? [message.attachment] : []);
+    // Consecutive messages from the same sender cluster like any messenger:
+    // the sender line and incoming avatar only render on the first of a run.
+    const grouped = index > 0 && list[index - 1].senderId === message.senderId && !list[index - 1].deleted;
     return (
-      <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+      <div key={message.id} className={`group flex items-end gap-2 ${mine ? 'justify-end' : 'justify-start'} ${grouped ? 'mt-0.5' : 'mt-3'}`}>
+        {!mine && (
+          grouped ? (
+            <span className="w-7 shrink-0" />
+          ) : (
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-200">
+              {sender?.avatarInitial ?? sender?.username?.charAt(0).toUpperCase() ?? '?'}
+            </span>
+          )
+        )}
         <div
-          className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm ${mine ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-zinc-100'}`}
+          className={`max-w-[78%] px-3.5 py-2 text-sm shadow-sm ${
+            mine
+              ? `bg-emerald-600 text-white ${grouped ? 'rounded-2xl rounded-tr-md' : 'rounded-2xl rounded-br-md'}`
+              : `bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-zinc-100 ${grouped ? 'rounded-2xl rounded-tl-md' : 'rounded-2xl rounded-bl-md'}`
+          }`}
         >
-          <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span className="opacity-70">{sender?.username} · {formatTime(message.createdAt)}</span>
-            {message.scope === 'quarter' && <QuarterRoleBadge role={quarterRoleOf(activeQuarter, message.senderId)} />}
-          </div>
+          {!grouped && (
+            <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="opacity-70">{mine ? 'You' : sender?.username} · {formatTime(message.createdAt)}</span>
+              {message.scope === 'quarter' && <QuarterRoleBadge role={quarterRoleOf(activeQuarter, message.senderId)} />}
+            </div>
+          )}
           {message.deleted ? <em>Message unavailable</em> : message.body && <p>{message.body}</p>}
           {attachments.map((attachment) => {
             if (attachment.type === 'image') {
@@ -347,7 +380,7 @@ export default function Comms() {
               </button>
             );
           })}
-          <div className="mt-2 flex items-center gap-2 text-xs">
+          <div className="mt-1.5 flex items-center gap-2 text-[11px] opacity-70 transition-opacity group-hover:opacity-100">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
             {message.scope === 'quarter' && !activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
             {message.scope === 'quarter' && activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && (
@@ -395,45 +428,57 @@ export default function Comms() {
     );
   };
 
-  return (
-    <div className="space-y-4">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight">
-          <MessageSquare size={22} className="text-emerald-500" />
-          Comms
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
-          Direct messages, message requests, and your Quarters.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {(['messages', 'requests', 'quarters'] as Tab[]).map((name) => (
-            <button
-              key={name}
-              onClick={() => setTab(name)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === name ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
-            >
-              {name === 'messages'
-                ? 'Messages'
-                : name === 'requests'
-                  ? 'Message Requests'
-                  : 'Quarters'}{' '}
-              <span className="ml-1 rounded-full bg-black/10 px-1.5">{comms.counts[name]}</span>
-            </button>
-          ))}
-        </div>
-      </section>
+  const openConversation = (id: string) => {
+    setActiveConversationId(id);
+    setMobileThreadOpen(true);
+  };
+  const openQuarter = (id: string) => {
+    setActiveQuarterId(id);
+    setShowQuarterInfo(false);
+    setMobileThreadOpen(true);
+  };
 
-      <section className="grid gap-4 lg:grid-cols-[320px_1fr]">
-        <aside className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search users to start a DM"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            />
+  return (
+    <div className="mx-auto flex h-[calc(100dvh-9.5rem)] w-full max-w-6xl flex-col md:h-[calc(100dvh-7rem)]">
+      <section className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        {/* Conversation list pane */}
+        <aside className={`${mobileThreadOpen ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-r border-slate-200 dark:border-zinc-800 md:w-80 lg:w-[360px]`}>
+          <div className="border-b border-slate-200 p-4 pb-3 dark:border-zinc-800">
+            <h1 className="flex items-center gap-2 text-xl font-black tracking-tight">
+              <MessageSquare size={20} className="text-emerald-500" />
+              Comms
+            </h1>
+            <div className="mt-3 flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-zinc-800/80">
+              {(['messages', 'requests', 'quarters'] as Tab[]).map((name) => (
+                <button
+                  key={name}
+                  onClick={() => setTab(name)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-semibold transition-colors ${
+                    tab === name
+                      ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                  }`}
+                >
+                  {name === 'messages' ? 'Chats' : name === 'requests' ? 'Requests' : 'Quarters'}
+                  {comms.counts[name] > 0 && (
+                    <span className={`rounded-full px-1.5 text-[10px] font-bold ${tab === name ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-zinc-700 dark:text-zinc-300'}`}>
+                      {comms.counts[name]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="relative mt-3">
+              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search users to start a DM"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-950"
+              />
+            </div>
           </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {query && (
             <div className="space-y-2">
               {matches.map((user) => {
@@ -483,25 +528,33 @@ export default function Comms() {
                   .filter((m) => m.conversationId === conversation.id)
                   .at(-1);
                 const unread = comms.unreadConversationCount(conversation.id);
+                const active = tab === 'messages' && activeConversation?.id === conversation.id;
                 return (
                   <button
                     key={conversation.id}
-                    onClick={() => setActiveConversationId(conversation.id)}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-left text-sm dark:border-zinc-800"
+                    onClick={() => openConversation(conversation.id)}
+                    className={`w-full rounded-xl p-2.5 text-left text-sm transition-colors ${active ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-zinc-800/60'}`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                         {other?.avatarInitial}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <strong>@{other?.username}</strong>
-                        <p className="truncate text-slate-500">{last?.body}</p>
-                      </span>
-                      {unread > 0 && (
-                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
-                          {unread}
+                        <span className="flex items-baseline justify-between gap-2">
+                          <strong className={unread > 0 ? 'text-slate-900 dark:text-zinc-50' : ''}>@{other?.username}</strong>
+                          {last && <span className="shrink-0 text-[11px] text-slate-400 dark:text-zinc-500">{formatTime(last.createdAt)}</span>}
                         </span>
-                      )}
+                        <span className="flex items-center justify-between gap-2">
+                          <p className={`truncate ${unread > 0 ? 'font-semibold text-slate-700 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-400'}`}>
+                            {last ? (last.body || 'Attachment') : 'Say hello'}
+                          </p>
+                          {unread > 0 && (
+                            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[11px] font-bold text-white">
+                              {unread}
+                            </span>
+                          )}
+                        </span>
+                      </span>
                     </div>
                   </button>
                 );
@@ -518,8 +571,8 @@ export default function Comms() {
                     return (
                       <button
                         key={conversation.id}
-                        onClick={() => setActiveConversationId(conversation.id)}
-                        className="w-full rounded-xl border border-dashed border-slate-300 p-3 text-left text-sm dark:border-zinc-700"
+                        onClick={() => openConversation(conversation.id)}
+                        className="w-full rounded-xl border border-dashed border-slate-300 p-2.5 text-left text-sm transition-colors hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800/60"
                       >
                         <div className="flex items-center gap-3">
                           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-zinc-800">
@@ -637,80 +690,136 @@ export default function Comms() {
               </div>
               {comms.quarters.map((quarter) => {
                 const last = comms.messages.filter((m) => m.quarterId === quarter.id).at(-1);
+                const unread = comms.unreadQuarterCount(quarter.id);
+                const active = tab === 'quarters' && activeQuarter?.id === quarter.id;
                 return (
                 <button
                   key={quarter.id}
-                  onClick={() => setActiveQuarterId(quarter.id)}
-                  className="w-full rounded-xl border border-slate-200 p-3 text-left text-sm dark:border-zinc-800"
+                  onClick={() => openQuarter(quarter.id)}
+                  className={`w-full rounded-xl p-2.5 text-left text-sm transition-colors ${active ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-zinc-800/60'}`}
                 >
-                  <strong>{quarter.title}</strong>
-                  {last && <p className="truncate text-slate-500">{last.body}</p>}
-                  <p className="text-slate-500">
-                    {quarter.memberIds.length} members · {comms.unreadQuarterCount(quarter.id)}{' '}
-                    unread
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-300">
+                      <Users size={18} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-baseline justify-between gap-2">
+                        <strong className={unread > 0 ? 'text-slate-900 dark:text-zinc-50' : ''}>{quarter.title}</strong>
+                        {last && <span className="shrink-0 text-[11px] text-slate-400 dark:text-zinc-500">{formatTime(last.createdAt)}</span>}
+                      </span>
+                      <span className="flex items-center justify-between gap-2">
+                        <p className={`truncate ${unread > 0 ? 'font-semibold text-slate-700 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-400'}`}>
+                          {last ? (last.body || 'Attachment') : `${quarter.memberIds.length} members`}
+                        </p>
+                        {unread > 0 && (
+                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[11px] font-bold text-white">
+                            {unread}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </div>
                 </button>
                 );
               })}
             </div>
           )}
+          </div>
         </aside>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        {/* Thread pane */}
+        <div className={`${mobileThreadOpen ? 'flex' : 'hidden'} min-w-0 flex-1 flex-col md:flex`}>
           {!hasActiveThread && (
-            <EmptyState
-              icon={tab === 'quarters' ? Users : MessageSquare}
-              title={tab === 'quarters' ? 'Select a Quarter' : 'Select a conversation'}
-              description={
-                tab === 'quarters'
-                  ? 'Choose a Quarter from the list on the left, or create one to get started.'
-                  : 'Choose a conversation from the list on the left, or search above to start a new one.'
-              }
-            />
-          )}
-          {tab !== 'quarters' && activeConversation && (
-            <>
-              <h2 className="font-bold">
-                @
-                {
-                  comms.getUser(
-                    activeConversation.participantIds.find((id) => id !== comms.viewerId) || '',
-                  )?.username
+            <div className="flex flex-1 items-center justify-center p-6">
+              <EmptyState
+                icon={tab === 'quarters' ? Users : MessageSquare}
+                title={tab === 'quarters' ? 'Select a Quarter' : 'Select a conversation'}
+                description={
+                  tab === 'quarters'
+                    ? 'Choose a Quarter from the list on the left, or create one to get started.'
+                    : 'Choose a conversation from the list on the left, or search above to start a new one.'
                 }
-              </h2>
-              <div className="mt-4 space-y-3">
+              />
+            </div>
+          )}
+          {tab !== 'quarters' && activeConversation && (() => {
+            const other = comms.getUser(
+              activeConversation.participantIds.find((id) => id !== comms.viewerId) || '',
+            );
+            const otherTyping =
+              !isPendingSentConversation &&
+              activeConversation.typingUserIds.filter((id) => id !== comms.viewerId).length > 0;
+            return (
+            <>
+              <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-zinc-800">
+                <button
+                  onClick={() => setMobileThreadOpen(false)}
+                  aria-label="Back to conversations"
+                  className="-ml-1 rounded-full p-1.5 text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  {other?.avatarInitial}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate font-bold leading-tight">@{other?.username}</h2>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">
+                    {isPendingSentConversation ? 'Request pending' : otherTyping ? 'typing…' : 'Direct message'}
+                  </p>
+                </div>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
                 {activeMessages.map(renderMessage)}
                 {isPendingSentConversation && (
-                  <p className="text-sm text-slate-500">
+                  <p className="mt-4 rounded-xl bg-slate-50 p-3 text-center text-sm text-slate-500 dark:bg-zinc-800/60 dark:text-zinc-400">
                     Message request sent. You&apos;ll be able to chat once they accept.
                   </p>
                 )}
-                {!isPendingSentConversation &&
-                  activeConversation.typingUserIds.filter((id) => id !== comms.viewerId).length >
-                    0 && <p className="text-sm text-slate-500">typing...</p>}
+                <div ref={messagesEndRef} />
               </div>
             </>
-          )}
+            );
+          })()}
           {tab === 'quarters' && activeQuarter && (
             <>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-bold">
-                    <Users className="mr-1 inline" size={17} />
-                    {activeQuarter.title}
-                  </h2>
-                  <p className="text-sm text-slate-500">{activeQuarter.description}</p>
+              <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-zinc-800">
+                <button
+                  onClick={() => setMobileThreadOpen(false)}
+                  aria-label="Back to quarters"
+                  className="-ml-1 rounded-full p-1.5 text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-300">
+                  <Users size={17} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate font-bold leading-tight">{activeQuarter.title}</h2>
+                  <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400">
+                    {activeQuarter.memberIds.length} members
+                    <QuarterRoleBadge role={quarterRoleOf(activeQuarter, comms.viewerId)} />
+                  </p>
                 </div>
+                <button
+                  onClick={() => setShowQuarterInfo((value) => !value)}
+                  aria-label="Quarter details"
+                  className={`rounded-full p-2 transition-colors ${showQuarterInfo ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'text-slate-500 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}`}
+                >
+                  <Info size={18} />
+                </button>
                 {!(activeQuarter.persisted && activeQuarter.ownerId === comms.viewerId) && (
                   <button
                     onClick={() => comms.leaveQuarter(activeQuarter.id)}
-                    className="rounded-lg bg-slate-100 px-3 py-1 text-sm dark:bg-zinc-800"
+                    className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                   >
                     Leave
                   </button>
                 )}
               </div>
-              <div className="mt-4 rounded-xl border border-slate-200 p-3 dark:border-zinc-800"><h3 className="mb-2 text-sm font-bold">Quarter Controls</h3><p className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">Your role: {quarterRoleOf(activeQuarter, comms.viewerId) ? <QuarterRoleBadge role={quarterRoleOf(activeQuarter, comms.viewerId)} /> : 'Member'}</p>
+              {showQuarterInfo && (
+              <div className="max-h-72 overflow-y-auto border-b border-slate-200 px-4 py-3 dark:border-zinc-800">
+              {activeQuarter.description && <p className="mb-2 text-sm text-slate-500 dark:text-zinc-400">{activeQuarter.description}</p>}
               {controlsError && (
                 <p className="mb-2 rounded-lg bg-red-50 p-2 text-xs text-red-700 dark:bg-red-950/30 dark:text-red-300">
                   {controlsError}
@@ -772,7 +881,7 @@ export default function Comms() {
                   </span>
                   );
                 })}
-              </div></div>
+              </div>
               {activeQuarter.persisted ? (
                 <div className="mt-3 flex gap-2">
                   <input
@@ -814,12 +923,17 @@ export default function Comms() {
                     ))}
                 </select>
               )}
-              <div className="mt-4 space-y-3">{activeQuarterMessages.map(renderMessage)}</div>
+              </div>
+              )}
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+                {activeQuarterMessages.map(renderMessage)}
+                <div ref={messagesEndRef} />
+              </div>
             </>
           )}
 
           {hasActiveThread && !isPendingSentConversation && (
-          <div className="mt-5 border-t border-slate-200 pt-3 dark:border-zinc-800">
+          <div className="border-t border-slate-200 p-3 dark:border-zinc-800">
             {error && (
               <p className="mb-2 rounded-lg bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
                 {error}
@@ -830,18 +944,13 @@ export default function Comms() {
                 {attachError}
               </p>
             )}
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={
-                tab === 'quarters' ? 'Write a message. Use @username to mention someone.' : 'Write a message…'
-              }
-              className="h-20 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-950"
-            />
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="flex items-end gap-1.5">
               {showPersistedAttach && (
-                <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800 aria-disabled:opacity-50">
-                  <Paperclip className="inline" size={15} /> {attachSending ? 'Uploading…' : 'Attach'}
+                <label
+                  title={attachSending ? 'Uploading…' : 'Attach a file'}
+                  className={`cursor-pointer rounded-full p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 ${attachSending ? 'animate-pulse' : ''}`}
+                >
+                  <Paperclip size={19} />
                   <input
                     hidden
                     type="file"
@@ -857,8 +966,8 @@ export default function Comms() {
               )}
               {showRichComposer && (
                 <>
-                  <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">
-                    <Image className="inline" size={15} /> Image
+                  <label title="Send an image or GIF" className="cursor-pointer rounded-full p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                    <Image size={19} />
                     <input
                       hidden
                       type="file"
@@ -870,8 +979,8 @@ export default function Comms() {
                       }}
                     />
                   </label>
-                  <label className="cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-zinc-800">
-                    <Paperclip className="inline" size={15} /> File
+                  <label title="Send a file" className="cursor-pointer rounded-full p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                    <Paperclip size={19} />
                     <input
                       hidden
                       type="file"
@@ -884,19 +993,34 @@ export default function Comms() {
                     />
                   </label>
                   <button
+                    title={recording ? 'Stop recording' : 'Record a voice note'}
                     onClick={() => (recording ? stopVoice() : void startVoice())}
-                    className={`rounded-lg px-3 py-2 text-sm ${recording ? 'bg-red-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
+                    className={`rounded-full p-2.5 transition-colors ${recording ? 'animate-pulse bg-red-600 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'}`}
                   >
-                    <Mic className="inline" size={15} /> {recording ? 'Stop recording' : 'Record voice'}
+                    <Mic size={19} />
                   </button>
                 </>
               )}
+              <textarea
+                value={draft}
+                rows={1}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder={tab === 'quarters' ? 'Message the quarter — @username to mention' : 'Message…'}
+                className="max-h-32 min-h-[42px] flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-950"
+              />
               <button
                 onClick={() => send()}
                 disabled={!draft.trim()}
-                className="ml-auto inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                aria-label="Send"
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
               >
-                <Send size={15} /> Send
+                <Send size={18} />
               </button>
             </div>
           </div>
