@@ -25,6 +25,7 @@ export function SaveButton({ id, type, className, metadata }: SaveButtonProps) {
 
   return (
     <button
+      type="button"
       onClick={toggleSave}
       className={cn(
         "p-2 rounded-full transition-colors flex items-center justify-center",
@@ -34,6 +35,8 @@ export function SaveButton({ id, type, className, metadata }: SaveButtonProps) {
         className
       )}
       title={saved ? "Unsave" : "Save"}
+      aria-label={saved ? "Unsave" : "Save"}
+      aria-pressed={saved}
     >
       <Bookmark size={18} className={saved ? "fill-current" : ""} />
     </button>
