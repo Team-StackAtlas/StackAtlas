@@ -29,7 +29,13 @@ import { usePosts } from '../context/PostsContext';
 import AccessBadge from '../components/AccessBadge';
 import StarRating from '../components/StarRating';
 import { cn } from '../lib/utils';
-import { TYPE_TAGS, type Substance, type Brand, type Stack } from '../data/mockData';
+import { ADMINISTRATION_META } from '../lib/administrationIcons';
+import { TYPE_TAGS, type AdministrationMethod, type Substance, type Brand, type Stack } from '../data/mockData';
+
+/** Administration values keep their emoji as the data key; show the clean label. */
+function adminLabel(method: string): string {
+  return ADMINISTRATION_META[method as AdministrationMethod]?.label ?? method;
+}
 
 type CompareType = 'substance' | 'brand' | 'stack';
 
@@ -394,7 +400,7 @@ export default function Compare() {
 
             <OverlapSection title="Subjective effects" icon={Activity} a={s1.subjectiveEffects} b={s2.subjectiveEffects} nameA={s1.name} nameB={s2.name} />
             <OverlapSection title="Health risks" icon={AlertTriangle} a={s1.healthRisks} b={s2.healthRisks} nameA={s1.name} nameB={s2.name} sharedTone="warn" />
-            <OverlapSection title="Administration" icon={Pill} a={s1.administration} b={s2.administration} nameA={s1.name} nameB={s2.name} />
+            <OverlapSection title="Administration" icon={Pill} a={s1.administration.map(adminLabel)} b={s2.administration.map(adminLabel)} nameA={s1.name} nameB={s2.name} />
             <OverlapSection
               title="Categories"
               icon={Layers}
