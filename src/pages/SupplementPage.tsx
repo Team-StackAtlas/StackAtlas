@@ -54,6 +54,31 @@ const RISK_LEVEL_STYLES: Record<'Low' | 'Moderate' | 'High', string> = {
   High: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
 };
 
+/** Fact value that clamps long prose to three lines with a Show more toggle.
+ * Imported catalog values (e.g. half-life) can be full paragraphs; rendered
+ * unclamped at display size they stretch the whole tile row into towers of
+ * empty space. Short values keep the big stat treatment. */
+function ExpandableValue({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  if (text.length <= 60) {
+    return <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{text}</p>;
+  }
+  return (
+    <div>
+      <p className={`text-sm font-medium leading-relaxed text-slate-700 dark:text-zinc-300 ${open ? '' : 'line-clamp-3'}`}>
+        {text}
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="mt-1.5 text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+      >
+        {open ? 'Show less' : 'Show more'}
+      </button>
+    </div>
+  );
+}
+
 function FactTile({ icon, label, className = '', children }: { icon: ReactNode; label: string; className?: string; children: ReactNode }) {
   return (
     <div className={`rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-4 shadow-sm ${className}`}>
@@ -290,22 +315,22 @@ export default function SupplementPage() {
           <Sources targetType="substance" targetId={supplement.id} section="dosage" />
         </FactTile>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap items-start gap-4">
         {supplement.halfLife && (
           <FactTile icon={<Timer size={16} />} label="Half-life" className="min-w-[150px] flex-1">
-            <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{supplement.halfLife}</p>
+            <ExpandableValue text={supplement.halfLife} />
           </FactTile>
         )}
 
         {supplement.lengthOfCycle && (
           <FactTile icon={<Repeat size={16} />} label="Cycle Length" className="min-w-[150px] flex-1">
-            <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{supplement.lengthOfCycle}</p>
+            <ExpandableValue text={supplement.lengthOfCycle} />
           </FactTile>
         )}
 
         {supplement.toleranceBuildup && (
           <FactTile icon={<Beaker size={16} />} label="Tolerance Buildup" className="min-w-[150px] flex-1">
-            <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{supplement.toleranceBuildup}</p>
+            <ExpandableValue text={supplement.toleranceBuildup} />
           </FactTile>
         )}
 

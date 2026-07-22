@@ -507,6 +507,7 @@ export const SUBSTANCES: Substance[] = [
     id: 'melatonin',
     name: 'Melatonin',
     formula: 'C13H16N2O2',
+    halfLife: 'Immediate-release melatonin generally has a plasma half-life of roughly 20-50 minutes. Prolonged- or surge-sustained formulations extend exposure for several hours, so release profile is more informative than one pooled value.',
     description: 'A hormone that regulates the sleep-wake cycle, useful for jet lag and sleep onset.',
     paths: [
       { domain: 'Mind', category: 'Sleep' },
