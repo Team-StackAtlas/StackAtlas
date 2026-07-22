@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../services/supabase/client';
 import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
+import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
 
 interface GlossaryContextValue {
   /** Lowercased term text -> term. */
@@ -24,7 +25,11 @@ export function GlossaryProvider({ children }: { children: ReactNode }) {
   const [terms, setTerms] = useState<GlossaryTerm[]>([]);
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      // No backend: the seed glossary keeps inline term-linking alive in demos.
+      setTerms(MOCK_GLOSSARY_TERMS);
+      return;
+    }
     let cancelled = false;
     listGlossaryTerms(supabase)
       .then((rows) => {

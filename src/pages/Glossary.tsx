@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Search } from 'lucide-react';
 import { supabase } from '../services/supabase/client';
 import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
+import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
 import { GlossaryText } from '../components/GlossaryText';
 import { EmptyState } from '../components/EmptyState';
 
@@ -16,7 +17,12 @@ export default function Glossary() {
   const activeTerm = searchParams.get('term');
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      // No backend: browse the seed glossary so the page still works in demos.
+      setTerms(MOCK_GLOSSARY_TERMS);
+      setLoaded(true);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -105,15 +111,7 @@ export default function Glossary() {
         </p>
       </div>
 
-      {!supabase && (
-        <p className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-          Backend not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to browse the
-          glossary.
-        </p>
-      )}
-
-      {supabase && (
-        <>
+      <>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
@@ -176,8 +174,7 @@ export default function Glossary() {
               </div>
             )
           )}
-        </>
-      )}
+      </>
     </div>
   );
 }
