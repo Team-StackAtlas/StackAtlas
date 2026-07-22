@@ -109,32 +109,32 @@ const TOOLS: {
   name: string;
   description: string;
   icon: typeof GitCompare;
-  color: string;
-  bg: string;
+  gradient: string;
+  shadow: string;
 }[] = [
   {
     type: 'substance',
     name: 'Substance Compare',
     description: 'Compare two substances side by side.',
     icon: GitCompare,
-    color: 'text-pink-500 dark:text-pink-400',
-    bg: 'bg-pink-500/10',
+    gradient: 'bg-gradient-to-br from-pink-500 to-rose-500',
+    shadow: 'shadow-pink-500/25',
   },
   {
     type: 'brand',
     name: 'Brand Compare',
     description: 'Compare two brands on reliability and testing.',
     icon: GitCompare,
-    color: 'text-indigo-500 dark:text-indigo-400',
-    bg: 'bg-indigo-500/10',
+    gradient: 'bg-gradient-to-br from-indigo-500 to-blue-500',
+    shadow: 'shadow-indigo-500/25',
   },
   {
     type: 'stack',
     name: 'Stack Compare',
     description: 'Compare two stacks and their substances.',
     icon: Layers,
-    color: 'text-violet-500 dark:text-violet-400',
-    bg: 'bg-violet-500/10',
+    gradient: 'bg-gradient-to-br from-violet-500 to-purple-500',
+    shadow: 'shadow-violet-500/25',
   },
 ];
 
@@ -167,7 +167,7 @@ export default function Lab() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8 px-4 pt-6 max-w-3xl mx-auto w-full transition-colors duration-200">
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Tools</h2>
+        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">Lab</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
           Compare substances, brands, and stacks side by side, or look up a term.
         </p>
@@ -178,40 +178,43 @@ export default function Lab() {
           <button
             key={tool.type}
             onClick={() => openPicker(tool.type)}
-            className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all group text-left shadow-sm"
+            className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 transition-all group text-left shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md dark:hover:border-zinc-700"
           >
             <div
               className={cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110',
-                tool.bg,
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-md transition-transform group-hover:scale-110',
+                tool.gradient,
+                tool.shadow,
               )}
             >
-              <tool.icon size={20} className={tool.color} />
+              <tool.icon size={21} className="text-white" />
             </div>
-            <div>
-              <span className="block text-sm font-semibold text-slate-700 dark:text-zinc-200 group-hover:text-slate-900 dark:group-hover:text-zinc-50 transition-colors">
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-slate-800 dark:text-zinc-100">
                 {tool.name}
               </span>
               <span className="text-xs text-slate-500 dark:text-zinc-500">{tool.description}</span>
             </div>
+            <ChevronRight size={16} className="shrink-0 text-slate-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-zinc-600" />
           </button>
         ))}
 
         <Link
           to="/glossary"
-          className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all group text-left shadow-sm"
+          className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 transition-all group text-left shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md dark:hover:border-zinc-700"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-110">
-            <BookOpen size={20} className="text-emerald-500 dark:text-emerald-400" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/25 transition-transform group-hover:scale-110">
+            <BookOpen size={21} className="text-white" />
           </div>
-          <div>
-            <span className="block text-sm font-semibold text-slate-700 dark:text-zinc-200 group-hover:text-slate-900 dark:group-hover:text-zinc-50 transition-colors">
+          <div className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-slate-800 dark:text-zinc-100">
               Glossary
             </span>
             <span className="text-xs text-slate-500 dark:text-zinc-500">
               Plain-language definitions for supplement and research terms.
             </span>
           </div>
+          <ChevronRight size={16} className="shrink-0 text-slate-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-zinc-600" />
         </Link>
       </div>
 

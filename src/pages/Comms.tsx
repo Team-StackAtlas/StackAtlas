@@ -370,16 +370,12 @@ export default function Comms() {
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
-          <MessageSquare size={18} />
-          <span className="text-xs font-bold uppercase tracking-[0.18em]">Comms</span>
-        </div>
-        <h1 className="mt-2 text-2xl font-black tracking-tight">
-          Messages, Requests, and Quarters
+        <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight">
+          <MessageSquare size={22} className="text-emerald-500" />
+          Comms
         </h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-zinc-400">
-          Notifications stay in their own sidebar tab; Comms shows unread activity and creates
-          notification events for requests, invites, accepted requests, and mentions.
+        <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
+          Direct messages, message requests, and your Quarters.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {(['messages', 'requests', 'quarters'] as Tab[]).map((name) => (
