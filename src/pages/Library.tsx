@@ -93,7 +93,14 @@ export default function Library() {
           <form onSubmit={submitAlbum} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><h2 className="mb-3 flex items-center gap-2 font-bold"><Folder size={16}/> Create album</h2><input name="title" required placeholder="Album title" className="mb-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"/><textarea name="description" placeholder="Optional description" className="mb-2 h-20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"/><select name="privacy" defaultValue="private" className="mb-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"><option value="private">Private</option><option value="public">Public</option></select><button className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Create album</button></form>
         </div>
       )}
-      <div className="space-y-3">{rows.map((item) => 'ownerId' in item ? <div key={`album-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="flex justify-between gap-3"><div><Link to={`/library/albums/${item.id}`} className="font-bold hover:underline">{item.title}</Link><p className="text-sm text-slate-500">{item.privacy} · {item.description}</p></div><button onClick={() => deleteAlbum(item.id)}><Trash2 size={16}/></button></div></div> : <SavedRow key={`${item.type}-${item.id}`} item={item} albums={albums} albumItems={albumItems} onUnsave={() => unsaveItem(item.id, item.type)} onAdd={addToAlbum} onRemove={removeFromAlbum} />)}{rows.length === 0 && <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-zinc-800">No Library items match.</div>}</div>
+      <div className="space-y-3">{rows.map((item) => 'ownerId' in item ? <div key={`album-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="flex justify-between gap-3"><div><Link to={`/library/albums/${item.id}`} className="font-bold hover:underline">{item.title}</Link><p className="text-sm text-slate-500">{item.privacy} · {item.description}</p></div><button onClick={() => deleteAlbum(item.id)}><Trash2 size={16}/></button></div></div> : <SavedRow key={`${item.type}-${item.id}`} item={item} albums={albums} albumItems={albumItems} onUnsave={() => unsaveItem(item.id, item.type)} onAdd={addToAlbum} onRemove={removeFromAlbum} />)}{rows.length === 0 && (
+        <EmptyState
+          icon={Bookmark}
+          title={query || filter !== 'all' ? 'Nothing matches' : 'Nothing saved yet'}
+          description={query || filter !== 'all' ? 'Try a different search or filter.' : 'Tap the bookmark on any post, substance, or source to save it here — and organize saves into albums.'}
+          action={query || filter !== 'all' ? undefined : { label: 'Explore the Square', to: '/square' }}
+        />
+      )}</div>
     </div>
   );
 }
