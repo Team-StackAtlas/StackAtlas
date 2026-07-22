@@ -227,51 +227,52 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 text-3xl font-bold text-slate-500 shadow-sm dark:border-zinc-950 dark:bg-zinc-800 dark:text-zinc-400">
+      <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+        {/* Banner + overlapping avatar, x.com-style */}
+        <div className="h-28 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 sm:h-32" />
+        <div className="px-5 pb-5">
+          <div className="flex items-end justify-between">
+            <div className="-mt-11 flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 text-3xl font-bold text-slate-500 shadow-md dark:border-zinc-900 dark:bg-zinc-800 dark:text-zinc-400">
               {showAvatar && shownProfile.avatarUrl ? <img src={shownProfile.avatarUrl} alt="" className="h-full w-full object-cover" /> : shownProfile.username.charAt(0).toUpperCase()}
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">{shownProfile.displayName || shownProfile.username}</h1>
-                {shownProfile.isVerified && <ShieldCheck size={18} className="text-emerald-500" />}
-                {(shownProfile.role === 'Admin' || shownProfile.role === 'Developer') && (
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{shownProfile.role}</span>
+            {isOwnProfile ? (
+              <div className="flex shrink-0 flex-wrap justify-end gap-2 pt-3">
+                {user && (
+                  <button onClick={() => signOut()} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800" aria-label="Sign out">
+                    <LogOut size={14} className="inline" />
+                  </button>
                 )}
+                <button onClick={() => setIsEditing((value) => !value)} className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                  {isEditing ? 'Cancel' : 'Edit Profile'}
+                </button>
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2"><p className="text-sm font-medium text-slate-500 dark:text-zinc-400">@{shownProfile.username}</p>{!isOwnProfile && <ReportAction targetType="profile" targetId={shownProfile.id} entityName={`@${shownProfile.username}`} />}</div>
-              {shownProfile.bio && <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-zinc-300">{shownProfile.bio}</p>}
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-zinc-500">
-                <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>
-                <span className="flex items-center gap-1"><Activity size={13} /> {shownProfile.stats?.dispatchCount ?? 0} Dispatches</span>
-                <span>{shownProfile.stats?.signalCount ?? 0} Signals</span>
-                <span>{shownProfile.stats?.followersCount ?? 0} followers</span>
-              </div>
+            ) : (
+              <button onClick={() => shownProfile && toggleFollow('user', shownProfile.id)} className="mt-3 shrink-0 rounded-full bg-slate-900 px-6 py-1.5 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white">
+                {followRequested ? 'Requested' : following ? 'Following' : 'Follow'}
+              </button>
+            )}
+          </div>
+          <div className="mt-3 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-zinc-100">{shownProfile.displayName || shownProfile.username}</h1>
+              {shownProfile.isVerified && <ShieldCheck size={18} className="text-emerald-500" />}
+              {(shownProfile.role === 'Admin' || shownProfile.role === 'Developer') && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{shownProfile.role}</span>
+              )}
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2"><p className="text-sm font-medium text-slate-500 dark:text-zinc-400">@{shownProfile.username}</p>{!isOwnProfile && <ReportAction targetType="profile" targetId={shownProfile.id} entityName={`@${shownProfile.username}`} />}</div>
+            {shownProfile.bio && <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-zinc-300">{shownProfile.bio}</p>}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-slate-500 dark:text-zinc-500">
+              <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1"><Activity size={13} /> <strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.dispatchCount ?? 0}</strong> Dispatches</span>
+              <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.signalCount ?? 0}</strong> Signals</span>
+              <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.followersCount ?? 0}</strong> followers</span>
             </div>
           </div>
-
-          {isOwnProfile ? (
-            <div className="flex shrink-0 flex-wrap justify-end gap-2">
-              {user && (
-                <button onClick={() => signOut()} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                  <LogOut size={14} className="inline" />
-                </button>
-              )}
-              <button onClick={() => setIsEditing((value) => !value)} className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
-                {isEditing ? 'Cancel' : 'Edit Profile'}
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => shownProfile && toggleFollow('user', shownProfile.id)} className="rounded-full bg-slate-900 px-6 py-1.5 text-sm font-medium text-white hover:bg-slate-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white">
-              {followRequested ? 'Requested' : following ? 'Following' : 'Follow'}
-            </button>
-          )}
         </div>
 
         {showBodyStats && bodyStats.length > 0 && (
-          <div className="mt-5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50 sm:grid-cols-5">
+          <div className="mx-5 mb-5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50 sm:grid-cols-5">
             {bodyStats.map(([label, value]) => (
               <div key={label}><div className="text-xs text-slate-500 dark:text-zinc-500">{label}</div><div className="font-semibold">{value}</div></div>
             ))}

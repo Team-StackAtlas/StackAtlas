@@ -551,39 +551,64 @@ export default function Create() {
 
       <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
         {!activeType ? (
-          <div className="mx-auto mt-8 max-w-2xl">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">What are you sharing?</h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">Pick a format — you'll add the substance, dose, and bearings on the next step.</p>
+          <div className="mx-auto mt-6 max-w-2xl sm:mt-12">
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">What are you sharing?</h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-zinc-400">Pick a format — you'll add the substance, dose, and bearings on the next step.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <button type="button" onClick={() => setActiveType('Dispatch')} className="group flex min-h-[260px] flex-col rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-500/5 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500/60">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 transition-transform group-hover:scale-105">
-                  <ClipboardList size={22} className="text-emerald-600 dark:text-emerald-400" />
+              <button type="button" onClick={() => setActiveType('Dispatch')} className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-500/60">
+                <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 to-teal-400" />
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/25 transition-transform group-hover:scale-110">
+                    <ClipboardList size={24} className="text-white" />
+                  </div>
+                  <h3 className="flex items-center gap-1.5 text-xl font-bold text-slate-900 dark:text-zinc-100">
+                    Dispatch
+                    <InfoTooltip label="Dispatch details" text="Dispatches help StackAtlas turn real user experiences into useful community data. Use them when you can share what you took, dose, frequency, duration, and enough context for others to compare." />
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">A structured log of a real protocol you ran.</p>
+                  <ul className="mt-4 flex-1 space-y-2">
+                    {['What you took, dose, and frequency', 'Duration and what happened', 'Counts toward community averages'].map(line => (
+                      <li key={line} className="flex items-start gap-2 text-[13px] text-slate-600 dark:text-zinc-300">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                    Start a Dispatch <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                  </span>
                 </div>
-                <h3 className="flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-zinc-100">
-                  Dispatch
-                  <InfoTooltip label="Dispatch details" text="Dispatches help StackAtlas turn real user experiences into useful community data. Use them when you can share what you took, dose, frequency, duration, and enough context for others to compare." />
-                </h3>
-                <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">A structured log — what you took, dose, frequency, duration, and what happened.</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                  Start a Dispatch <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
-                </span>
               </button>
-              <button type="button" onClick={() => setActiveType('Signal')} className="group flex min-h-[260px] flex-col rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/5 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500/60">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 transition-transform group-hover:scale-105">
-                  <Radio size={22} className="text-blue-600 dark:text-blue-400" />
+              <button type="button" onClick={() => setActiveType('Signal')} className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-500/60">
+                <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-sky-400" />
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-sky-500 shadow-md shadow-blue-500/25 transition-transform group-hover:scale-110">
+                    <Radio size={24} className="text-white" />
+                  </div>
+                  <h3 className="flex items-center gap-1.5 text-xl font-bold text-slate-900 dark:text-zinc-100">
+                    Signal
+                    <InfoTooltip label="Signal details" text="Signals are freeform community posts. They can be general, or linked to a substance, brand, or stack if you want the post connected to something specific." />
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">A question, observation, or open discussion.</p>
+                  <ul className="mt-4 flex-1 space-y-2">
+                    {['Ask the community anything', 'Optionally tag a substance, brand, or stack', 'Fast, freeform — no structure required'].map(line => (
+                      <li key={line} className="flex items-start gap-2 text-[13px] text-slate-600 dark:text-zinc-300">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" aria-hidden="true" />
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-blue-600 dark:text-blue-400">
+                    Start a Signal <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                  </span>
                 </div>
-                <h3 className="flex items-center gap-1.5 text-lg font-bold text-slate-900 dark:text-zinc-100">
-                  Signal
-                  <InfoTooltip label="Signal details" text="Signals are freeform community posts. They can be general, or linked to a substance, brand, or stack if you want the post connected to something specific." />
-                </h3>
-                <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">A question, an observation, or a discussion — optionally tied to a substance or brand.</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                  Start a Signal <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
-                </span>
               </button>
             </div>
+            <p className="mt-6 text-center text-xs text-slate-400 dark:text-zinc-500">
+              Not sure? A Dispatch is for something you tried; a Signal is for everything else.
+            </p>
           </div>
         ) : activeType === 'Dispatch' ? (
           <form onSubmit={handleDispatchSubmit} className="space-y-8">
