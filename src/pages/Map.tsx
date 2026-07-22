@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Activity, ShieldAlert, Star, Settings2, Plus, Loader2 } from 'lucide-react';
+import { Search, Truck, ShieldAlert, ShieldCheck, Star, Settings2, Plus, Loader2 } from 'lucide-react';
 import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -522,33 +522,42 @@ export default function Map() {
                   key={brand.id}
                   to={`/brand/${brand.id}`}
                   onClick={() => handleSearchClick({ id: brand.id, name: brand.name, type: 'brand' })}
-                  className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm"
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:shadow-black/30"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{brand.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 text-xs font-medium text-amber-500 dark:text-amber-400">
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-600 dark:text-zinc-50 dark:group-hover:text-emerald-400">{brand.name}</h3>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-600 ring-1 ring-inset ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/25">
                         <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
                         {brand.userRating}
-                      </div>
+                      </span>
                       <SecondaryHideMenu id={brand.id} name={brand.name} type="brand" />
                     </div>
                   </div>
                   {isAdminLike && isHidden('brand', brand.id) && (
-                    <span className="mb-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
+                    <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                   )}
-                  {brand.description && (
-                    <p className="mb-3 line-clamp-2 text-xs leading-snug text-slate-500 dark:text-zinc-400">{brand.description}</p>
-                  )}
-                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-zinc-400">
-                    <div className="flex items-center gap-1">
-                      <Activity size={14} />
-                      Shipping: {brand.shippingReliability}/5
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <ShieldAlert size={14} className={brand.contaminationReports > 0 ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"} />
-                      {brand.contaminationReports} Reports
-                    </div>
+                  <div className="flex-1">
+                    {brand.description && (
+                      <p className="line-clamp-2 text-[13px] leading-relaxed text-slate-600 dark:text-zinc-400">{brand.description}</p>
+                    )}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs dark:border-zinc-800/60">
+                    {brand.contaminationReports > 0 ? (
+                      <span className="inline-flex items-center gap-1 font-semibold text-red-500 dark:text-red-400">
+                        <ShieldAlert size={14} />
+                        {brand.contaminationReports} contamination {brand.contaminationReports === 1 ? 'report' : 'reports'}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                        <ShieldCheck size={14} />
+                        No contamination reports
+                      </span>
+                    )}
+                    <span className="inline-flex shrink-0 items-center gap-1 text-slate-400 dark:text-zinc-500" title={`Shipping reliability ${brand.shippingReliability}/5`}>
+                      <Truck size={13} />
+                      {brand.shippingReliability}/5
+                    </span>
                   </div>
                 </Link>
               ))}
