@@ -591,9 +591,11 @@ export default function Map() {
                         <SecondaryHideMenu id={stack.id} name={stack.name} type="stack" />
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mb-3 flex-1">
-                      {stack.description}
-                    </p>
+                    <div className="mb-3 flex-1">
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2">
+                        {stack.description}
+                      </p>
+                    </div>
                     {isAdminLike && isHidden('stack', stack.id) && (
                       <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                     )}
