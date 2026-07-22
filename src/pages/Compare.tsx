@@ -1,119 +1,500 @@
-import { useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useCatalog } from '../context/CatalogContext';
-import { ArrowLeft, CheckCircle, XCircle, Minus } from 'lucide-react';
-import type { Substance, Brand, Stack } from '../data/mockData';
+// Side-by-side comparison for substances, brands, and stacks.
+//
+// Built around what a comparison is actually for: seeing what DIFFERS and
+// what's SHARED. Identical facts are muted with a "Same" tag so differences
+// carry the visual weight; list data (effects, risks, routes, components)
+// is split into shared-vs-unique chip groups instead of two blobs of prose.
 
-type ComparisonItem = Substance | Brand | Stack;
+import { useMemo, type ReactNode } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowLeft,
+  ArrowUpRight,
+  CheckCircle2,
+  Hourglass,
+  Layers,
+  Pill,
+  Radio,
+  Repeat,
+  ShieldAlert,
+  Timer,
+  Truck,
+  XCircle,
+  type LucideIcon,
+} from 'lucide-react';
+import { useCatalog } from '../context/CatalogContext';
+import { usePosts } from '../context/PostsContext';
+import AccessBadge from '../components/AccessBadge';
+import StarRating from '../components/StarRating';
+import { cn } from '../lib/utils';
+import { TYPE_TAGS, type Substance, type Brand, type Stack } from '../data/mockData';
+
+type CompareType = 'substance' | 'brand' | 'stack';
+
+const ENTITY_ROUTE: Record<CompareType, string> = {
+  substance: '/substance',
+  brand: '/brand',
+  stack: '/stack',
+};
+
+const RISK_STYLES: Record<string, string> = {
+  Low: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
+  Moderate: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+  High: 'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300',
+};
+
+function initials(name: string) {
+  return name.trim().charAt(0).toUpperCase() || '?';
+}
+
+function norm(value: string) {
+  return value.trim().toLowerCase();
+}
+
+/** Splits two string lists into shared values and per-side uniques. */
+function splitShared(a: string[], b: string[]) {
+  const bSet = new Set(b.map(norm));
+  const aSet = new Set(a.map(norm));
+  const seen = new Set<string>();
+  const shared: string[] = [];
+  const onlyA: string[] = [];
+  const onlyB: string[] = [];
+  for (const value of a) {
+    const key = norm(value);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    (bSet.has(key) ? shared : onlyA).push(value);
+  }
+  for (const value of b) {
+    const key = norm(value);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (!aSet.has(key)) onlyB.push(value);
+  }
+  return { shared, onlyA, onlyB };
+}
+
+// --- building blocks --------------------------------------------------------
+
+function SectionCard({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+      <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-300">
+        <Icon size={16} className="text-slate-400 dark:text-zinc-500" />
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+/** One compared fact: label row, then the two values side by side. Identical
+ * values are muted with a "Same" tag so the differences carry the weight. */
+function FactRow({ label, icon: Icon, a, b, same }: { label: string; icon: LucideIcon; a: ReactNode; b: ReactNode; same?: boolean }) {
+  return (
+    <div className="py-3 first:pt-0 last:pb-0">
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <Icon size={13} className="text-slate-400 dark:text-zinc-500" />
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">{label}</span>
+        {same && (
+          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
+            Same
+          </span>
+        )}
+      </div>
+      <div className={cn('grid grid-cols-2 gap-3 text-sm', same ? 'text-slate-400 dark:text-zinc-500' : 'text-slate-900 dark:text-zinc-100 font-medium')}>
+        <div>{a}</div>
+        <div>{b}</div>
+      </div>
+    </div>
+  );
+}
+
+function Chip({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'shared' | 'warn' }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium',
+        tone === 'shared' && 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300',
+        tone === 'warn' && 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300',
+        tone === 'neutral' && 'border-slate-200 bg-slate-50 text-slate-600 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300',
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Shared chips on top, then per-side unique chips in two columns. */
+function OverlapSection({
+  title,
+  icon,
+  a,
+  b,
+  nameA,
+  nameB,
+  sharedTone = 'shared',
+  renderChip,
+}: {
+  title: string;
+  icon: LucideIcon;
+  a: string[];
+  b: string[];
+  nameA: string;
+  nameB: string;
+  sharedTone?: 'shared' | 'warn';
+  renderChip?: (value: string, tone: 'neutral' | 'shared' | 'warn') => ReactNode;
+}) {
+  const { shared, onlyA, onlyB } = splitShared(a, b);
+  if (shared.length === 0 && onlyA.length === 0 && onlyB.length === 0) return null;
+  const chip = renderChip ?? ((value: string, tone: 'neutral' | 'shared' | 'warn') => <Chip key={value} tone={tone}>{value}</Chip>);
+  return (
+    <SectionCard title={title} icon={icon}>
+      {shared.length > 0 && (
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">Both</p>
+          <div className="flex flex-wrap gap-1.5">{shared.map((value) => chip(value, sharedTone))}</div>
+        </div>
+      )}
+      {(onlyA.length > 0 || onlyB.length > 0) && (
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">Only {nameA}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {onlyA.length > 0 ? onlyA.map((value) => chip(value, 'neutral')) : <span className="text-xs text-slate-400 dark:text-zinc-600">—</span>}
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">Only {nameB}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {onlyB.length > 0 ? onlyB.map((value) => chip(value, 'neutral')) : <span className="text-xs text-slate-400 dark:text-zinc-600">—</span>}
+            </div>
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+function IdentityCard({ type, item }: { type: CompareType; item: Substance | Brand | Stack }) {
+  const substance = type === 'substance' ? (item as Substance) : null;
+  const tagLabels = substance
+    ? substance.typeTags.slice(0, 2).map((tag) => TYPE_TAGS.find((t) => t.full === tag)?.label).filter((l): l is string => !!l)
+    : [];
+  return (
+    <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+      <div className="flex items-center gap-3">
+        <span className="relative shrink-0">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-200">
+            {initials(item.name)}
+          </span>
+          {substance && (
+            <AccessBadge
+              classification={substance.classification}
+              className="absolute -bottom-1 -right-1 h-5 w-5 border-2 border-white dark:border-zinc-900"
+            />
+          )}
+        </span>
+        <div className="min-w-0">
+          <h2 className="truncate text-lg font-bold text-slate-900 dark:text-zinc-100">{item.name}</h2>
+          {substance && (
+            <p className="truncate text-xs text-slate-500 dark:text-zinc-400">
+              {[substance.classification, ...tagLabels].join(' · ')}
+            </p>
+          )}
+          {type === 'stack' && (
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              {(item as Stack).substances.length} substances
+            </p>
+          )}
+          {type === 'brand' && (
+            <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-zinc-400">
+              <StarRating value={(item as Brand).userRating} size={12} />
+              {(item as Brand).userRating.toFixed(1)}
+            </span>
+          )}
+        </div>
+      </div>
+      {'description' in item && item.description && (
+        <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-slate-600 dark:text-zinc-400">{item.description}</p>
+      )}
+      <Link
+        to={`${ENTITY_ROUTE[type]}/${item.id}`}
+        className="mt-3 inline-flex w-fit items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+      >
+        View {type}
+        <ArrowUpRight size={14} />
+      </Link>
+    </div>
+  );
+}
+
+/** Numeric score where higher wins: the better side is emphasized with the delta. */
+function ScorePair({ a, b, format }: { a: number; b: number; format?: (v: number) => ReactNode }) {
+  const fmt = format ?? ((v: number) => v.toFixed(1));
+  const cell = (own: number, other: number) => {
+    const better = own > other;
+    return (
+      <div className={cn('flex items-center gap-2', better ? 'font-bold text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-zinc-100')}>
+        {fmt(own)}
+        {better && <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">+{(own - other).toFixed(1)}</span>}
+      </div>
+    );
+  };
+  return { a: cell(a, b), b: cell(b, a), same: a === b };
+}
+
+// --- page -------------------------------------------------------------------
 
 export default function Compare() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
-  const type = searchParams.get('type');
+  const { posts: allPosts } = usePosts();
+  const type = searchParams.get('type') as CompareType | null;
   const id1 = searchParams.get('id1');
   const id2 = searchParams.get('id2');
 
-  const [item1, item2] = useMemo<[ComparisonItem | undefined, ComparisonItem | undefined]>(() => {
-    if (type === 'substance') {
-      return [SUPPLEMENTS.find(s => s.id === id1), SUPPLEMENTS.find(s => s.id === id2)];
-    } else if (type === 'stack') {
-      return [STACKS.find(s => s.id === id1), STACKS.find(s => s.id === id2)];
-    } else if (type === 'brand') {
-      return [BRANDS.find(b => b.id === id1), BRANDS.find(b => b.id === id2)];
-    }
+  const [item1, item2] = useMemo<[Substance | Brand | Stack | undefined, Substance | Brand | Stack | undefined]>(() => {
+    if (type === 'substance') return [SUPPLEMENTS.find((s) => s.id === id1), SUPPLEMENTS.find((s) => s.id === id2)];
+    if (type === 'stack') return [STACKS.find((s) => s.id === id1), STACKS.find((s) => s.id === id2)];
+    if (type === 'brand') return [BRANDS.find((b) => b.id === id1), BRANDS.find((b) => b.id === id2)];
     return [undefined, undefined];
   }, [type, id1, id2, SUPPLEMENTS, STACKS, BRANDS]);
 
   if (!type || !id1 || !id2) {
-    return <div className="p-8 text-center text-slate-500">Invalid comparison parameters.</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-zinc-400">Invalid comparison parameters.</div>;
   }
-
   if (!item1 || !item2) {
-    return <div className="p-8 text-center text-slate-500">Loading comparison...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-zinc-400">Loading comparison…</div>;
   }
 
-  const renderComparisonRow = (label: string, val1: string | number | boolean | null | undefined, val2: string | number | boolean | null | undefined, isBoolean = false) => {
+  const postsFor = (id: string) => {
+    const key = type === 'substance' ? 'supplementId' : type === 'brand' ? 'brandId' : 'stackId';
+    return allPosts.filter((p) => p[key] === id);
+  };
+  const posts1 = postsFor(item1.id);
+  const posts2 = postsFor(item2.id);
+  const pulse = (posts: typeof allPosts) => {
+    const dispatches = posts.filter((p) => p.type === 'Dispatch').length;
+    const signals = posts.filter((p) => p.type === 'Signal').length;
+    if (dispatches === 0 && signals === 0) return <span className="text-slate-400 dark:text-zinc-500">No posts yet</span>;
     return (
-      <div className="grid grid-cols-3 gap-4 py-4 border-b border-slate-200 dark:border-zinc-800">
-        <div className="font-medium text-slate-500 dark:text-zinc-400 text-sm flex items-center">{label}</div>
-        <div className="text-slate-900 dark:text-zinc-100">
-          {isBoolean ? (
-            val1 ? <CheckCircle className="text-emerald-500" size={20} /> : <XCircle className="text-red-500" size={20} />
-          ) : (
-            val1 || <Minus className="text-slate-300 dark:text-zinc-700" size={20} />
-          )}
-        </div>
-        <div className="text-slate-900 dark:text-zinc-100">
-          {isBoolean ? (
-            val2 ? <CheckCircle className="text-emerald-500" size={20} /> : <XCircle className="text-red-500" size={20} />
-          ) : (
-            val2 || <Minus className="text-slate-300 dark:text-zinc-700" size={20} />
-          )}
-        </div>
-      </div>
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="inline-flex items-center gap-1"><Pill size={13} className="text-emerald-500" /> {dispatches} {dispatches === 1 ? 'Dispatch' : 'Dispatches'}</span>
+        <span className="inline-flex items-center gap-1"><Radio size={13} className="text-blue-500" /> {signals} {signals === 1 ? 'Signal' : 'Signals'}</span>
+      </span>
     );
   };
 
+  const s1 = type === 'substance' ? (item1 as Substance) : null;
+  const s2 = type === 'substance' ? (item2 as Substance) : null;
+  const b1 = type === 'brand' ? (item1 as Brand) : null;
+  const b2 = type === 'brand' ? (item2 as Brand) : null;
+  const k1 = type === 'stack' ? (item1 as Stack) : null;
+  const k2 = type === 'stack' ? (item2 as Stack) : null;
+
+  const riskPill = (risk: Substance['riskLevel']) =>
+    risk ? (
+      <span className={cn('inline-flex rounded-full px-2.5 py-1 text-xs font-bold', RISK_STYLES[risk])}>{risk}</span>
+    ) : (
+      <span className="text-slate-400 dark:text-zinc-500">Not assessed</span>
+    );
+
+  const substanceChip = (value: string, tone: 'neutral' | 'shared' | 'warn') => {
+    const match = SUPPLEMENTS.find((s) => norm(s.name) === norm(value));
+    if (!match) return <Chip key={value} tone={tone}>{value}</Chip>;
+    return (
+      <Link key={value} to={`/substance/${match.id}`} className="transition-opacity hover:opacity-75">
+        <Chip tone={tone}>
+          <AccessBadge classification={match.classification} className="mr-1.5 h-3.5 w-3.5 text-[8px]" />
+          {value}
+        </Chip>
+      </Link>
+    );
+  };
+
+  const brandRating = b1 && b2 ? ScorePair({ a: b1.userRating, b: b2.userRating }) : null;
+  const brandShipping = b1 && b2 ? ScorePair({ a: b1.shippingReliability, b: b2.shippingReliability }) : null;
+
+  const brandSubstances = (brand: Brand) => {
+    const ids = new Set<string>([...(brand.products ?? []), ...((brand.productCatalog ?? []).map((p) => p.substanceId).filter((x): x is string => !!x))]);
+    return [...ids].map((id) => SUPPLEMENTS.find((s) => s.id === id)?.name).filter((n): n is string => !!n);
+  };
+  const brandLabels = (brand: Brand) => [...new Set((brand.productCatalog ?? []).flatMap((p) => p.healthLabels ?? []))];
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button 
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+      <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 mb-8 transition-colors"
+        className="mb-6 flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         <ArrowLeft size={16} />
         Back
       </button>
 
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mb-8 capitalize">
-        Compare {type}s
-      </h1>
+      {/* VS hero */}
+      <div className="relative mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6">
+        <IdentityCard type={type} item={item1} />
+        <IdentityCard type={type} item={item2} />
+        <span className="absolute left-1/2 top-1/2 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-500 to-emerald-700 text-xs font-black text-white shadow-lg dark:border-zinc-950 sm:flex">
+          VS
+        </span>
+      </div>
 
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-        {/* Header Row */}
-        <div className="grid grid-cols-3 gap-4 p-6 bg-slate-50 dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800 items-end">
-          <div className="font-medium text-slate-500 dark:text-zinc-400">Features</div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100">{item1.name}</h2>
-            {type === 'substance' && <p className="text-sm text-slate-500 dark:text-zinc-400">{(item1 as Substance).typeTags?.[0]}</p>}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100">{item2.name}</h2>
-            {type === 'substance' && <p className="text-sm text-slate-500 dark:text-zinc-400">{(item2 as Substance).typeTags?.[0]}</p>}
-          </div>
-        </div>
+      <div className="space-y-4">
+        {/* Substance: key facts + set overlaps */}
+        {s1 && s2 && (
+          <>
+            <SectionCard title="Key facts" icon={Activity}>
+              <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+                <FactRow label="Names" icon={Activity} a={<span className="font-bold">{s1.name}</span>} b={<span className="font-bold">{s2.name}</span>} />
+                <FactRow
+                  label="Reported dose range"
+                  icon={Pill}
+                  a={s1.averageDosage || '—'}
+                  b={s2.averageDosage || '—'}
+                  same={norm(s1.averageDosage) === norm(s2.averageDosage) && !!s1.averageDosage}
+                />
+                <FactRow
+                  label="Length of cycle"
+                  icon={Repeat}
+                  a={s1.lengthOfCycle || '—'}
+                  b={s2.lengthOfCycle || '—'}
+                  same={norm(s1.lengthOfCycle) === norm(s2.lengthOfCycle) && !!s1.lengthOfCycle}
+                />
+                <FactRow
+                  label="Tolerance buildup"
+                  icon={Timer}
+                  a={s1.toleranceBuildup || '—'}
+                  b={s2.toleranceBuildup || '—'}
+                  same={norm(s1.toleranceBuildup) === norm(s2.toleranceBuildup) && !!s1.toleranceBuildup}
+                />
+                <FactRow
+                  label="Risk level"
+                  icon={ShieldAlert}
+                  a={riskPill(s1.riskLevel)}
+                  b={riskPill(s2.riskLevel)}
+                  same={!!s1.riskLevel && s1.riskLevel === s2.riskLevel}
+                />
+                {(s1.halfLife || s2.halfLife) && (
+                  <FactRow
+                    label="Half-life"
+                    icon={Hourglass}
+                    a={s1.halfLife || '—'}
+                    b={s2.halfLife || '—'}
+                    same={!!s1.halfLife && norm(s1.halfLife) === norm(s2.halfLife ?? '')}
+                  />
+                )}
+                <FactRow label="Community activity" icon={Radio} a={pulse(posts1)} b={pulse(posts2)} />
+              </div>
+            </SectionCard>
 
-        {/* Comparison Rows */}
-        <div className="px-6">
-          {type === 'substance' && (
-            <>
-              {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('Reported Dose Range', (item1 as Substance).averageDosage, (item2 as Substance).averageDosage)}
-              {renderComparisonRow('Length of Cycle', (item1 as Substance).lengthOfCycle, (item2 as Substance).lengthOfCycle)}
-              {renderComparisonRow('Risk Level', (item1 as Substance).riskLevel, (item2 as Substance).riskLevel)}
-              {renderComparisonRow('Classification', (item1 as Substance).classification, (item2 as Substance).classification)}
-              {renderComparisonRow('Tolerance Buildup', (item1 as Substance).toleranceBuildup, (item2 as Substance).toleranceBuildup)}
-            </>
-          )}
+            <OverlapSection title="Subjective effects" icon={Activity} a={s1.subjectiveEffects} b={s2.subjectiveEffects} nameA={s1.name} nameB={s2.name} />
+            <OverlapSection title="Health risks" icon={AlertTriangle} a={s1.healthRisks} b={s2.healthRisks} nameA={s1.name} nameB={s2.name} sharedTone="warn" />
+            <OverlapSection title="Administration" icon={Pill} a={s1.administration} b={s2.administration} nameA={s1.name} nameB={s2.name} />
+            <OverlapSection
+              title="Categories"
+              icon={Layers}
+              a={s1.paths.map((p) => p.category)}
+              b={s2.paths.map((p) => p.category)}
+              nameA={s1.name}
+              nameB={s2.name}
+            />
+          </>
+        )}
 
-          {type === 'brand' && (
-            <>
-              {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('User Rating', (item1 as Brand).userRating ? `${(item1 as Brand).userRating}/5` : null, (item2 as Brand).userRating ? `${(item2 as Brand).userRating}/5` : null)}
-              {renderComparisonRow('Shipping Reliability', (item1 as Brand).shippingReliability ? `${(item1 as Brand).shippingReliability}/5` : null, (item2 as Brand).shippingReliability ? `${(item2 as Brand).shippingReliability}/5` : null)}
-              {renderComparisonRow('Contamination Reports', (item1 as Brand).contaminationReports, (item2 as Brand).contaminationReports)}
-              {renderComparisonRow('Third-Party Tested', (item1 as Brand).thirdPartyTestingLinks?.length > 0, (item2 as Brand).thirdPartyTestingLinks?.length > 0, true)}
-            </>
-          )}
+        {/* Brand: scored facts + overlap */}
+        {b1 && b2 && brandRating && brandShipping && (
+          <>
+            <SectionCard title="Scores" icon={Activity}>
+              <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+                <FactRow label="Names" icon={Activity} a={<span className="font-bold">{b1.name}</span>} b={<span className="font-bold">{b2.name}</span>} />
+                <FactRow
+                  label="User rating"
+                  icon={Activity}
+                  a={<span className="flex items-center gap-2"><StarRating value={b1.userRating} size={14} />{brandRating.a}</span>}
+                  b={<span className="flex items-center gap-2"><StarRating value={b2.userRating} size={14} />{brandRating.b}</span>}
+                  same={brandRating.same}
+                />
+                <FactRow
+                  label="Shipping reliability"
+                  icon={Truck}
+                  a={brandShipping.a}
+                  b={brandShipping.b}
+                  same={brandShipping.same}
+                />
+                <FactRow
+                  label="Contamination reports"
+                  icon={AlertTriangle}
+                  a={b1.contaminationReports === 0
+                    ? <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400"><CheckCircle2 size={15} /> None reported</span>
+                    : <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 dark:text-red-400"><AlertTriangle size={15} /> {b1.contaminationReports}</span>}
+                  b={b2.contaminationReports === 0
+                    ? <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400"><CheckCircle2 size={15} /> None reported</span>
+                    : <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 dark:text-red-400"><AlertTriangle size={15} /> {b2.contaminationReports}</span>}
+                  same={b1.contaminationReports === b2.contaminationReports}
+                />
+                <FactRow
+                  label="Third-party tested"
+                  icon={CheckCircle2}
+                  a={b1.thirdPartyTestingLinks.length > 0
+                    ? <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400"><CheckCircle2 size={15} /> Yes · {b1.thirdPartyTestingLinks.length} {b1.thirdPartyTestingLinks.length === 1 ? 'report' : 'reports'}</span>
+                    : <span className="inline-flex items-center gap-1.5 text-slate-500 dark:text-zinc-400"><XCircle size={15} /> None on file</span>}
+                  b={b2.thirdPartyTestingLinks.length > 0
+                    ? <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400"><CheckCircle2 size={15} /> Yes · {b2.thirdPartyTestingLinks.length} {b2.thirdPartyTestingLinks.length === 1 ? 'report' : 'reports'}</span>
+                    : <span className="inline-flex items-center gap-1.5 text-slate-500 dark:text-zinc-400"><XCircle size={15} /> None on file</span>}
+                  same={(b1.thirdPartyTestingLinks.length > 0) === (b2.thirdPartyTestingLinks.length > 0)}
+                />
+                <FactRow label="Community activity" icon={Radio} a={pulse(posts1)} b={pulse(posts2)} />
+              </div>
+            </SectionCard>
 
-          {type === 'stack' && (
-            <>
-              {renderComparisonRow('Description', item1.description, item2.description)}
-              {renderComparisonRow('Substances', (item1 as Stack).substances?.map((s) => s.name).join(', '), (item2 as Stack).substances?.map((s) => s.name).join(', '))}
-              {renderComparisonRow('Substance Count', (item1 as Stack).substances?.length ?? 0, (item2 as Stack).substances?.length ?? 0)}
-            </>
-          )}
-        </div>
+            <OverlapSection
+              title="Substances carried"
+              icon={Pill}
+              a={brandSubstances(b1)}
+              b={brandSubstances(b2)}
+              nameA={b1.name}
+              nameB={b2.name}
+              renderChip={substanceChip}
+            />
+            <OverlapSection title="Health labels" icon={CheckCircle2} a={brandLabels(b1)} b={brandLabels(b2)} nameA={b1.name} nameB={b2.name} />
+          </>
+        )}
+
+        {/* Stack: component overlap is the whole story */}
+        {k1 && k2 && (
+          <>
+            <OverlapSection
+              title="Components"
+              icon={Layers}
+              a={k1.substances.map((s) => s.name)}
+              b={k2.substances.map((s) => s.name)}
+              nameA={k1.name}
+              nameB={k2.name}
+              renderChip={substanceChip}
+            />
+            <SectionCard title="Key facts" icon={Activity}>
+              <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+                <FactRow label="Names" icon={Activity} a={<span className="font-bold">{k1.name}</span>} b={<span className="font-bold">{k2.name}</span>} />
+                <FactRow
+                  label="Substance count"
+                  icon={Layers}
+                  a={`${k1.substances.length} substances`}
+                  b={`${k2.substances.length} substances`}
+                  same={k1.substances.length === k2.substances.length}
+                />
+                <FactRow label="Community activity" icon={Radio} a={pulse(posts1)} b={pulse(posts2)} />
+              </div>
+            </SectionCard>
+            {(k1.markers?.length || k2.markers?.length) ? (
+              <OverlapSection title="Common reasons" icon={Activity} a={k1.markers ?? []} b={k2.markers ?? []} nameA={k1.name} nameB={k2.name} />
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );

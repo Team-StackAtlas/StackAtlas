@@ -159,7 +159,8 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
       .filter(item => item.id !== baseItemId)
       .filter(item => {
         if (!query) return true;
-        return normalize(`${item.name} ${'description' in item ? item.description || '' : ''}`).includes(query);
+        const aliases = type === 'substance' ? (item as Supplement).aliases ?? [] : [];
+        return normalize(`${item.name} ${aliases.join(' ')} ${'description' in item ? item.description || '' : ''}`).includes(query);
       })
       .sort((a, b) => {
         if (type === 'substance' && baseItem) {
