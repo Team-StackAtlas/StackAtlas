@@ -55,6 +55,40 @@ function writeHiddenItems(hiddenItems: HiddenItems) {
   window.dispatchEvent(new Event('stackatlas:hiddenItemsChanged'));
 }
 
+// Many components (every HideItemButton, post filters) mount this hook, so
+// share one in-flight/recent list request across instances instead of firing
+// one identical hidden_items GET per mount. Invalidated on writes.
+type HiddenService = NonNullable<ReturnType<typeof useAuth>['services']>['hidden'];
+let sharedHidden: { userId: string; promise: Promise<HiddenItems>; at: number } | null = null;
+const SHARED_HIDDEN_TTL_MS = 15_000;
+
+function fetchHiddenShared(hidden: HiddenService, userId: string): Promise<HiddenItems> {
+  if (sharedHidden && sharedHidden.userId === userId && Date.now() - sharedHidden.at < SHARED_HIDDEN_TTL_MS) {
+    return sharedHidden.promise;
+  }
+  const promise = hidden.list(userId).then((items) => {
+    const next: HiddenItems = { substances: [], stacks: [], brands: [], tags: [] };
+    items.forEach((item) => {
+      const type = item.itemType as HideableType;
+      next[groupForType(type)].push({
+        id: item.itemId,
+        name: item.itemId,
+        type,
+        tagType: item.tagType,
+        hiddenAt: new Date().toISOString(),
+      });
+    });
+    return next;
+  });
+  sharedHidden = { userId, promise, at: Date.now() };
+  promise.catch(() => { if (sharedHidden?.promise === promise) sharedHidden = null; });
+  return promise;
+}
+
+function invalidateHiddenShared() {
+  sharedHidden = null;
+}
+
 export function useHiddenItems() {
   const { isBackendConfigured, services, user } = useAuth();
   const requireAccount = useRequireAccountAction();
@@ -63,24 +97,15 @@ export function useHiddenItems() {
 
   useEffect(() => {
     if (backed && services && user) {
-      services.hidden
-        .list(user.id)
-        .then((items) => {
-          const next: HiddenItems = { substances: [], stacks: [], brands: [], tags: [] };
-          items.forEach((item) => {
-            const type = item.itemType as HideableType;
-            next[groupForType(type)].push({
-              id: item.itemId,
-              name: item.itemId,
-              type,
-              tagType: item.tagType,
-              hiddenAt: new Date().toISOString(),
-            });
-          });
-          setHiddenItems(next);
+      let cancelled = false;
+      fetchHiddenShared(services.hidden, user.id)
+        .then((next) => {
+          if (!cancelled) setHiddenItems(next);
         })
         .catch(() => {});
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     const syncHiddenItems = () => setHiddenItems(readHiddenItems());
     window.addEventListener('storage', syncHiddenItems);
@@ -104,6 +129,7 @@ export function useHiddenItems() {
       return next;
     });
     if (backed && services && user) {
+      invalidateHiddenShared();
       services.hidden.add(user.id, { itemId: item.id, itemType: item.type, tagType: item.tagType }).catch(() => {
         setHiddenItems((current) => {
           const group = groupForType(item.type);
@@ -125,6 +151,7 @@ export function useHiddenItems() {
       return next;
     });
     if (backed && services && user) {
+      invalidateHiddenShared();
       services.hidden.remove(user.id, { itemId: id, itemType: type }).catch(() => {});
     }
   }, [backed, requireAccount, services, user]);
