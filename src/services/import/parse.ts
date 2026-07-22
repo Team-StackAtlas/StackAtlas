@@ -148,6 +148,8 @@ export function parseDataPackJson(text: string): { pack: DataPack | null; issues
 type CsvField =
   | 'title'
   | 'substances'
+  | 'brands'
+  | 'stacks'
   | 'source_type'
   | 'url'
   | 'pmid'
@@ -162,6 +164,10 @@ const HEADER_ALIASES: Record<string, CsvField> = {
   title: 'title',
   substance: 'substances',
   substances: 'substances',
+  brand: 'brands',
+  brands: 'brands',
+  stack: 'stacks',
+  stacks: 'stacks',
   sourcetype: 'source_type',
   type: 'source_type',
   url: 'url',
@@ -249,6 +255,20 @@ export function parseSourcesCsv(text: string): { pack: DataPack | null; issues: 
     if (notes) row.notes = notes;
     if (substancesRaw) {
       row.substances = substancesRaw
+        .split(';')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    const brandsRaw = get(raw, 'brands');
+    if (brandsRaw) {
+      row.brands = brandsRaw
+        .split(';')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    const stacksRaw = get(raw, 'stacks');
+    if (stacksRaw) {
+      row.stacks = stacksRaw
         .split(';')
         .map((s) => s.trim())
         .filter(Boolean);

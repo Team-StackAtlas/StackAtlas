@@ -26,6 +26,47 @@ type Step = 'load' | 'review' | 'execute';
 const STEP_ORDER: Step[] = ['load', 'review', 'execute'];
 const STEP_LABELS: Record<Step, string> = { load: 'Load', review: 'Review', execute: 'Import' };
 
+const DROP_EXTENSIONS = ['.zip', '.json', '.csv', '.md', '.markdown'];
+function hasSupportedExtension(name: string): boolean {
+  const lower = name.toLowerCase();
+  return DROP_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+/** Recursively read a dropped directory entry into a flat list of supported
+ * files, so dropping the unzipped research *folder* works the same as dropping
+ * its files or a .zip. Junk (images, PDFs, hidden files) is filtered out here
+ * rather than surfaced as a wall of "unsupported" rows. */
+async function readEntry(entry: FileSystemEntry): Promise<File[]> {
+  if (entry.isFile) {
+    const file = await new Promise<File>((resolve, reject) =>
+      (entry as FileSystemFileEntry).file(resolve, reject),
+    );
+    return hasSupportedExtension(file.name) ? [file] : [];
+  }
+  if (entry.isDirectory) {
+    const reader = (entry as FileSystemDirectoryEntry).createReader();
+    const readBatch = () =>
+      new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject));
+    const children: FileSystemEntry[] = [];
+    // readEntries yields at most ~100 entries per call; loop until it drains.
+    for (let batch = await readBatch(); batch.length > 0; batch = await readBatch()) {
+      children.push(...batch);
+    }
+    const nested = await Promise.all(children.map(readEntry));
+    return nested.flat();
+  }
+  return [];
+}
+
+/** Collect dropped files, walking any dropped folders. Falls back to the flat
+ * file list when the browser doesn't expose directory entries. */
+async function filesFromDrop(entries: (FileSystemEntry | null)[], flat: File[]): Promise<File[]> {
+  const usable = entries.filter((e): e is FileSystemEntry => e !== null);
+  if (usable.length === 0) return flat.filter((f) => hasSupportedExtension(f.name));
+  const walked = (await Promise.all(usable.map(readEntry))).flat();
+  return walked.length > 0 ? walked : flat.filter((f) => hasSupportedExtension(f.name));
+}
+
 function entityCount(pack: DataPack, entity: EntityKind): number {
   switch (entity) {
     case 'substances':
@@ -58,6 +99,7 @@ export default function ImportWizard({
 
   const [step, setStep] = useState<Step>('load');
   const [isDragging, setIsDragging] = useState(false);
+  const [dropError, setDropError] = useState('');
   const [pastedText, setPastedText] = useState('');
   const [pastedFormat, setPastedFormat] = useState<'json' | 'csv'>('json');
   const [loadSourceLabel, setLoadSourceLabel] = useState('');
@@ -93,6 +135,7 @@ export default function ImportWizard({
 
   const resetAll = () => {
     setStep('load');
+    setDropError('');
     setPastedText('');
     setLoadSourceLabel('');
     setPack(null);
@@ -120,6 +163,7 @@ export default function ImportWizard({
   const handleFiles = async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
     if (files.length === 0) return;
+    setDropError('');
     const result = await parseImportFiles(files, substanceCatalog);
     const label = files.length === 1 ? `file "${files[0].name}"` : `${files.length} files`;
     setPack(result.pack);
@@ -135,7 +179,28 @@ export default function ImportWizard({
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files.length > 0) void handleFiles(e.dataTransfer.files);
+    // webkitGetAsEntry must be called synchronously, before the DataTransfer
+    // is neutered — collect entries here, then walk them async.
+    const items = Array.from(e.dataTransfer.items ?? []);
+    const entries = items.map((item) =>
+      typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null,
+    );
+    const flat = Array.from(e.dataTransfer.files);
+    void (async () => {
+      try {
+        const files = await filesFromDrop(entries, flat);
+        if (files.length > 0) {
+          await handleFiles(files);
+        } else if (flat.length > 0 || entries.some(Boolean)) {
+          setDropError(
+            'Nothing usable in that drop. Drop .zip, .json, .csv, or .md files — or a folder containing them.',
+          );
+        }
+      } catch (err) {
+        console.error('Read dropped items failed', err);
+        setDropError(err instanceof Error ? err.message : 'Could not read the dropped files.');
+      }
+    })();
   };
 
   const handleParsePasted = () => {
@@ -236,8 +301,13 @@ export default function ImportWizard({
             <p className="mt-2 text-sm text-slate-600 dark:text-zinc-400">
               Upload research files or a ZIP archive, or drag them here
             </p>
-            <p className="mt-1 text-xs text-slate-400">Accepts .json, .csv, .md, .markdown, and .zip — drop several at once.</p>
+            <p className="mt-1 text-xs text-slate-400">Accepts .json, .csv, .md, .markdown, and .zip — drop several files, or a whole folder.</p>
             <p className="mt-0.5 text-xs text-slate-400">Data packs and research-agent packages (substances / brands / products / evidence / source_ledger) are both recognized automatically.</p>
+            {dropError && (
+              <p className="mx-auto mt-3 max-w-md rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                {dropError}
+              </p>
+            )}
             <button
               onClick={() => fileInputRef.current?.click()}
               className="mt-3 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white dark:bg-white dark:text-slate-900"
@@ -285,7 +355,7 @@ export default function ImportWizard({
               placeholder={
                 pastedFormat === 'json'
                   ? '{ "kind": "stackatlas-data-pack", "schema_version": 1, ... }'
-                  : 'title,source_type,url,pmid,doi,year,journal_or_site,authors,abstract,substances'
+                  : 'title,source_type,url,pmid,doi,year,journal_or_site,authors,abstract,substances,brands,stacks'
               }
             />
             <button
