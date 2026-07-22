@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Flame, Sparkles, TrendingUp } from 'lucide-react';
 import { SUPPLEMENTS, type Post, type Substance } from '../data/mockData';
 import { useFollowing } from '../hooks/useFollowing';
+import { useUserScope } from '../context/UserScopeContext';
+import { getCanonicalCategories } from '../lib/bearings';
 import AccessBadge from './AccessBadge';
 
 /** Top bearings by frequency across the current feed, most-mentioned first. */
@@ -57,9 +59,17 @@ function SubstanceLine({ substance, meta }: { substance: Substance; meta?: React
  * below as a secondary way in. */
 export default function SquareRail({ posts }: { posts: Post[] }) {
   const { isFollowing, toggleFollow } = useFollowing();
+  const { scope } = useUserScope();
   const trending = trendingSubstances(posts, 3);
   const trendingIds = new Set(trending.map((row) => row.substance.id));
-  const suggestions = SUPPLEMENTS.filter((s) => !isFollowing('substance', s.id) && !trendingIds.has(s.id)).slice(0, 3);
+  // Suggestions prefer substances matching the user's onboarding goals, so
+  // Discover reflects what they said they're here for.
+  const goalMatches = (s: Substance) =>
+    getCanonicalCategories(s.paths.map((p) => p.category)).filter((c) => scope.goals.includes(c)).length;
+  const suggestions = SUPPLEMENTS
+    .filter((s) => !isFollowing('substance', s.id) && !trendingIds.has(s.id))
+    .sort((a, b) => goalMatches(b) - goalMatches(a))
+    .slice(0, 3);
   const bearings = topBearings(posts, 8);
 
   return (
