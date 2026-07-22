@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit3, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Edit3, Link as LinkIcon, CheckCircle2, Star } from 'lucide-react';
 import { usePosts } from '../context/PostsContext';
 import PostCard from '../components/PostCard';
 import SuggestEditModal from '../components/SuggestEditModal';
@@ -200,28 +200,36 @@ export default function BrandPage() {
             })()}
           </div>
 
-          {/* Your rating (0–5, quarter-star increments) */}
+          {/* Your rating: tap a star to rate 1–5. */}
           <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Your rating</p>
-                <div className="flex items-center gap-2">
-                  <StarRating value={ratingSummary.userRating ?? 0} size={20} />
-                  <span className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
-                    {(ratingSummary.userRating ?? 0).toFixed(2)}
-                  </span>
+              <p className="text-sm font-semibold text-slate-700 dark:text-zinc-300">Your rating</p>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Set your rating">
+                  {[1, 2, 3, 4, 5].map((value) => {
+                    const active = (ratingSummary.userRating ?? 0) >= value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={ratingSummary.userRating === value}
+                        aria-label={`${value} star${value === 1 ? '' : 's'}`}
+                        onClick={() => setRating(brand.id, value)}
+                        className="rounded p-0.5 transition-transform hover:scale-125"
+                      >
+                        <Star
+                          size={22}
+                          className={active ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-zinc-600'}
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
+                {ratingSummary.userRating != null && ratingSummary.userRating > 0 && (
+                  <span className="text-sm font-semibold text-slate-900 dark:text-zinc-100">{ratingSummary.userRating.toFixed(0)}/5</span>
+                )}
               </div>
-              <input
-                type="range"
-                min={0}
-                max={5}
-                step={0.25}
-                value={ratingSummary.userRating ?? 0}
-                onChange={(e) => setRating(brand.id, Number(e.target.value))}
-                aria-label="Set your rating"
-                className="w-full sm:w-56 accent-amber-500"
-              />
             </div>
           </div>
 
