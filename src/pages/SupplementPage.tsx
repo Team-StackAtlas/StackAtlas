@@ -210,6 +210,12 @@ export default function SupplementPage() {
             <p className="mt-4 max-w-2xl text-lg text-slate-600 dark:text-zinc-400 leading-relaxed">
               <GlossaryText>{supplement.description}</GlossaryText>
             </p>
+            {supplement.aliases && supplement.aliases.length > 0 && (
+              <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-zinc-500">
+                <span className="font-semibold text-slate-600 dark:text-zinc-400">Also known as:</span>{' '}
+                {supplement.aliases.join(' · ')}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">

@@ -136,6 +136,7 @@ export default function Map() {
     const substanceResults: SearchResult[] = SUPPLEMENTS
       .filter((supplement) => searchMatches(searchQuery, [
         supplement.name,
+        ...(supplement.aliases || []),
         supplement.description,
         supplement.classification,
         ...supplement.paths.flatMap((path) => [path.domain, path.category]),
@@ -230,7 +231,7 @@ export default function Map() {
     if (s.administration.length > 0 && !s.administration.some(a => activeAdmins.includes(a))) return false;
 
     // Search Query Filtering (debounced)
-    if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
+    if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, ...(s.aliases || []), s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;
 
     return true;
   }).sort((a, b) => {
