@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export const MOCK_COMMS_STORAGE_KEY = 'stackatlas.mockComms.v2';
 
@@ -283,12 +283,26 @@ export function useMockComms() {
     };
   }, []);
 
+  // Persisting to localStorage and notifying other useMockComms instances
+  // (e.g. the sidebar badge in Layout) is a side effect, so it must not run
+  // inside the setState updater itself -- React (StrictMode in particular)
+  // can invoke that updater more than once per update, and doing it there
+  // was firing a cross-component setState while Comms was still rendering.
+  // Flushing from an effect keyed on `state` instead keeps the updater pure.
+  // The flag (rather than flushing on every state change) matters because
+  // `sync` below also calls setState in response to another instance's
+  // write -- flushing unconditionally would re-dispatch the change event
+  // and every mounted instance would keep re-triggering each other forever.
+  const pendingWriteRef = useRef(false);
+  useEffect(() => {
+    if (!pendingWriteRef.current) return;
+    pendingWriteRef.current = false;
+    writeState(state);
+  }, [state]);
+
   const update = useCallback((updater: (current: CommsState) => CommsState) => {
-    setState((current) => {
-      const next = updater(current);
-      writeState(next);
-      return next;
-    });
+    pendingWriteRef.current = true;
+    setState((current) => updater(current));
   }, []);
 
   const getUser = useCallback(
