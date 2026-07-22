@@ -53,7 +53,6 @@ export default function Profile() {
   const [ownReports, setOwnReports] = useState<{ id: string; targetType: string; targetLabel?: string; status: string; createdAt: string }[]>([]);
 
   const isOwnProfile = !username || (!!authProfile && username.toLowerCase() === authProfile.username.toLowerCase());
-  const needsCompletion = isOwnProfile && !isProfileComplete(authProfile);
 
   useEffect(() => {
     let active = true;
@@ -122,6 +121,10 @@ export default function Profile() {
   }
 
   const shownProfile = isOwnProfile ? authProfile ?? profile : profile;
+  // Checked against shownProfile (what's actually rendered below), not the
+  // raw auth-context profile — in mock mode authProfile is always null, so
+  // gating on it made this banner show unconditionally on a complete profile.
+  const needsCompletion = isOwnProfile && !isProfileComplete(shownProfile);
   const settings = withDefaultProfileSettings(shownProfile?.settings);
   const userPosts = allPosts.filter((post) => post.author.username.toLowerCase() === shownProfile?.username.toLowerCase());
   const filteredPosts = userPosts.filter((post) => {
