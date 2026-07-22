@@ -72,6 +72,13 @@ const ROUTE_CATEGORY_TO_CANONICAL: Record<string, string> = {
   'Gut Health': 'Digestive Health',
 };
 
+// Canonical category names map to themselves, so a substance whose paths
+// already carry a canonical name (e.g. inferred categories synthesized for
+// imported substances) still resolves through getCanonicalCategories.
+for (const category of BEARING_CATEGORIES) {
+  ROUTE_CATEGORY_TO_CANONICAL[category.name] = category.name;
+}
+
 /** Canonical category names for a substance's route categories, in canonical order. */
 export function getCanonicalCategories(routeCategories: string[]): string[] {
   const mapped = new Set(
