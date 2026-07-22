@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Beaker, CornerDownLeft, FileText, Layers, Package, Search, X } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext';
@@ -139,7 +140,10 @@ export function GlobalSearch() {
         </kbd>
       </button>
 
-      {open && (
+      {/* Portaled to <body>: the app header's backdrop-blur creates a stacking
+          context that would otherwise trap this fixed overlay beneath other
+          sticky bars (e.g. the Square command bar). */}
+      {open && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -244,7 +248,8 @@ export function GlobalSearch() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
