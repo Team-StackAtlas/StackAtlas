@@ -34,9 +34,9 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
       )}
 
       <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <AccessBadge classification={supplement.classification} />
-          <h3 className="truncate text-[15px] font-semibold leading-tight text-slate-900 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">
+        <div className="flex min-w-0 items-start gap-2">
+          <AccessBadge classification={supplement.classification} className="mt-0.5" />
+          <h3 className="line-clamp-2 text-[15px] font-semibold leading-tight text-slate-900 transition-colors group-hover:text-emerald-600 dark:text-zinc-100 dark:group-hover:text-emerald-400">
             {supplement.name}
           </h3>
         </div>
@@ -61,9 +61,14 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
         ))}
       </div>
 
-      <p className="line-clamp-2 flex-1 text-[12.5px] leading-snug text-slate-600 dark:text-zinc-400">
-        {supplement.description}
-      </p>
+      {/* flex-1 lives on the wrapper: putting it on the clamped element itself
+          stretches the -webkit-box past its clamp height, so text hard-clips
+          at the card edge with no ellipsis. */}
+      <div className="flex-1">
+        <p className="line-clamp-3 text-[12.5px] leading-snug text-slate-600 dark:text-zinc-400">
+          {supplement.description}
+        </p>
+      </div>
 
       {isHiddenByUser && (
         <span className="mt-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
