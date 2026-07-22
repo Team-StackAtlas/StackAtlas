@@ -1,4 +1,5 @@
-import { Heart, MessageCircle, MoreHorizontal, ShieldCheck, Radio, FlaskConical, Beaker, Package, Layers, type LucideIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Heart, MessageCircle, MoreHorizontal, ShieldCheck, Radio, FlaskConical, Beaker, Package, Layers, Share, type LucideIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Post, SUPPLEMENTS, BRANDS, STACKS } from '../data/mockData';
@@ -57,6 +58,22 @@ export default function PostCard({ post }: PostCardProps) {
   const dispatchLine = getDispatchLine(post);
   const commentCount = getPostCommentCount(post);
   const { liked, count, toggleLike } = usePostLike(post.id, post.helpfulCount, post.author.id);
+  const [copied, setCopied] = useState(false);
+
+  const sharePost = async () => {
+    const url = `${window.location.origin}/post/${post.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // User dismissed the share sheet or clipboard was unavailable — no-op.
+    }
+  };
 
   const isDispatch = post.type === 'Dispatch';
   const TypeIcon = isDispatch ? FlaskConical : Radio;
@@ -136,6 +153,9 @@ export default function PostCard({ post }: PostCardProps) {
         <Link to={`/post/${post.id}#comments`} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 dark:hover:text-blue-400" aria-label={`${commentCount} comments`}>
           <MessageCircle size={16} />{commentCount}
         </Link>
+        <button type="button" onClick={() => void sharePost()} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400" aria-label="Share post">
+          {copied ? <><Check size={16} className="text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400">Copied</span></> : <Share size={16} />}
+        </button>
       </footer>
     </article>
   );
