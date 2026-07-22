@@ -532,12 +532,27 @@ export default function Compare() {
       </button>
 
       {/* VS hero */}
-      <div className="relative mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6">
+      <div className="relative mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-6">
         <IdentityCard type={type} item={item1} />
         <IdentityCard type={type} item={item2} />
         <span className="absolute left-1/2 top-1/2 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-500 to-emerald-700 text-xs font-black text-white shadow-lg dark:border-zinc-950 sm:flex">
           VS
         </span>
+      </div>
+
+      {/* Sticky column key: keeps each column's identity in view once the
+          hero cards scroll away, so long comparisons stay readable. */}
+      <div className="sticky top-16 z-30 mb-4 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 md:top-20">
+        <div className="grid grid-cols-2 gap-3">
+          {[item1, item2].map((item) => (
+            <div key={item.id} className="flex min-w-0 items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-200">
+                {initials(item.name)}
+              </span>
+              <span className="truncate text-sm font-bold text-slate-900 dark:text-zinc-100">{item.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -546,7 +561,6 @@ export default function Compare() {
           <>
             <SectionCard title="Key facts" icon={Activity}>
               <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-                <FactRow label="Names" icon={Activity} a={<span className="font-bold">{s1.name}</span>} b={<span className="font-bold">{s2.name}</span>} />
                 <FactRow
                   label="Reported dose range"
                   icon={Pill}
@@ -607,7 +621,6 @@ export default function Compare() {
           <>
             <SectionCard title="Scores" icon={Activity}>
               <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-                <FactRow label="Names" icon={Activity} a={<span className="font-bold">{b1.name}</span>} b={<span className="font-bold">{b2.name}</span>} />
                 <FactRow
                   label="User rating"
                   icon={Activity}
@@ -675,7 +688,6 @@ export default function Compare() {
             />
             <SectionCard title="Key facts" icon={Activity}>
               <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-                <FactRow label="Names" icon={Activity} a={<span className="font-bold">{k1.name}</span>} b={<span className="font-bold">{k2.name}</span>} />
                 <FactRow
                   label="Substance count"
                   icon={Layers}
