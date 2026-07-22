@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ShieldAlert, Info, ChevronRight } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Info, Check, ChevronRight, Target } from 'lucide-react';
 import { useUserScope, AccessLevel } from '../context/UserScopeContext';
 import { Classification } from '../data/mockData';
+import { BEARING_CATEGORIES } from '../lib/bearings';
 import { cn } from '../lib/utils';
 import AccessBadge from '../components/AccessBadge';
 
@@ -63,13 +64,91 @@ const CLASSIFICATION_REFERENCE: { classification: Classification; name: string; 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { scope, updateScope } = useUserScope();
+  const [step, setStep] = useState<'scope' | 'goals'>('scope');
   const [selectedLevel, setSelectedLevel] = useState<AccessLevel | null>(scope.accessLevel);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>(scope.goals);
 
-  const handleComplete = () => {
+  const toggleGoal = (name: string) => {
+    setSelectedGoals((current) =>
+      current.includes(name) ? current.filter((g) => g !== name) : [...current, name],
+    );
+  };
+
+  const handleComplete = (goals: string[]) => {
     if (!selectedLevel) return;
-    updateScope({ accessLevel: selectedLevel });
+    updateScope({ accessLevel: selectedLevel, goals });
     navigate('/map');
   };
+
+  if (step === 'goals') {
+    return (
+      <div className="min-h-screen bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col items-center justify-center p-4 font-sans selection:bg-emerald-500/30">
+        <div className="w-full max-w-3xl">
+          <div className="mb-10 text-center">
+            <span className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-900/20">
+              <Target size={24} />
+            </span>
+            <h1 className="text-4xl font-bold tracking-tight mb-3 text-slate-900 dark:text-zinc-50">
+              What are you here for?
+            </h1>
+            <p className="text-slate-600 dark:text-zinc-400 max-w-xl mx-auto text-lg leading-relaxed">
+              Pick the goals you care about. We use them to rank substances and discussion for you —
+              you can change them any time by revisiting setup.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {BEARING_CATEGORIES.map((category) => {
+              const active = selectedGoals.includes(category.name);
+              return (
+                <button
+                  key={category.name}
+                  onClick={() => toggleGoal(category.name)}
+                  className={cn(
+                    'flex items-start gap-3 rounded-2xl border p-4 text-left transition-all',
+                    active
+                      ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500 dark:bg-emerald-500/10'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/60',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                      active
+                        ? 'border-emerald-500 bg-emerald-500 text-white'
+                        : 'border-slate-300 dark:border-zinc-600',
+                    )}
+                  >
+                    {active && <Check size={12} />}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-bold text-slate-900 dark:text-zinc-100">{category.name}</span>
+                    <span className="block text-xs text-slate-500 dark:text-zinc-400">{category.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 flex items-center justify-between">
+            <button
+              onClick={() => handleComplete([])}
+              className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              Skip for now
+            </button>
+            <button
+              onClick={() => handleComplete(selectedGoals)}
+              className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 transition-colors shadow-sm"
+            >
+              {selectedGoals.length > 0 ? `Finish with ${selectedGoals.length} ${selectedGoals.length === 1 ? 'goal' : 'goals'}` : 'Finish'}
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col items-center justify-center p-4 font-sans selection:bg-emerald-500/30">
@@ -135,11 +214,11 @@ export default function Onboarding() {
 
           <div className="flex justify-end mt-8">
             <button
-              onClick={handleComplete}
+              onClick={() => selectedLevel && setStep('goals')}
               disabled={!selectedLevel}
               className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 transition-colors shadow-sm"
             >
-              Complete Setup <ChevronRight size={18} />
+              Next: Your Goals <ChevronRight size={18} />
             </button>
           </div>
         </div>

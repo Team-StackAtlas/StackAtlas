@@ -17,7 +17,7 @@ import { EmptyState } from '../components/EmptyState';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
-import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
+import { BEARING_CATEGORIES, getCanonicalCategories, getFilterBearings } from '../lib/bearings';
 
 type SearchableType = 'substance' | 'brand' | 'stack';
 type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
@@ -237,6 +237,15 @@ export default function Map() {
     if (!aPrioritized && bPrioritized) return 1;
 
     if (feedType === 'For You') {
+      // Goals picked at onboarding outrank everything else: substances whose
+      // canonical categories overlap the user's goals surface first.
+      if (scope.goals.length > 0) {
+        const goalScore = (s: typeof a) =>
+          getCanonicalCategories(s.paths.map(p => p.category)).filter(c => scope.goals.includes(c)).length;
+        const aGoals = goalScore(a);
+        const bGoals = goalScore(b);
+        if (aGoals !== bGoals) return bGoals - aGoals;
+      }
       const aScore = a.typeTags.length + (a.markers?.length || 0);
       const bScore = b.typeTags.length + (b.markers?.length || 0);
       if (aScore !== bScore) return bScore - aScore;

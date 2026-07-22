@@ -5,6 +5,8 @@ export type AccessLevel = ScopeLevel;
 
 export interface UserScope {
   accessLevel: AccessLevel | null;
+  /** Canonical category names picked at onboarding; used to rank "For You". */
+  goals: string[];
 }
 
 interface UserScopeContextType {
@@ -19,6 +21,7 @@ export const UserScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [scope, setScope] = useState<UserScope>(() => {
     const fallback: UserScope = {
       accessLevel: null,
+      goals: [],
     };
     try {
       const saved = localStorage.getItem('stackatlas_user_scope');
