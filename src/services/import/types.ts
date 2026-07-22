@@ -116,6 +116,8 @@ export interface SourcePackRow {
   authors?: string;
   abstract?: string;
   substances?: string[]; // substance slugs to link via research_source_substances
+  brands?: string[]; // brand slugs (or names) to link via research_source_brands
+  stacks?: string[]; // stack names to link via research_source_stacks
   notes?: string; // stored on the source-substance link
   // Provenance for sources extracted from a raw document (Markdown, etc.)
   // rather than a hand-authored pack row. content_hash lets a document with

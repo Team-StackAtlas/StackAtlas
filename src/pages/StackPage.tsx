@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3 } from 'lucide-react';
 import { usePosts } from '../context/PostsContext';
@@ -12,6 +12,11 @@ import { EntityNotFound } from '../components/EntityNotFound';
 import { GlossaryText } from '../components/GlossaryText';
 import { useFollowing } from '../hooks/useFollowing';
 import { useCatalog } from '../context/CatalogContext';
+import { supabase } from '../services/supabase/client';
+import { listStackSources, type PublicSource } from '../services/research';
+import { ResearchSourcesCard } from '../components/ResearchSourcesCard';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function StackPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +27,25 @@ export default function StackPage() {
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
+  const [sources, setSources] = useState<PublicSource[]>([]);
+
+  useEffect(() => {
+    // Mock stacks have non-UUID ids; the stack_id column is a uuid, so only
+    // query for real backend rows.
+    if (!stack || !supabase || !UUID_RE.test(stack.id)) return;
+    let cancelled = false;
+    listStackSources(supabase, stack.id)
+      .then((rows) => {
+        if (!cancelled) setSources(rows);
+      })
+      .catch((err) => {
+        console.error('Load stack sources failed', err);
+        if (!cancelled) setSources([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [stack]);
 
   if (!stack) {
     return <EntityNotFound label="Stack" />;
@@ -120,6 +144,8 @@ export default function StackPage() {
           )}
         </div>
       </div>
+
+      <ResearchSourcesCard sources={sources} entityNoun="stack" />
 
       <div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-4">Related Dispatches</h2>

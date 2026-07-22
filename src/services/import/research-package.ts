@@ -156,7 +156,7 @@ function convertBrands(rows: unknown[], issues: RowIssue[], brandMap: Map<string
     if (docUrl) brand.transparency = { ...(brand.transparency ?? {}), documentation_url: docUrl };
     brandMap.set(slug, brand);
 
-    // Brand-level sources become source rows linked to no substance.
+    // Brand-level sources become source rows linked to their brand.
     if (Array.isArray(row.sources)) {
       row.sources.forEach((s) => {
         if (typeof s !== 'object' || s === null) return;
@@ -166,6 +166,7 @@ function convertBrands(rows: unknown[], issues: RowIssue[], brandMap: Map<string
         const source: SourcePackRow = {
           title,
           source_type: mapSourceType(asString(src.source_type)),
+          brands: [slug],
         };
         const url = asString(src.url);
         if (url) source.url = url;
@@ -231,6 +232,10 @@ function convertEvidence(rows: unknown[], sources: SourcePackRow[]): void {
     const appliesTo = row.applies_to as Record<string, unknown> | undefined;
     const substance = asString(appliesTo?.substance);
     if (substance && substance.toLowerCase() !== 'multiple') source.substances = [slugify(substance)];
+    const brand = asString(appliesTo?.brand);
+    if (brand && brand.toLowerCase() !== 'multiple') source.brands = [slugify(brand)];
+    const stack = asString(appliesTo?.stack);
+    if (stack && stack.toLowerCase() !== 'multiple') source.stacks = [stack];
     sources.push(source);
   });
 }

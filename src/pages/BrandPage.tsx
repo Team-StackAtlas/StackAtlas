@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit3, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { usePosts } from '../context/PostsContext';
@@ -13,6 +13,9 @@ import { GlossaryText } from '../components/GlossaryText';
 import { useFollowing } from '../hooks/useFollowing';
 import { useBrandRatings } from '../hooks/useBrandRatings';
 import { useCatalog } from '../context/CatalogContext';
+import { supabase } from '../services/supabase/client';
+import { listBrandSources, type PublicSource } from '../services/research';
+import { ResearchSourcesCard } from '../components/ResearchSourcesCard';
 
 export default function BrandPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +27,23 @@ export default function BrandPage() {
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const { isFollowing, toggleFollow } = useFollowing();
   const { setRating, getSummary } = useBrandRatings();
+  const [sources, setSources] = useState<PublicSource[]>([]);
+
+  useEffect(() => {
+    if (!brand || !supabase) return;
+    let cancelled = false;
+    listBrandSources(supabase, brand.id)
+      .then((rows) => {
+        if (!cancelled) setSources(rows);
+      })
+      .catch((err) => {
+        console.error('Load brand sources failed', err);
+        if (!cancelled) setSources([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brand]);
 
   if (!brand) {
     return <EntityNotFound label="Brand" />;
@@ -280,6 +300,10 @@ export default function BrandPage() {
           )}
         </div>
       </div>
+
+      {/* Research on file for this brand (COAs, vendor docs, testing reports),
+          grouped by evidence type. */}
+      <ResearchSourcesCard sources={sources} entityNoun="brand" />
 
       <div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 mb-6">Dispatches & Signals</h2>

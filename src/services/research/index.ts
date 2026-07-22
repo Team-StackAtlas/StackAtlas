@@ -125,21 +125,10 @@ export function sourceHref(source: Pick<PublicSource, 'url' | 'doi' | 'pmid'>): 
   return null;
 }
 
-export async function listSubstanceSources(
-  client: SupabaseClient,
-  substanceSlug: string,
-): Promise<PublicSource[]> {
-  const { data, error } = await client
-    .from('research_source_substances')
-    .select(
-      'research_sources!inner(id, title, url, doi, pmid, journal_or_site, year, source_type), substances!inner(slug)',
-    )
-    .eq('substances.slug', substanceSlug);
-  if (error) throw error;
-
+function mapLinkedRows(data: unknown[]): PublicSource[] {
   const seen = new Set<string>();
   const out: PublicSource[] = [];
-  for (const row of (data ?? []) as unknown as RawLinkedSourceRow[]) {
+  for (const row of data as RawLinkedSourceRow[]) {
     const rs = row.research_sources;
     if (!rs || seen.has(rs.id)) continue;
     seen.add(rs.id);
@@ -157,4 +146,42 @@ export async function listSubstanceSources(
   // Newest first, then alphabetical for undated rows.
   out.sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.title.localeCompare(b.title));
   return out;
+}
+
+const LINKED_SOURCE_SELECT = 'research_sources!inner(id, title, url, doi, pmid, journal_or_site, year, source_type)';
+
+export async function listSubstanceSources(
+  client: SupabaseClient,
+  substanceSlug: string,
+): Promise<PublicSource[]> {
+  const { data, error } = await client
+    .from('research_source_substances')
+    .select(`${LINKED_SOURCE_SELECT}, substances!inner(slug)`)
+    .eq('substances.slug', substanceSlug);
+  if (error) throw error;
+  return mapLinkedRows(data ?? []);
+}
+
+export async function listBrandSources(
+  client: SupabaseClient,
+  brandSlug: string,
+): Promise<PublicSource[]> {
+  const { data, error } = await client
+    .from('research_source_brands')
+    .select(`${LINKED_SOURCE_SELECT}, brands!inner(slug)`)
+    .eq('brands.slug', brandSlug);
+  if (error) throw error;
+  return mapLinkedRows(data ?? []);
+}
+
+export async function listStackSources(
+  client: SupabaseClient,
+  stackId: string,
+): Promise<PublicSource[]> {
+  const { data, error } = await client
+    .from('research_source_stacks')
+    .select(LINKED_SOURCE_SELECT)
+    .eq('stack_id', stackId);
+  if (error) throw error;
+  return mapLinkedRows(data ?? []);
 }
