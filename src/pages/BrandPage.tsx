@@ -184,7 +184,7 @@ export default function BrandPage() {
                       Documentation ↗
                     </a>
                   )}
-                  {brand.thirdPartyTestingLinks.map((link) => (
+                  {brand.thirdPartyTestingLinks.map((link, i) => (
                     <a
                       key={link}
                       href={link}
@@ -192,7 +192,7 @@ export default function BrandPage() {
                       rel="noopener noreferrer"
                       className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300"
                     >
-                      Testing report ↗
+                      {brand.thirdPartyTestingLinks.length > 1 ? `Testing report ${i + 1} ↗` : 'Testing report ↗'}
                     </a>
                   ))}
                 </div>
