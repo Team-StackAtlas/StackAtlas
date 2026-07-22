@@ -530,6 +530,9 @@ export default function Map() {
                   {isAdminLike && isHidden('brand', brand.id) && (
                     <span className="mb-2 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                   )}
+                  {brand.description && (
+                    <p className="mb-3 line-clamp-2 text-xs leading-snug text-slate-500 dark:text-zinc-400">{brand.description}</p>
+                  )}
                   <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-zinc-400">
                     <div className="flex items-center gap-1">
                       <Activity size={14} />
