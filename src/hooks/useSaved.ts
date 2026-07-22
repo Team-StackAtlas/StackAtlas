@@ -58,6 +58,40 @@ function mergeSaved(primary: SavedItem[], secondary: SavedItem[]) {
   });
 }
 
+// Every SaveButton mounts its own useSaved(), so without sharing, a feed of N
+// posts fires N identical saved_items list requests. One in-flight/recent
+// promise is shared across all hook instances and invalidated on writes.
+type SavedService = NonNullable<ReturnType<typeof useAuth>['services']>['saved'];
+let sharedList: { userId: string; promise: Promise<SavedItem[]>; at: number } | null = null;
+const SHARED_LIST_TTL_MS = 15_000;
+
+function fetchSavedShared(saved: SavedService, userId: string): Promise<SavedItem[]> {
+  if (sharedList && sharedList.userId === userId && Date.now() - sharedList.at < SHARED_LIST_TTL_MS) {
+    return sharedList.promise;
+  }
+  const promise = saved.list(userId).then((items) =>
+    items.map((item) => ({
+      id: item.itemId,
+      type: item.itemType as SavedItemType,
+      savedAt: item.savedAt ?? new Date().toISOString(),
+      title: item.title,
+      url: item.url,
+      description: item.description,
+      siteName: item.siteName,
+      relatedType: item.relatedType,
+      relatedId: item.relatedId,
+      relatedName: item.relatedName,
+    })),
+  );
+  sharedList = { userId, promise, at: Date.now() };
+  promise.catch(() => { if (sharedList?.promise === promise) sharedList = null; });
+  return promise;
+}
+
+function invalidateSavedShared() {
+  sharedList = null;
+}
+
 export function useSaved() {
   const { isBackendConfigured, services, user } = useAuth();
   const requireAccount = useRequireAccountAction();
@@ -66,26 +100,18 @@ export function useSaved() {
 
   useEffect(() => {
     if (backed && services && user) {
-      services.saved
-        .list(user.id)
-        .then((items) =>
-          setSavedItems(
-            mergeSaved(items.map((item) => ({
-              id: item.itemId,
-              type: item.itemType,
-              savedAt: item.savedAt ?? new Date().toISOString(),
-              title: item.title,
-              url: item.url,
-              description: item.description,
-              siteName: item.siteName,
-              relatedType: item.relatedType,
-              relatedId: item.relatedId,
-              relatedName: item.relatedName,
-            })), readLocal()),
-          ),
-        )
-        .catch((error) => { console.error('Failed to load saved items', error); setSavedItems(readLocal()); });
-      return;
+      let cancelled = false;
+      fetchSavedShared(services.saved, user.id)
+        .then((items) => {
+          if (!cancelled) setSavedItems(mergeSaved(items, readLocal()));
+        })
+        .catch((error) => {
+          console.error('Failed to load saved items', error);
+          if (!cancelled) setSavedItems(readLocal());
+        });
+      return () => {
+        cancelled = true;
+      };
     }
     if (!isBackendConfigured) Promise.resolve().then(() => setSavedItems(readLocal()));
   }, [backed, isBackendConfigured, services, user]);
@@ -112,6 +138,7 @@ export function useSaved() {
         return next;
       });
       if (backed && services && user) {
+        invalidateSavedShared();
         services.saved.add(user.id, { itemId: id, itemType: toBackendType(type), ...metadata }).catch((error) => {
           console.error('Failed to save item; keeping the local saved copy.', error);
           setSavedItems((prev) => {
@@ -135,6 +162,7 @@ export function useSaved() {
         return next;
       });
       if (backed && services && user) {
+        invalidateSavedShared();
         services.saved.remove(user.id, { itemId: id, itemType: toBackendType(type) }).catch((error) => {
           console.error('Failed to remove saved item from the backend; it was removed locally.', error);
         });
