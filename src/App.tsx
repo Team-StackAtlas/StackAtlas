@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import RequireAuth from './components/RequireAuth';
+import AppErrorBoundary from './components/AppErrorBoundary';
 import { UserScopeProvider } from './context/UserScopeContext';
 import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
@@ -36,6 +37,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
   return (
+    <AppErrorBoundary>
     <UserScopeProvider>
       <FilterProvider>
         <MockRoleProvider>
@@ -85,5 +87,6 @@ export default function App() {
         </MockRoleProvider>
       </FilterProvider>
     </UserScopeProvider>
+    </AppErrorBoundary>
   );
 }
