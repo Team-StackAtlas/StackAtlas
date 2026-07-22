@@ -16,6 +16,7 @@ import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
 import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
 import { getPostCommentCount } from '../lib/comments';
 import { EmptyState } from '../components/EmptyState';
+import SquareRail from '../components/SquareRail';
 
 const SORT_OPTIONS = [
   { value: 'Highest Quality', icon: ArrowBigUp },
@@ -150,8 +151,11 @@ export default function Square() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 pb-24 md:pb-8 transition-colors duration-200">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 items-start gap-8">
+      {/* Feed column */}
+      <div className="min-w-0 flex-1 md:max-w-2xl">
       {/* Editorial intro */}
-      <div className="mx-auto w-full max-w-2xl px-4 pt-5 pb-3">
+      <div className="w-full px-4 pt-5 pb-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500">The Square</p>
         <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-slate-500 dark:text-zinc-400">
           Considered dispatches and signals — dosing logs, outcomes, and open questions from people running real protocols.
@@ -160,7 +164,7 @@ export default function Square() {
 
       {/* Command bar: feed tabs, search, create */}
       <div className="sticky top-14 md:top-0 z-40 border-b border-slate-200/70 bg-slate-50/90 backdrop-blur-md dark:border-zinc-800/70 dark:bg-zinc-950/90">
-        <div className="mx-auto w-full max-w-2xl px-4">
+        <div className="w-full px-4">
           <div className="flex items-center justify-between gap-3 pt-3">
             <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-zinc-800 dark:bg-zinc-900/70">
               {(['For You', 'Following'] as const).map((tab) => (
@@ -220,7 +224,7 @@ export default function Square() {
 
       {/* Bearing Filter Display */}
       {bearingParam && (
-        <div className="mx-auto w-full max-w-2xl px-4 pt-4 pb-1">
+        <div className="w-full px-4 pt-4 pb-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-slate-500 dark:text-zinc-400">Filtering by bearing</span>
             <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-200 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -234,7 +238,7 @@ export default function Square() {
       )}
 
       {/* Content Area */}
-      <div className="flex-1 mx-auto w-full max-w-2xl px-4 pt-4">
+      <div className="flex-1 w-full px-4 pt-4">
         <div className="mb-4 space-y-3">
           <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
             {sortedPosts.length.toLocaleString()} {sortedPosts.length === 1 ? 'post' : 'posts'}
@@ -305,6 +309,14 @@ export default function Square() {
             )
           )}
         </div>
+      </div>
+      </div>
+
+      {/* Right rail (desktop): keeps the wide viewport from reading as a
+          lone narrow feed column stranded in empty space. */}
+      <aside className="hidden lg:block lg:sticky lg:top-20 lg:w-72 lg:shrink-0 lg:pt-5">
+        <SquareRail posts={allPosts} />
+      </aside>
       </div>
 
       {/* Floating Action Button (Mobile) */}
