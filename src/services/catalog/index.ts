@@ -15,6 +15,7 @@ import {
   type AdministrationMethod,
   type HealthLabel,
 } from '../../data/mockData';
+import { inferCanonicalCategories } from '../../lib/categoryInference';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -69,8 +70,17 @@ function mapSubstances(rows: any[], brandIdToSlug: Map<string, string>, substanc
       .filter(Boolean)
       .map((cr: any) => ({ domain: cr.domain as Domain, category: cr.category as string }));
 
-    const typeTags = (row.substance_type_tags ?? [])
-      .map((t: any) => mapTypeTag(t.type_tags?.label))
+    // Raw type-tag labels carry the importer's taxonomic category + research
+    // areas (e.g. "Vitamin", "bone health"), most of which aren't recognized
+    // TypeTag values and get dropped below. They're the signal we use to
+    // infer big-category membership for substances the importer left without
+    // route paths, so they still appear under the category cards.
+    const rawTypeTagLabels = (row.substance_type_tags ?? [])
+      .map((t: any) => t.type_tags?.label)
+      .filter((l: unknown): l is string => typeof l === 'string');
+
+    const typeTags = rawTypeTagLabels
+      .map((label: string) => mapTypeTag(label))
       .filter((t: TypeTag | null): t is TypeTag => t !== null);
 
     const administration = (row.substance_administration_methods ?? [])
@@ -97,13 +107,21 @@ function mapSubstances(rows: any[], brandIdToSlug: Map<string, string>, substanc
       .map((a: any) => a.alias)
       .filter((a: unknown): a is string => typeof a === 'string' && a.trim() !== '');
 
+    // Fall back to inferred big categories when the importer gave a substance
+    // no route paths, so it isn't stranded outside every category card. Real
+    // route paths always win.
+    const resolvedPaths = paths.length > 0
+      ? paths
+      : inferCanonicalCategories([...rawTypeTagLabels, markers.join(' '), row.description, row.name])
+          .map((category) => ({ domain: 'Body' as Domain, category }));
+
     return {
       id: row.slug,
       name: row.name,
       aliases: aliases.length > 0 ? aliases : undefined,
       formula: row.formula ?? undefined,
       description: row.description,
-      paths,
+      paths: resolvedPaths,
       typeTags,
       classification: row.classification,
       administration,
