@@ -398,24 +398,25 @@ export function useComms(searchQuery: string) {
   );
 
   const createQuarter = useCallback(
-    (title: string, description: string) => {
+    async (title: string, description: string) => {
       if (!usingReal) {
         mock.createQuarter(title, description);
         return;
       }
-      void createQuarterRemote(supabase!, title, description)
-        .then(() => refresh())
-        .catch((err) => console.warn('Failed to create quarter:', err));
+      // Re-throw so the caller can surface the failure to the user rather
+      // than swallowing it into a console warning.
+      await createQuarterRemote(supabase!, title, description);
+      await refresh();
     },
     [usingReal, mock, refresh],
   );
 
   const inviteToQuarterByUsername = useCallback(
-    (quarterId: string, username: string) => {
-      if (!usingReal || !username.trim()) return;
-      void inviteToQuarterRemote(supabase!, quarterId, username.trim())
-        .then(() => refresh())
-        .catch((err) => console.warn('Failed to invite to quarter:', err));
+    async (quarterId: string, username: string) => {
+      const trimmed = username.trim();
+      if (!usingReal || !trimmed) return;
+      await inviteToQuarterRemote(supabase!, quarterId, trimmed);
+      await refresh();
     },
     [usingReal, refresh],
   );
@@ -603,14 +604,13 @@ export function useComms(searchQuery: string) {
   );
 
   const startConversation = useCallback(
-    (userId: string) => {
+    async (userId: string) => {
       if (!usingReal) {
         mock.startConversation(userId);
         return;
       }
-      void createConversationRequest(supabase!, userId)
-        .then(() => refresh())
-        .catch((err) => console.warn('Failed to start conversation:', err));
+      await createConversationRequest(supabase!, userId);
+      await refresh();
     },
     [usingReal, mock, refresh],
   );

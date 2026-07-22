@@ -414,10 +414,15 @@ export default function Comms() {
                   <button
                     key={user.id}
                     disabled={blocked}
-                    onClick={() => {
-                      comms.startConversation(user.id);
-                      setQuery('');
-                      setTab('messages');
+                    onClick={async () => {
+                      setError('');
+                      try {
+                        await comms.startConversation(user.id);
+                        setQuery('');
+                        setTab('messages');
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : 'Could not start that conversation.');
+                      }
                     }}
                     className="w-full rounded-xl border border-slate-200 p-3 text-left text-sm disabled:opacity-50 dark:border-zinc-800"
                   >
@@ -587,10 +592,15 @@ export default function Comms() {
                 />
                 <button
                   disabled={!quarterTitle.trim()}
-                  onClick={() => {
-                    comms.createQuarter(quarterTitle, quarterDescription);
-                    setQuarterTitle('');
-                    setQuarterDescription('');
+                  onClick={async () => {
+                    setError('');
+                    try {
+                      await comms.createQuarter(quarterTitle, quarterDescription);
+                      setQuarterTitle('');
+                      setQuarterDescription('');
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Could not create that Quarter.');
+                    }
                   }}
                   className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50"
                 >
@@ -744,9 +754,14 @@ export default function Comms() {
                   />
                   <button
                     disabled={!inviteUsername.trim()}
-                    onClick={() => {
-                      comms.inviteToQuarterByUsername(activeQuarter.id, inviteUsername);
-                      setInviteUsername('');
+                    onClick={async () => {
+                      setError('');
+                      try {
+                        await comms.inviteToQuarterByUsername(activeQuarter.id, inviteUsername);
+                        setInviteUsername('');
+                      } catch (err) {
+                        setError(err instanceof Error ? err.message : `Could not invite @${inviteUsername.trim()}. Check the username and try again.`);
+                      }
                     }}
                     className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50"
                   >
