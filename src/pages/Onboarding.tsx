@@ -6,6 +6,7 @@ import { Classification } from '../data/mockData';
 import { cn } from '../lib/utils';
 import AccessBadge from '../components/AccessBadge';
 import { GoalsPicker } from '../components/GoalsPicker';
+import { useGoals } from '../hooks/useGoals';
 
 const SCOPES: {
   level: AccessLevel;
@@ -64,6 +65,7 @@ const CLASSIFICATION_REFERENCE: { classification: Classification; name: string; 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { scope, updateScope } = useUserScope();
+  const { setGoals } = useGoals();
   const [step, setStep] = useState<'scope' | 'goals'>('scope');
   const [selectedLevel, setSelectedLevel] = useState<AccessLevel | null>(scope.accessLevel);
   const [selectedGoals, setSelectedGoals] = useState<string[]>(scope.goals);
@@ -76,7 +78,10 @@ export default function Onboarding() {
 
   const handleComplete = (goals: string[]) => {
     if (!selectedLevel) return;
-    updateScope({ accessLevel: selectedLevel, goals });
+    updateScope({ accessLevel: selectedLevel });
+    // setGoals persists to localStorage and, for a signed-in user, to their
+    // profile so the picks sync across devices.
+    setGoals(goals);
     navigate('/map');
   };
 
