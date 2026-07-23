@@ -8,7 +8,7 @@ continue the work without this session's context.
 - **Repo:** `Team-StackAtlas/StackAtlas`
 - **Working branch:** `claude/research-source-system-bmu9wg` (all work lands here, ships via squash-merge PRs to `main`, branch resets from `origin/main` after every merge)
 - **Session date:** July 23, 2026 (UTC)
-- **PRs merged this session:** 28 (approx. #131–#157; see ledger below). **#158 in flight** at time of writing.
+- **PRs merged this session:** 30 (approx. #131–#159; see ledger below).
 
 ---
 
@@ -166,14 +166,20 @@ theme rather than exact PR number. Everything from #135 on is exact.
   degrades gracefully until its migration is applied (see §3.1): the
   `create_post` RPC ignores the unknown `image_url` payload key, and the
   posts read retries without the column.
-- (#158 — IN FLIGHT) **Profile photo upload + author avatars** — replaces the
+- (#158 — MERGED) **Profile photo upload + author avatars** — replaces the
   raw "Avatar URL" text input with a real picker (circular preview, 256px
   downscale, Remove; tri-state draft so untouched saves keep the stored
   avatar). `profiles.avatar_url` already exists in prod → **works in backed
   mode with no migration**. Author avatars render in Square cards and post
   detail headers (fallback: initial letter). Shared
   `src/lib/imageUtils.ts:downscaleImage(file, maxDim, quality)` now backs both
-  pickers.
+  pickers. Also carries this handoff doc into the repo.
+- (#159 — MERGED) **Avatar completion** — every initial-letter circle in
+  Comms (message bubbles, conversation list, pending requests, thread header)
+  renders the profile photo when set; both comms profile selects load
+  `avatar_url`; sidebar + mobile-header Profile links show your own avatar.
+- (#160 — see §4) **Post-image lightbox** — click an attached photo on the
+  post page for a full-screen viewer (backdrop/Esc closes).
 
 ### 2.8 Bug-fix roll-up (found by proactive audits, all verified with Playwright)
 | Bug | Root cause | Fix PR |
@@ -227,6 +233,22 @@ following three are committed to the repo but **NOT applied to prod**:
 Supabase SQL editor. Order-independent, all idempotent. (Or restore my
 Supabase MCP access in a future session and say "apply the three pending
 migrations".)
+
+**⚠️ Migration-history drift (surfaced 07:48 UTC):** the Supabase GitHub
+integration's "Supabase Preview" check on `main` now fails with *"Remote
+migration versions not found in local migrations directory."* Almost
+certainly because migrations applied through the Supabase MCP earlier in the
+session were recorded in the remote `supabase_migrations.schema_migrations`
+history under versions that don't match the filenames committed to
+`supabase/migrations/`. Consequences and remedy:
+- `supabase db push` may refuse or mis-plan until the history is reconciled.
+  Run `supabase migration list --linked` to see the mismatch, then either add
+  matching local stub files for remote-only versions or
+  `supabase migration repair --status reverted <version>` for duplicates.
+  The SQL-editor route (pasting the three files) sidesteps the history
+  entirely and is the low-friction option.
+- This check is informational (always "skipped" on PRs; only runs on `main`
+  pushes) — it does not block merges or deploys.
 
 ### 3.2 Unsure / needs a product decision
 - **Data-URL images vs. storage buckets.** Post photos and avatars store
@@ -313,13 +335,9 @@ migrations".)
 
 ## 4. In flight right now
 
-- **PR #158** (profile photo upload + author avatars): feature commit
-  `f257aca` + empty re-trigger `d949824`. Vercel green; the `build` run
-  (29987899032) started 07:19:48 UTC after the Actions lag. A `send_later`
-  check-in is armed for 07:30 UTC to squash-merge on green, reset the branch,
-  and continue. If you are reading this after that fired, check `git log
-  origin/main` — it may already be merged.
-- After #158, **no other code work is queued**. The buildable backlog is empty
+- **Post-image lightbox + this doc refresh** — being shipped as the next PR
+  (#160) right after this edit. Check `git log origin/main` for its state.
+- After that, **no other code work is queued**. The buildable backlog is empty
   pending (a) the three migrations, (b) product decisions in §3.2.
 
 ---
@@ -400,9 +418,9 @@ migrations".)
 | Catalog cleanup (prod) | ⚠️ migration committed, NOT applied |
 | Catalog cleanup (mock parity) | ✅ shipped |
 | Post photos | ✅ shipped (backed persistence awaits migration 3) |
-| Profile avatars | 🚀 PR #158 in flight (no migration needed) |
+| Profile avatars (profile, feed, Comms, sidebar) | ✅ shipped (#158 + #159, no migration needed) |
 | Album notes → DB | ✅ shipped AND applied |
 | Supabase MCP access | ❌ blocked all session (all calls declined) |
 | GitHub Actions | ⚠️ intermittent lag today; remedies in §3.3 |
-| Open PRs | #158 only |
+| Open PRs | #160 (lightbox + doc refresh) at time of writing |
 | Migrations awaiting user | `profile_goals`, `catalog_cleanup_noncanonical_substances`, `post_images` |
