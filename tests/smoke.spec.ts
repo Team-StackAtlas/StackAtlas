@@ -50,8 +50,11 @@ test('admin routes are gated for signed-out visitors', async ({ page }) => {
 
 test('global search finds catalog entries and posts', async ({ page }) => {
   await page.goto('/map');
-  await page.keyboard.press('ControlOrMeta+k');
-  await page.getByPlaceholder(/Search substances, brands/i).fill('magnesium');
+  // Open via the header button, not Cmd/Ctrl+K: on /map the shortcut can race
+  // listener mount and the page's inline search box shares a similar
+  // placeholder, which previously let this test pass against the wrong input.
+  await page.getByRole('button', { name: 'Search everything' }).click();
+  await page.getByPlaceholder(/stacks, posts/i).fill('magnesium');
   await expect(page.getByRole('button', { name: /Magnesium Glycinate/i }).first()).toBeVisible();
 });
 
@@ -59,4 +62,39 @@ test('create flow requires the create route to load', async ({ page }) => {
   await page.goto('/create');
   // RequireAuth may bounce to login in seed mode; both outcomes render UI.
   await expect(page.locator('body')).not.toHaveText('');
+});
+
+test('global search surfaces glossary terms', async ({ page }) => {
+  await page.goto('/map');
+  await page.getByRole('button', { name: 'Search everything' }).click();
+  await page.getByPlaceholder(/stacks, posts/i).fill('bioavailability');
+  const hit = page.getByRole('button', { name: /Bioavailability/i }).first();
+  await expect(hit).toBeVisible();
+  await hit.click();
+  await expect(page).toHaveURL(/\/glossary\?term=bioavailability/);
+  await expect(page.getByRole('heading', { name: /^Glossary$/ })).toBeVisible();
+});
+
+test('Lab shows popular-comparison quick-starts that open compare results', async ({ page }) => {
+  await page.goto('/lab');
+  const chip = page.locator('a[href^="/compare?type=substance"]').first();
+  await expect(chip).toBeVisible();
+  await chip.click();
+  // The deep link renders the full results view with both identity cards.
+  await expect(page).toHaveURL(/\/compare\?type=substance&id1=.+&id2=.+/);
+  await expect(page.getByText('Key Facts', { exact: false }).first()).toBeVisible();
+});
+
+test('compare deep link renders both substances', async ({ page }) => {
+  await page.goto('/compare?type=substance&id1=caffeine&id2=l-theanine');
+  await expect(page.getByRole('heading', { name: /^Caffeine$/ }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: /L-Theanine/i }).first()).toBeVisible();
+});
+
+test('stack page rows carry classification and risk context', async ({ page }) => {
+  await page.goto('/stack/st1');
+  await expect(page.getByRole('heading', { name: /Beginner Focus Stack/i })).toBeVisible();
+  // Enriched substance rows: classification subline + risk pill.
+  await expect(page.getByText('Everyday · Food / Drink · Botanical').first()).toBeVisible();
+  await expect(page.getByText('Low', { exact: true }).first()).toBeVisible();
 });
