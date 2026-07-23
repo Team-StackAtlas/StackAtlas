@@ -267,6 +267,9 @@ export default function PostDetail() {
         )}
 
         <div className="whitespace-pre-wrap text-lg leading-relaxed text-slate-700 dark:text-zinc-300">{post.content}</div>
+        {post.imageUrl && (
+          <img src={post.imageUrl} alt="" className="mt-4 max-h-[32rem] w-full rounded-2xl border border-slate-200 object-contain dark:border-zinc-800" />
+        )}
 
         {dispatchRows.length > 0 && (
           <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-950">

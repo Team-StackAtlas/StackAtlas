@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronDown, ClipboardList, HelpCircle, Radio, Search, X, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, ClipboardList, HelpCircle, ImagePlus, Radio, Search, X, ArrowRight } from 'lucide-react';
 import { SUPPLEMENTS, BRANDS, USERS, Post, Domain } from '../data/mockData';
 import { usePosts } from '../context/PostsContext';
 import { cn } from '../lib/utils';
@@ -126,6 +126,66 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 function ErrorText({ children }: { children?: string }) {
   if (!children) return null;
   return <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">{children}</p>;
+}
+
+const POST_IMAGE_MAX_DIM = 1280;
+const POST_IMAGE_MAX_FILE = 10 * 1024 * 1024;
+
+/** Downscale to a bounded JPEG data-url so attached photos stay storable. */
+function downscalePostImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, POST_IMAGE_MAX_DIM / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      const context = canvas.getContext('2d');
+      if (!context) { reject(new Error('Could not process the image.')); return; }
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read the image.')); };
+    image.src = url;
+  });
+}
+
+function PostImagePicker({ value, onChange, onError }: {
+  value: string | null;
+  onChange: (dataUrl: string | null) => void;
+  onError: (message: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { onError('Only image files can be attached.'); return; }
+    if (file.size > POST_IMAGE_MAX_FILE) { onError('Images must be under 10 MB.'); return; }
+    try {
+      onChange(await downscalePostImage(file));
+      onError('');
+    } catch (err) {
+      onError(err instanceof Error ? err.message : 'Could not process the image.');
+    }
+  };
+  return (
+    <div>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ''; }} />
+      {value ? (
+        <div className="relative inline-block">
+          <img src={value} alt="Attached" className="max-h-56 rounded-xl border border-slate-200 object-cover dark:border-zinc-700" />
+          <button type="button" onClick={() => onChange(null)} aria-label="Remove photo" className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition-colors hover:bg-black/80">
+            <X size={14} />
+          </button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-400 hover:text-emerald-600 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
+          <ImagePlus size={16} /> Add photo
+        </button>
+      )}
+    </div>
+  );
 }
 
 function getEntityTypeLabel(type: EntityType) {
@@ -434,6 +494,11 @@ export default function Create() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [dispatchData, setDispatchData] = useState({ title: '', content: '', clarification: '' });
   const [signalData, setSignalData] = useState({ title: '', content: '' });
+  const [postImage, setPostImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState('');
+
+  // A photo attached to one form shouldn't silently carry into the other.
+  useEffect(() => { setPostImage(null); setImageError(''); }, [activeType]);
   const [primaryProtocol, setPrimaryProtocol] = useState<SubstanceProtocol>(makeEmptyProtocol);
   const [companionProtocol, setCompanionProtocol] = useState<SubstanceProtocol>(makeEmptyProtocol);
   const [duration, setDuration] = useState<Duration>({ amount: '', unit: 'weeks' });
@@ -493,6 +558,7 @@ export default function Create() {
       logDetails: { duration: durationLabel, dosage: protocolEntries.map(entry => `${entry.dose} · ${entry.frequency}`).join(' · '), stackIncluded: Boolean(companion) },
       qualityScore: 50,
       bearings: dispatchBearings,
+      imageUrl: postImage ?? undefined,
       dispatchProtocol: { entries: protocolEntries, duration: durationLabel, clarification: dispatchData.clarification.trim() || undefined },
     };
     setPublishing(true);
@@ -534,6 +600,7 @@ export default function Create() {
       createdAt: new Date().toISOString(),
       qualityScore: 50,
       bearings: signalBearings,
+      imageUrl: postImage ?? undefined,
     };
     setPublishing(true);
     try {
@@ -645,6 +712,11 @@ export default function Create() {
                 <textarea rows={7} value={dispatchData.content} onChange={e => setDispatchData({ ...dispatchData, content: e.target.value })} placeholder="Describe benefits, side effects, context, and what happened." className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
                 <div className="mt-1 flex justify-between text-xs text-slate-500 dark:text-zinc-400"><ErrorText>{errors.content}</ErrorText><span>{dispatchData.content.trim().length}/{MIN_DISPATCH_BODY_CHARS} minimum</span></div>
               </div>
+              <div>
+                <FieldLabel>Photo (optional)</FieldLabel>
+                <PostImagePicker value={postImage} onChange={setPostImage} onError={setImageError} />
+                <ErrorText>{imageError || undefined}</ErrorText>
+              </div>
               <BearingPicker mode="dispatch" selected={dispatchBearings} entity={dispatchEntity} onChange={setDispatchBearings} error={errors.bearings} />
             </div>
 
@@ -694,6 +766,11 @@ export default function Create() {
                 <FieldLabel>Body text <span className="text-red-500">*</span></FieldLabel>
                 <textarea rows={7} value={signalData.content} onChange={e => setSignalData({ ...signalData, content: e.target.value })} placeholder="What's on your mind?" className="w-full resize-none rounded-xl border border-slate-200 bg-transparent px-4 py-3 focus:border-blue-500 focus:outline-none dark:border-zinc-700" />
                 <ErrorText>{errors.content}</ErrorText>
+              </div>
+              <div>
+                <FieldLabel>Photo (optional)</FieldLabel>
+                <PostImagePicker value={postImage} onChange={setPostImage} onError={setImageError} />
+                <ErrorText>{imageError || undefined}</ErrorText>
               </div>
               <BearingPicker mode="signal" selected={signalBearings} entity={signalEntity} onChange={setSignalBearings} error={errors.bearings} />
             </div>

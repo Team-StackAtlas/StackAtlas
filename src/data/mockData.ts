@@ -242,6 +242,8 @@ export interface Post {
   };
   qualityScore: number;
   bearings?: string[];
+  /** Optional attached photo (downscaled data-url in mock mode). */
+  imageUrl?: string;
   dispatchProtocol?: PostDispatchProtocol;
   commentItems?: PostComment[];
   /** True when the post was loaded from Supabase rather than seed/localStorage. */

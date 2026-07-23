@@ -11,12 +11,16 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Post } from '../../data/mockData';
 import type { CommentNode } from '../../lib/comments';
 
-const POSTS_SELECT =
+const POSTS_SELECT_BASE =
   'id, kind, title, content, domain, category, subcategory, quality_score, is_gold, ' +
   'structured_content, log_details, dispatch_protocol, created_at, stack_id, ' +
   'substances(slug), brands(slug), ' +
   'profiles(id, username, display_name, is_verified, verification_type), ' +
   'post_bearings(bearings(label)), post_votes(count), post_comments(count)';
+
+// image_url lands with the post_images migration; until it's applied the
+// select retries without the column so reads keep working.
+const POSTS_SELECT = `${POSTS_SELECT_BASE}, image_url`;
 
 function countOf(embed: any): number {
   return Array.isArray(embed) && embed.length > 0 ? Number(embed[0]?.count ?? 0) : 0;
@@ -54,17 +58,19 @@ function mapPostRow(row: any): Post {
     logDetails: row.log_details ?? undefined,
     qualityScore: row.quality_score ?? 0,
     bearings: bearings.length > 0 ? bearings : undefined,
+    imageUrl: row.image_url ?? undefined,
     dispatchProtocol: row.dispatch_protocol ?? undefined,
     persisted: true,
   };
 }
 
 export async function loadSupabasePosts(client: SupabaseClient): Promise<Post[] | null> {
-  const { data, error } = await client
-    .from('posts')
-    .select(POSTS_SELECT)
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const run = (select: string): Promise<{ data: any[] | null; error: { message: string } | null }> =>
+    client.from('posts').select(select).order('created_at', { ascending: false }).limit(200) as any;
+  let { data, error } = await run(POSTS_SELECT);
+  if (error && /image_url/.test(error.message)) {
+    ({ data, error } = await run(POSTS_SELECT_BASE));
+  }
   if (error) {
     console.warn('Supabase posts unavailable, using local data:', error.message);
     return null;
@@ -92,6 +98,9 @@ export async function createSupabasePost(client: SupabaseClient, post: Post): Pr
     log_details: post.logDetails ?? null,
     dispatch_protocol: post.dispatchProtocol ?? null,
     quality_score: String(post.qualityScore ?? 0),
+    // Ignored by the pre-post_images create_post RPC; persisted once the
+    // migration lands.
+    image_url: post.imageUrl ?? null,
   };
   const { data, error } = await client.rpc('create_post', { p_post: payload });
   if (error) throw error;
