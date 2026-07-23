@@ -415,6 +415,7 @@ export interface CommsQuartersLoadResult {
   profiles: CommsProfileDTO[];
   lastReadAt: Record<string, string | null>;
   invites: CommsQuarterInviteDTO[];
+  reactions: CommsReactionDTO[];
 }
 
 // Loads every quarter the viewer belongs to (plus its members, messages,
@@ -454,7 +455,7 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
     roleByQuarter.set(row.quarter_id, row.role);
   });
   if (ids.length === 0) {
-    return { quarters: [], members: [], messages: [], profiles: [], lastReadAt, invites };
+    return { quarters: [], members: [], messages: [], profiles: [], lastReadAt, invites, reactions: [] };
   }
 
   const [quartersResult, membersResult, messagesResult] = await Promise.all([
@@ -528,7 +529,48 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
     attachments: attachmentsByQuarterMessage.get(row.id) ?? [],
   }));
 
-  return { quarters, members, messages, profiles: Array.from(profilesById.values()), lastReadAt, invites };
+  // Reactions on those messages. Before the quarter_message_reactions
+  // migration the table doesn't exist — degrade to an empty set.
+  let reactions: CommsReactionDTO[] = [];
+  if (quarterMessageIds.length) {
+    const reactionsResult = await client
+      .from('quarter_message_reactions')
+      .select('quarter_message_id, user_id, emoji')
+      .in('quarter_message_id', quarterMessageIds);
+    if (!reactionsResult.error) {
+      reactions = (reactionsResult.data ?? []).map((row: any) => ({
+        messageId: row.quarter_message_id,
+        userId: row.user_id,
+        emoji: row.emoji,
+      }));
+    }
+  }
+
+  return { quarters, members, messages, profiles: Array.from(profilesById.values()), lastReadAt, invites, reactions };
+}
+
+/** Quarter counterpart of toggleDmReaction; same graceful-failure contract. */
+export async function toggleQuarterReaction(
+  client: SupabaseClient,
+  quarterMessageId: string,
+  userId: string,
+  emoji: string,
+  active: boolean,
+): Promise<void> {
+  if (active) {
+    const { error } = await client
+      .from('quarter_message_reactions')
+      .delete()
+      .eq('quarter_message_id', quarterMessageId)
+      .eq('user_id', userId)
+      .eq('emoji', emoji);
+    if (error) throw error;
+  } else {
+    const { error } = await client
+      .from('quarter_message_reactions')
+      .insert({ quarter_message_id: quarterMessageId, user_id: userId, emoji });
+    if (error) throw error;
+  }
 }
 
 export async function sendQuarterMessage(

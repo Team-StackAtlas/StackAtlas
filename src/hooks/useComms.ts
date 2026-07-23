@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   loadComms,
   toggleDmReaction,
+  toggleQuarterReaction,
   type CommsReactionDTO,
   searchProfiles,
   sendCommsMessage,
@@ -100,6 +101,7 @@ export function useComms(searchQuery: string) {
   const [realQuarters, setRealQuarters] = useState<CommsQuarterDTO[]>([]);
   const [realQuarterMembers, setRealQuarterMembers] = useState<CommsQuarterMemberDTO[]>([]);
   const [realQuarterMessages, setRealQuarterMessages] = useState<CommsQuarterMessageDTO[]>([]);
+  const [realQuarterReactions, setRealQuarterReactions] = useState<CommsReactionDTO[]>([]);
   const [realQuarterProfiles, setRealQuarterProfiles] = useState<CommsProfileDTO[]>([]);
   const [quarterLastReadAt, setQuarterLastReadAt] = useState<Record<string, string | null>>({});
   const [quarterInvites, setQuarterInvites] = useState<CommsQuarterInviteDTO[]>([]);
@@ -120,6 +122,7 @@ export function useComms(searchQuery: string) {
         setRealQuarters(quarterResult.quarters);
         setRealQuarterMembers(quarterResult.members);
         setRealQuarterMessages(quarterResult.messages);
+        setRealQuarterReactions(quarterResult.reactions);
         setRealQuarterProfiles(quarterResult.profiles);
         setQuarterLastReadAt(quarterResult.lastReadAt);
         setQuarterInvites(quarterResult.invites);
@@ -269,6 +272,12 @@ export function useComms(searchQuery: string) {
       attachments: m.attachments.map(toCommsAttachment),
       persisted: true,
     }));
+    const quarterReactionsByMessage = new Map<string, Record<string, string[]>>();
+    realQuarterReactions.forEach((r) => {
+      const byEmoji = quarterReactionsByMessage.get(r.messageId) ?? {};
+      byEmoji[r.emoji] = [...(byEmoji[r.emoji] ?? []), r.userId];
+      quarterReactionsByMessage.set(r.messageId, byEmoji);
+    });
     const quarterMessages: CommsMessage[] = realQuarterMessages.map((m) => ({
       id: m.id,
       scope: 'quarter',
@@ -278,13 +287,13 @@ export function useComms(searchQuery: string) {
       body: m.deleted ? '[deleted]' : m.body,
       createdAt: m.createdAt,
       readBy: [],
-      reactions: {},
+      reactions: quarterReactionsByMessage.get(m.id) ?? {},
       deleted: m.deleted,
       attachments: m.deleted ? [] : m.attachments.map(toCommsAttachment),
       persisted: true,
     }));
     return [...dmMessages, ...quarterMessages];
-  }, [usingReal, realMessages, realReactions, realQuarterMessages, mock.messages]);
+  }, [usingReal, realMessages, realReactions, realQuarterMessages, realQuarterReactions, mock.messages]);
 
   const unreadConversationCount = useCallback(
     (conversationId: string) => {
@@ -637,20 +646,24 @@ export function useComms(searchQuery: string) {
         return;
       }
       const isDm = realMessages.some((m) => m.id === messageId);
-      if (!isDm) return; // quarter reactions have no backing table yet
-      const active = realReactions.some(
+      const isQuarter = !isDm && realQuarterMessages.some((m) => m.id === messageId);
+      if (!isDm && !isQuarter) return;
+      const pool = isDm ? realReactions : realQuarterReactions;
+      const setPool = isDm ? setRealReactions : setRealQuarterReactions;
+      const active = pool.some(
         (r) => r.messageId === messageId && r.userId === user.id && r.emoji === emoji,
       );
-      setRealReactions((current) =>
+      setPool((current) =>
         active
           ? current.filter(
               (r) => !(r.messageId === messageId && r.userId === user.id && r.emoji === emoji),
             )
           : [...current, { messageId, userId: user.id, emoji }],
       );
-      toggleDmReaction(supabase!, messageId, user.id, emoji, active).catch(() => void refresh());
+      const toggle = isDm ? toggleDmReaction : toggleQuarterReaction;
+      toggle(supabase!, messageId, user.id, emoji, active).catch(() => void refresh());
     },
-    [usingReal, user, realMessages, realReactions, mock, refresh],
+    [usingReal, user, realMessages, realQuarterMessages, realReactions, realQuarterReactions, mock, refresh],
   );
 
   return {
