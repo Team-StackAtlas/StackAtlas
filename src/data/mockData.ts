@@ -691,26 +691,6 @@ export const SUBSTANCES: Substance[] = [
     riskLevel: 'Low',
   },
   {
-    id: 'probiotics',
-    name: 'Probiotics (Lactobacillus)',
-    description: 'Beneficial bacteria that support gut microbiome health, digestion, and immune function.',
-    paths: [
-      { domain: 'Vitality', category: 'Gut Health' },
-      { domain: 'All', category: 'Beginner-Friendly' }
-    ],
-    typeTags: ['💊 Supplement'],
-    classification: 'Everyday',
-    administration: ['👄 Oral'],
-    averageDosage: '10-50 Billion CFU',
-    lengthOfCycle: 'Continuous',
-    mostPopularBrandId: 'b2',
-    healthRisks: ['Initial bloating or gas'],
-    subjectiveEffects: ['Improved digestion', 'Regularity'],
-    toleranceBuildup: 'None',
-    possiblePairings: ['Prebiotics'],
-    riskLevel: 'Low',
-  },
-  {
     id: 'metformin',
     name: 'Metformin',
     description: 'A first-line medication for type 2 diabetes that improves insulin sensitivity, also studied for anti-aging benefits.',

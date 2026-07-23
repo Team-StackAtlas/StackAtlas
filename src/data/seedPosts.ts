@@ -522,46 +522,6 @@ export const SEED_POSTS: Post[] = [
     qualityScore: 50,
     bearings: ['Memory']
   },
-  // Probiotics
-  {
-    id: 'p_prob_dispatch',
-    type: 'Dispatch',
-    title: 'Probiotics for Gut Health',
-    content: 'Improved digestion and less bloating.',
-    structuredContent: {
-      dosages: '1 capsule',
-      frequency: 'daily',
-      effects: 'improved digestion, less bloating',
-      sideEffects: 'None',
-      personalExperience: 'Improved digestion and less bloating.',
-      goal: 'gut health',
-      startDate: 'ongoing'
-    },
-    author: { id: 'u_slin', username: 'slin', displayName: 'Sarah Lin', isVerified: true, age: 30, weight: '140 lbs', sex: 'Female' },
-    domain: 'Vitality',
-    category: 'Gut Health',
-    supplementId: 'probiotics',
-    helpfulCount: 140,
-    comments: 22,
-    createdAt: new Date().toISOString(),
-    logDetails: { duration: '6 weeks', dosage: '1 capsule' },
-    qualityScore: 100
-  },
-  {
-    id: 'p_prob_signal',
-    type: 'Signal',
-    title: 'Gut Health Importance',
-    content: 'Gut health impacts everything more than people think.',
-    author: { id: 'u_oaziz', username: 'oaziz', displayName: 'Omar Aziz', isVerified: false },
-    domain: 'Vitality',
-    category: 'Gut Health',
-    supplementId: 'probiotics',
-    helpfulCount: 120,
-    comments: 18,
-    createdAt: new Date().toISOString(),
-    qualityScore: 50,
-    bearings: ['Gut Health']
-  },
   // Metformin
   {
     id: 'p_met_dispatch',
