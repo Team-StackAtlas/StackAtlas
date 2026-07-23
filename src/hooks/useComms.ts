@@ -10,6 +10,8 @@ import { supabase, isBackendConfigured } from '../services/supabase/client';
 import { useAuth } from '../context/AuthContext';
 import {
   loadComms,
+  toggleDmReaction,
+  type CommsReactionDTO,
   searchProfiles,
   sendCommsMessage,
   createConversationRequest,
@@ -90,6 +92,7 @@ export function useComms(searchQuery: string) {
 
   const [realConversations, setRealConversations] = useState<CommsConversationDTO[]>([]);
   const [realMessages, setRealMessages] = useState<CommsMessageDTO[]>([]);
+  const [realReactions, setRealReactions] = useState<CommsReactionDTO[]>([]);
   const [realProfiles, setRealProfiles] = useState<CommsProfileDTO[]>([]);
   const [lastReadAt, setLastReadAt] = useState<Record<string, string | null>>({});
   const [searchResults, setSearchResults] = useState<CommsProfileDTO[]>([]);
@@ -111,6 +114,7 @@ export function useComms(searchQuery: string) {
       await Promise.resolve().then(() => {
         setRealConversations(result.conversations);
         setRealMessages(result.messages);
+        setRealReactions(result.reactions);
         setRealProfiles(result.profiles);
         setLastReadAt(result.lastReadAt);
         setRealQuarters(quarterResult.quarters);
@@ -246,6 +250,12 @@ export function useComms(searchQuery: string) {
 
   const messages: CommsMessage[] = useMemo(() => {
     if (!usingReal) return mock.messages;
+    const reactionsByMessage = new Map<string, Record<string, string[]>>();
+    realReactions.forEach((r) => {
+      const byEmoji = reactionsByMessage.get(r.messageId) ?? {};
+      byEmoji[r.emoji] = [...(byEmoji[r.emoji] ?? []), r.userId];
+      reactionsByMessage.set(r.messageId, byEmoji);
+    });
     const dmMessages: CommsMessage[] = realMessages.map((m) => ({
       id: m.id,
       scope: 'dm',
@@ -255,7 +265,7 @@ export function useComms(searchQuery: string) {
       body: m.body,
       createdAt: m.createdAt,
       readBy: [],
-      reactions: {},
+      reactions: reactionsByMessage.get(m.id) ?? {},
       attachments: m.attachments.map(toCommsAttachment),
       persisted: true,
     }));
@@ -274,7 +284,7 @@ export function useComms(searchQuery: string) {
       persisted: true,
     }));
     return [...dmMessages, ...quarterMessages];
-  }, [usingReal, realMessages, realQuarterMessages, mock.messages]);
+  }, [usingReal, realMessages, realReactions, realQuarterMessages, mock.messages]);
 
   const unreadConversationCount = useCallback(
     (conversationId: string) => {
@@ -618,11 +628,37 @@ export function useComms(searchQuery: string) {
 
   const searchUsers: CommsUser[] = usingReal ? searchResults.map(toCommsUser) : mock.users;
 
+  // Reactions on persisted DMs: optimistic local toggle, then the write;
+  // any failure (e.g. delete grant missing pre-migration) re-syncs state.
+  const react = useCallback(
+    (messageId: string, emoji = '👍') => {
+      if (!usingReal || !user) {
+        mock.react(messageId, emoji);
+        return;
+      }
+      const isDm = realMessages.some((m) => m.id === messageId);
+      if (!isDm) return; // quarter reactions have no backing table yet
+      const active = realReactions.some(
+        (r) => r.messageId === messageId && r.userId === user.id && r.emoji === emoji,
+      );
+      setRealReactions((current) =>
+        active
+          ? current.filter(
+              (r) => !(r.messageId === messageId && r.userId === user.id && r.emoji === emoji),
+            )
+          : [...current, { messageId, userId: user.id, emoji }],
+      );
+      toggleDmReaction(supabase!, messageId, user.id, emoji, active).catch(() => void refresh());
+    },
+    [usingReal, user, realMessages, realReactions, mock, refresh],
+  );
+
   return {
     ...mock,
     viewerId,
     conversations,
     messages,
+    react,
     quarters,
     quarterInvites: usingReal ? quarterInvites : [],
     searchUsers,
