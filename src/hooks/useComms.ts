@@ -67,6 +67,7 @@ function toCommsUser(profile: CommsProfileDTO): CommsUser {
     username: profile.username,
     displayName: profile.displayName ?? profile.username,
     avatarInitial: avatarInitial(profile.username),
+    avatarUrl: profile.avatarUrl,
   };
 }
 
