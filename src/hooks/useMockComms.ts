@@ -10,6 +10,8 @@ export interface CommsUser {
   username: string;
   displayName: string;
   avatarInitial: string;
+  /** Profile photo (backed mode); mock users fall back to the initial. */
+  avatarUrl?: string;
   isPrivate?: boolean;
   followsViewer?: boolean;
   viewerFollows?: boolean;

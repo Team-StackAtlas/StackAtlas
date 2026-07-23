@@ -26,6 +26,7 @@ export interface CommsProfileDTO {
   id: string;
   username: string;
   displayName?: string;
+  avatarUrl?: string;
 }
 
 export interface CommsConversationDTO {
@@ -176,7 +177,7 @@ export async function searchProfiles(
   if (!trimmed) return [];
   const { data, error } = await client
     .from('profiles')
-    .select('id, username, display_name')
+    .select('id, username, display_name, avatar_url')
     .ilike('username', `%${trimmed}%`)
     .neq('id', excludeUserId)
     .order('username')
@@ -186,6 +187,7 @@ export async function searchProfiles(
     id: row.id,
     username: row.username,
     displayName: row.display_name ?? undefined,
+    avatarUrl: row.avatar_url ?? undefined,
   }));
 }
 
@@ -212,7 +214,7 @@ export async function loadComms(client: SupabaseClient, viewerId: string): Promi
     client
       .from('conversation_participants')
       .select(
-        'conversation_id, user_id, profiles!conversation_participants_user_id_fkey(id, username, display_name)',
+        'conversation_id, user_id, profiles!conversation_participants_user_id_fkey(id, username, display_name, avatar_url)',
       )
       .in('conversation_id', ids),
     client
@@ -407,7 +409,7 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
     client.from('quarters').select('id, owner_id, title, description').in('id', ids),
     client
       .from('quarter_members')
-      .select('quarter_id, user_id, role, profiles!quarter_members_user_id_fkey(id, username, display_name)')
+      .select('quarter_id, user_id, role, profiles!quarter_members_user_id_fkey(id, username, display_name, avatar_url)')
       .in('quarter_id', ids)
       .is('removed_at', null),
     client
@@ -434,6 +436,7 @@ export async function loadQuarters(client: SupabaseClient, viewerId: string): Pr
         id: profile.id,
         username: profile.username,
         displayName: profile.display_name ?? undefined,
+        avatarUrl: profile.avatar_url ?? undefined,
       });
     }
     return { quarterId: row.quarter_id, userId: row.user_id, role: row.role };

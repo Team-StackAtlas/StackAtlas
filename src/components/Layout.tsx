@@ -131,8 +131,8 @@ export default function Layout() {
             to="/profile"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
-              <User size={16} />
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
+              {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" /> : <User size={16} />}
             </div>
             <span className="font-medium">Profile</span>
           </Link>
@@ -149,9 +149,9 @@ export default function Layout() {
             <Link
               to="/profile"
               aria-label="Profile"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
+              className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
             >
-              <User size={16} className="text-slate-600 dark:text-zinc-300" />
+              {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" /> : <User size={16} className="text-slate-600 dark:text-zinc-300" />}
             </Link>
 
             <h1 className="text-lg font-semibold tracking-tight">{getPageTitle()}</h1>

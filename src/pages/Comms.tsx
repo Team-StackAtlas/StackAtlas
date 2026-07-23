@@ -351,8 +351,12 @@ export default function Comms() {
           grouped ? (
             <span className="w-7 shrink-0" />
           ) : (
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-200">
-              {sender?.avatarInitial ?? sender?.username?.charAt(0).toUpperCase() ?? '?'}
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-[11px] font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-200">
+              {sender?.avatarUrl ? (
+                <img src={sender.avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                sender?.avatarInitial ?? sender?.username?.charAt(0).toUpperCase() ?? '?'
+              )}
             </span>
           )
         )}
@@ -557,8 +561,8 @@ export default function Comms() {
                     className={`w-full rounded-xl p-2.5 text-left text-sm transition-colors ${active ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-zinc-800/60'}`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                        {other?.avatarInitial}
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-100 text-base font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                        {other?.avatarUrl ? <img src={other.avatarUrl} alt="" className="h-full w-full object-cover" /> : other?.avatarInitial}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
@@ -596,8 +600,8 @@ export default function Comms() {
                         className="w-full rounded-xl border border-dashed border-slate-300 p-2.5 text-left text-sm transition-colors hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800/60"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-zinc-800">
-                            {other?.avatarInitial}
+                          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-zinc-800">
+                            {other?.avatarUrl ? <img src={other.avatarUrl} alt="" className="h-full w-full object-cover" /> : other?.avatarInitial}
                           </span>
                           <span className="min-w-0 flex-1">
                             <strong>@{other?.username}</strong>
@@ -784,8 +788,8 @@ export default function Comms() {
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                  {other?.avatarInitial}
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-100 font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  {other?.avatarUrl ? <img src={other.avatarUrl} alt="" className="h-full w-full object-cover" /> : other?.avatarInitial}
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate font-bold leading-tight">@{other?.username}</h2>
