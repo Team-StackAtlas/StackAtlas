@@ -19,6 +19,25 @@ import {
   toggleSupabaseCommentVote,
 } from '../services/posts';
 
+/** Full-screen viewer for an attached post photo; click anywhere or Esc closes. */
+function ImageLightbox({ url, onClose }: { url: string; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div
+      role="dialog"
+      aria-label="Image viewer"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/85 p-4"
+    >
+      <img src={url} alt="" className="max-h-full max-w-full rounded-xl object-contain" />
+    </div>
+  );
+}
+
 function getLinkedEntity(post: Post) {
   const supplement = SUPPLEMENTS.find(s => s.id === post.supplementId);
   const brand = BRANDS.find(b => b.id === post.brandId);
@@ -103,6 +122,7 @@ export default function PostDetail() {
   const [comments, setComments] = useState<CommentNode[]>(() => (post ? readCommentOverrides(post.id) ?? ((post.commentItems ?? []) as CommentNode[]) : []));
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [commentError, setCommentError] = useState('');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Supabase-backed posts persist their discussion; seed/local posts keep the
   // original localStorage behavior.
@@ -272,8 +292,11 @@ export default function PostDetail() {
 
         <div className="whitespace-pre-wrap text-lg leading-relaxed text-slate-700 dark:text-zinc-300">{post.content}</div>
         {post.imageUrl && (
-          <img src={post.imageUrl} alt="" className="mt-4 max-h-[32rem] w-full rounded-2xl border border-slate-200 object-contain dark:border-zinc-800" />
+          <button type="button" onClick={() => setLightboxOpen(true)} aria-label="View image full screen" className="mt-4 block w-full cursor-zoom-in">
+            <img src={post.imageUrl} alt="" className="max-h-[32rem] w-full rounded-2xl border border-slate-200 object-contain dark:border-zinc-800" />
+          </button>
         )}
+        {lightboxOpen && post.imageUrl && <ImageLightbox url={post.imageUrl} onClose={() => setLightboxOpen(false)} />}
 
         {dispatchRows.length > 0 && (
           <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-950">
