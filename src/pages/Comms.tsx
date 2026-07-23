@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Crown, Image, Info, MessageSquare, Mic, Paperclip, Plus, Search, Send, Shield, Users } from 'lucide-react';
+import { ArrowLeft, Crown, Image, ImageOff, Info, MessageSquare, Mic, Paperclip, Plus, Search, Send, Shield, Users } from 'lucide-react';
 import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
@@ -54,6 +54,33 @@ function QuarterRoleBadge({ role }: { role: QuarterRole }) {
     <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300" title="Moderator">
       <Shield size={10} /> Mod
     </span>
+  );
+}
+
+/**
+ * Image attachment that degrades gracefully: if the file fails to load
+ * (expired signed url, dead mock path), show a labeled tile instead of the
+ * browser's broken-image glyph.
+ */
+function MessageImage({ url, name }: { url: string; name: string }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <span className="mt-2 flex items-center gap-2 rounded-xl bg-black/10 px-3 py-2 text-xs dark:bg-white/10">
+        <ImageOff size={14} className="shrink-0 opacity-70" />
+        <span className="truncate opacity-80">{name}</span>
+      </span>
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer">
+      <img
+        src={url}
+        alt={name}
+        onError={() => setBroken(true)}
+        className="mt-2 max-h-48 rounded-xl object-cover"
+      />
+    </a>
   );
 }
 
@@ -346,13 +373,7 @@ export default function Comms() {
           {attachments.map((attachment) => {
             if (attachment.type === 'image') {
               return attachment.url ? (
-                <a key={attachment.id} href={attachment.url} target="_blank" rel="noreferrer">
-                  <img
-                    src={attachment.url}
-                    alt={attachment.name}
-                    className="mt-2 max-h-48 rounded-xl object-cover"
-                  />
-                </a>
+                <MessageImage key={attachment.id} url={attachment.url} name={attachment.name} />
               ) : (
                 <p key={attachment.id} className="mt-2 text-xs italic opacity-70">
                   Image unavailable
@@ -473,13 +494,13 @@ export default function Comms() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search users to start a DM"
+                placeholder={tab === 'quarters' ? 'Search quarters' : 'Search users to start a DM'}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-950"
               />
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {query && (
+          {query && tab !== 'quarters' && (
             <div className="space-y-2">
               {matches.map((user) => {
                 const blocked = user.isPrivate && !user.followsViewer;
@@ -688,7 +709,11 @@ export default function Comms() {
                   <Plus size={14} /> Create Quarter
                 </button>
               </div>
-              {comms.quarters.map((quarter) => {
+              {comms.quarters.filter((quarter) => {
+                if (!query) return true;
+                const q = query.toLowerCase();
+                return quarter.title.toLowerCase().includes(q) || (quarter.description ?? '').toLowerCase().includes(q);
+              }).map((quarter) => {
                 const last = comms.messages.filter((m) => m.quarterId === quarter.id).at(-1);
                 const unread = comms.unreadQuarterCount(quarter.id);
                 const active = tab === 'quarters' && activeQuarter?.id === quarter.id;
@@ -770,13 +795,16 @@ export default function Comms() {
                 </div>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-                {activeMessages.map(renderMessage)}
-                {isPendingSentConversation && (
-                  <p className="mt-4 rounded-xl bg-slate-50 p-3 text-center text-sm text-slate-500 dark:bg-zinc-800/60 dark:text-zinc-400">
-                    Message request sent. You&apos;ll be able to chat once they accept.
-                  </p>
-                )}
-                <div ref={messagesEndRef} />
+                {/* justify-end keeps short threads anchored to the composer like any messenger. */}
+                <div className="flex min-h-full flex-col justify-end">
+                  {activeMessages.map(renderMessage)}
+                  {isPendingSentConversation && (
+                    <p className="mt-4 rounded-xl bg-slate-50 p-3 text-center text-sm text-slate-500 dark:bg-zinc-800/60 dark:text-zinc-400">
+                      Message request sent. You&apos;ll be able to chat once they accept.
+                    </p>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
               </div>
             </>
             );
@@ -926,8 +954,11 @@ export default function Comms() {
               </div>
               )}
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-                {activeQuarterMessages.map(renderMessage)}
-                <div ref={messagesEndRef} />
+                {/* justify-end keeps short threads anchored to the composer like any messenger. */}
+                <div className="flex min-h-full flex-col justify-end">
+                  {activeQuarterMessages.map(renderMessage)}
+                  <div ref={messagesEndRef} />
+                </div>
               </div>
             </>
           )}
