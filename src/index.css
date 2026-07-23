@@ -1,3 +1,18 @@
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
+
+/* Horizontally scrollable chip rows: hide the native scrollbar (referenced
+   by Map/Square/BearingCategoryFilter but previously undefined, so Windows
+   rendered raw scrollbars) and fade the right edge as a scroll affordance. */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.scroll-fade-r {
+  mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
+}

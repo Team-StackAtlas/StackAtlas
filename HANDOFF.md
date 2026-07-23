@@ -633,11 +633,13 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
   everywhere). Admin panels are utilitarian tables **by design**; Suggest
   Edits and Users tabs are the barest.
 - **Inconsistencies (honest list):**
-  - Mobile Square/Map sort+filter chip rows scroll with `hide-scrollbar` and
-    no fade/paddle affordance, unlike category rails which got paddles
-    (#153). (`src/pages/Square.tsx:267`, chips row.)
-  - Stack card meta wraps awkwardly at 390px ("2 / substances by / @user") —
-    `x-map-stacks.png` third card.
+  - ~~Mobile chip rows had no scroll affordance~~ **FIXED July 23**: right-
+    edge fade on mobile (`scroll-fade-r`, `src/index.css`) + the previously
+    undefined `hide-scrollbar` utility is now actually defined (it was
+    referenced in 3 files but existed nowhere — Windows users saw raw
+    scrollbars).
+  - ~~Stack card meta wrap at 390px~~ **FIXED July 23**
+    (whitespace-nowrap + truncate, `src/pages/Map.tsx` stack card footer).
   - Comms action row (Report/delete) is always-visible at ~70% opacity —
     busy on touch, where hover-reveal can't work.
   - Two button vocabularies coexist: pill buttons (rounded-full) in
@@ -828,9 +830,10 @@ reusable nearly as-is; the work is almost entirely in the schema deltas above.
    features are dark in prod until their migrations apply
    (goals sync, catalog cleanup, post photos). Evidence: failing Supabase
    Preview on main 07:48 UTC; §4.
-3. **P0 (conditional) — pending cleanup migration may reference the dropped
-   `research_runs` table** and fail on apply. Verify/edit before running.
-   `supabase/migrations/20260723060000_catalog_cleanup_noncanonical_substances.sql:26`; §6.
+3. ~~P0 (conditional) — pending cleanup migration referenced dropped
+   run-era tables~~ **RESOLVED July 23**: the migration was rewritten against
+   the real post-drop FK graph (only `stack_components` +
+   `research_source_substances` restrict) before anyone applied it. §6.
 4. **P1 — CSR-only + empty HTML shell** kills SEO/social-unfurl for exactly
    the pages meant to attract users (substances/brands). §1.
 5. **P1 — No generated DB types**; hand-mapped `any` rows in five service
@@ -840,8 +843,9 @@ reusable nearly as-is; the work is almost entirely in the schema deltas above.
    396-evidence dataset. §8.
 7. **P1 — Backed-mode auth flows untested recently** (sign-up/confirm/reset;
    no live test possible this session). §6.
-8. **P2 — Brand zero-COA empty state unconfirmed** — credibility-sensitive.
-   §7.
+8. ~~P2 — Brand zero-COA empty state unconfirmed~~ **RESOLVED by
+   verification**: `src/pages/BrandPage.tsx:159-165` renders explicit "No
+   reviewed transparency records yet…" when no documentation exists. §7.
 9. **P2 — data-url images in DB text columns** (posts.image_url,
    profiles.avatar_url) — fine at current scale, needs bucket migration
    before feeds get image-heavy. §10.2.
