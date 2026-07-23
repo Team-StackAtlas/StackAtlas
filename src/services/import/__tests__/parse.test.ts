@@ -108,3 +108,17 @@ describe('parseImportFiles', () => {
     expect(result.pack.substances ?? []).toHaveLength(0);
   });
 });
+
+describe('sources CSV external_ref column', () => {
+  it('maps id/external_ref headers onto SourcePackRow.external_ref', async () => {
+    const csv = [
+      'id,title,source_type,url,substances',
+      'S0001,Creatine loading RCT,human_study,https://example.com/rct,creatine-monohydrate',
+      ',Untagged source,human_study,https://example.com/other,creatine-monohydrate',
+    ].join('\n');
+    const { parseSourcesCsv } = await import('../parse');
+    const { pack } = parseSourcesCsv(csv);
+    expect(pack?.sources?.[0].external_ref).toBe('S0001');
+    expect(pack?.sources?.[1].external_ref).toBeUndefined();
+  });
+});

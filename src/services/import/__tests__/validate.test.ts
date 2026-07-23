@@ -26,6 +26,22 @@ describe('sourceKeyVariants', () => {
     expect(keys).toEqual(['p:123', 'd:10.1/xyz', 'u:https://example.com/x', 'h:abc123', 't:some title|2020']);
   });
 
+  it('ranks a dataset external_ref above every other identity', () => {
+    const keys = sourceKeyVariants({
+      external_ref: 'S0001',
+      pmid: '123',
+      doi: '10.1/xyz',
+      url: 'https://example.com/x',
+      content_hash: 'abc123',
+      title: 'Some Title',
+      year: 2020,
+    });
+    expect(keys[0]).toBe('x:s0001');
+    expect(keys).toHaveLength(6);
+    // Case- and whitespace-insensitive so re-exports of the same ledger match.
+    expect(sourceKeyVariants({ external_ref: ' s0001 ', title: 'T', year: 2020 })[0]).toBe('x:s0001');
+  });
+
   it('falls through to the next available identity when earlier ones are missing', () => {
     expect(sourceKeyVariants({ doi: '10.1/xyz', title: 'T', year: 2020 })[0]).toBe('d:10.1/xyz');
     expect(sourceKeyVariants({ url: 'https://example.com/x', title: 'T', year: 2020 })[0]).toBe(

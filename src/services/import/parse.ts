@@ -146,6 +146,7 @@ export function parseDataPackJson(text: string): { pack: DataPack | null; issues
  * quoted fields, escaped ("") quotes, and both \n and \r\n line endings.
  * Fully blank lines are dropped. */
 type CsvField =
+  | 'external_ref'
   | 'title'
   | 'substances'
   | 'brands'
@@ -161,6 +162,12 @@ type CsvField =
   | 'notes';
 
 const HEADER_ALIASES: Record<string, CsvField> = {
+  // Stable dataset IDs (source-ledger "S0001" rows). "id" deliberately maps
+  // here: externally-produced ledgers label their stable ID column that way.
+  externalref: 'external_ref',
+  sourceid: 'external_ref',
+  ledgerid: 'external_ref',
+  id: 'external_ref',
   title: 'title',
   substance: 'substances',
   substances: 'substances',
@@ -238,6 +245,8 @@ export function parseSourcesCsv(text: string): { pack: DataPack | null; issues: 
       title: get(raw, 'title'),
       source_type: get(raw, 'source_type') as ResearchSourceType,
     };
+    const externalRef = get(raw, 'external_ref');
+    if (externalRef) row.external_ref = externalRef;
     const url = get(raw, 'url');
     const pmid = get(raw, 'pmid');
     const doi = get(raw, 'doi');

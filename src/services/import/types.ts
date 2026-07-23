@@ -106,6 +106,12 @@ export interface StackPackRow {
 }
 
 export interface SourcePackRow {
+  /**
+   * Stable ID from an externally-produced dataset (e.g. "S0001"). Strongest
+   * dedup identity when present; persisted once the importer_phase2 migration
+   * is applied (ignored harmlessly by the pre-phase-2 RPC before that).
+   */
+  external_ref?: string;
   title: string;
   source_type: ResearchSourceType;
   url?: string;
