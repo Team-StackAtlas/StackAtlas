@@ -98,3 +98,41 @@ test('stack page rows carry classification and risk context', async ({ page }) =
   await expect(page.getByText('Everyday · Food / Drink · Botanical').first()).toBeVisible();
   await expect(page.getByText('Low', { exact: true }).first()).toBeVisible();
 });
+
+// Seeds the mock signed-in user the way the app stores it, so RequireAuth
+// routes (composer) and per-user state (saves) work in seed mode.
+const seedUser = { id: 'mock-user', username: 'testuser', displayName: 'Test User', onboarded: true };
+
+test('signal composer publishes to the Square feed', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('stackatlas_user_scope', JSON.stringify(user));
+  }, seedUser);
+  await page.goto('/create');
+  await page.getByText('Start a Signal').click();
+  // Title is the first non-search input on the form.
+  await page.locator('input:visible').nth(1).fill('Smoke test signal');
+  await page.getByPlaceholder("What's on your mind?").fill('Published by the smoke suite to verify the core write path.');
+  // Bearings are required: search the inline picker and pick one.
+  await page.getByText('Open Bearing picker').click();
+  await page.getByPlaceholder('Search Bearings...').fill('sleep');
+  await page.getByRole('button', { name: 'Sleep', exact: true }).click();
+  await page.getByRole('button', { name: 'Broadcast Signal' }).click();
+  // Publishing redirects to the Square with the new post on top.
+  await expect(page).toHaveURL(/\/square/);
+  await expect(page.getByText('Smoke test signal').first()).toBeVisible();
+});
+
+test('saving a post from the Square surfaces it in the Library', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('stackatlas_user_scope', JSON.stringify(user));
+  }, seedUser);
+  await page.goto('/square');
+  const firstCard = page.locator('a[href^="/post/"]').first();
+  await expect(firstCard).toBeVisible();
+  await page.locator('button:has(svg.lucide-bookmark)').first().click();
+  await page.goto('/library');
+  // The empty state must be gone and a saved row present with album controls
+  // (the per-row select whose placeholder option is "Add to album…").
+  await expect(page.getByText('Nothing saved yet')).toHaveCount(0);
+  await expect(page.locator('select', { hasText: 'Add to album…' }).first()).toBeVisible();
+});
