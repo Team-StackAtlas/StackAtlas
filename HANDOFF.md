@@ -37,8 +37,10 @@ mock mode, or command output pasted verbatim.
 
 ## Section 0 — Recent work (session context + quibs)
 
-30 PRs merged July 22–23 (approx #131–#160) by the autonomous session that
-produced this audit. Full detail in `HANDOFF_JULY_23.md`. Quick quibs:
+40 PRs merged July 22–23 (approx #131–#169) by the autonomous session that
+produced this audit — #161–#166 in the overnight push, #167–#169 in the
+morning continuation (UI batch + smoke-suite expansion). Full detail in
+`HANDOFF_JULY_23.md`. Quick quibs:
 
 - **Research import system** (engine + Admin UI + AI data-pack kit): the big
   one. Client-side ZIP/JSON/CSV/Markdown importer with dedup + batch revert.
