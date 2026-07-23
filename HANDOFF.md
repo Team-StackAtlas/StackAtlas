@@ -699,9 +699,14 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
 - **Accessibility:** aria-labels present on icon buttons in the code driven
   (e.g. `aria-label="Remove photo"`, `aria-label="Post actions"`,
   lightbox `role="dialog"`); focus rings via Tailwind `focus:` utilities on
-  most interactive elements; **no systematic audit was performed** — keyboard
-  traversal of Comms and contrast checking of emerald-on-white text remain
-  unchecked. Semantic headings used (h1–h3). Note: the shared modal primitive
+  most interactive elements; **no systematic audit was performed** — contrast
+  checking of emerald-on-white text remains unchecked. Keyboard traversal of
+  Comms was verified July 23 (Playwright Tab-cycle): the full cycle reaches
+  the tab bar, DM search, request Accept/Decline, per-message actions (the
+  hover-reveal wrapper is `focus-within`-visible, so keyboard users see
+  them), the react buttons, and the composer textarea/Send; the one
+  icon-only button relying on `title` alone (voice note) was given an
+  `aria-label`. Semantic headings used (h1–h3). Note: the shared modal primitive
   (`src/components/ui/Modal.tsx`) was re-verified post-audit and already
   implements the full dialog contract — Escape close, Tab focus trap, initial
   focus, focus restoration on close, body scroll lock, `aria-modal` +
