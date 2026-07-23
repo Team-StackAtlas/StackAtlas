@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { supabase } from '../services/supabase/client';
 import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
 import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
+import { buildGlossaryMatcher } from '../lib/glossaryMatcher';
 
 interface GlossaryContextValue {
   /** All loaded terms, in load order. */
@@ -13,10 +14,6 @@ interface GlossaryContextValue {
 }
 
 const GlossaryContext = createContext<GlossaryContextValue | undefined>(undefined);
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 /**
  * Loads the glossary once and exposes a matcher so any prose can be scanned for
@@ -51,18 +48,7 @@ export function GlossaryProvider({ children }: { children: ReactNode }) {
       const key = t.term.toLowerCase();
       if (!byLower.has(key)) byLower.set(key, t);
     }
-    if (terms.length === 0) return { terms, byLower, matcher: null };
-
-    // Longest terms first so "Branched-Chain Amino Acid" wins over "Amino Acid".
-    const alternation = terms
-      .map((t) => t.term)
-      .sort((a, b) => b.length - a.length)
-      .map(escapeRegExp)
-      .join('|');
-    // Boundaries that respect letters, digits, and hyphens (so "Half-Life" and
-    // "GABA" match as whole terms, not inside longer words).
-    const matcher = new RegExp(`(?<![A-Za-z0-9-])(${alternation})(?![A-Za-z0-9-])`, 'gi');
-    return { terms, byLower, matcher };
+    return { terms, byLower, matcher: buildGlossaryMatcher(terms.map((t) => t.term)) };
   }, [terms]);
 
   return <GlossaryContext.Provider value={value}>{children}</GlossaryContext.Provider>;

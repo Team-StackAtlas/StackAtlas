@@ -136,3 +136,25 @@ test('saving a post from the Square surfaces it in the Library', async ({ page }
   await expect(page.getByText('Nothing saved yet')).toHaveCount(0);
   await expect(page.locator('select', { hasText: 'Add to album…' }).first()).toBeVisible();
 });
+
+test('albums organize saved items end to end', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('stackatlas_user_scope', JSON.stringify(user));
+  }, seedUser);
+  // Save something first so there is a row to organize.
+  await page.goto('/square');
+  await page.locator('button:has(svg.lucide-bookmark)').first().click();
+  // Create an album, file the saved item into it, and open it.
+  await page.goto('/library');
+  await page.getByRole('button', { name: /New album/i }).click();
+  await page.locator('input:visible').last().fill('Smoke album');
+  await page.getByRole('button', { name: 'Create album' }).click();
+  await page
+    .locator('select', { hasText: 'Add to album…' })
+    .first()
+    .selectOption({ label: 'Smoke album' });
+  await page.locator('a[href^="/library/albums/"]').first().click();
+  await expect(page.getByRole('heading', { name: 'Smoke album' })).toBeVisible();
+  // The filed item renders inside the album, not the empty state.
+  await expect(page.getByText('Nothing in this album yet')).toHaveCount(0);
+});
