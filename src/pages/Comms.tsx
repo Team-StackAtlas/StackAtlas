@@ -409,6 +409,8 @@ export default function Comms() {
             );
           })}
           <div className="mt-1.5 flex items-center gap-2 text-[11px] opacity-70 transition-opacity group-hover:opacity-100">
+            {/* Actions hide until hover where hover exists; touch devices keep them visible. */}
+            <span className="flex items-center gap-2 transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-within:opacity-100">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
             {message.scope === 'quarter' && !activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && <button type="button" onClick={() => comms.deleteQuarterMessage(message.id)} className="text-red-500">delete</button>}
             {message.scope === 'quarter' && activeQuarter?.persisted && (activeQuarter?.ownerId === comms.viewerId || activeQuarter?.adminIds.includes(comms.viewerId)) && !message.deleted && (
@@ -438,17 +440,17 @@ export default function Comms() {
               </button>
             )}
             {!hideReactions && (
-              <>
-                <button type="button" onClick={() => comms.react(message.id)}>
-                  👍
-                </button>
-                {reactions.map(([emoji, users]) => (
-                  <span key={emoji}>
-                    {emoji} {users.length}
-                  </span>
-                ))}
-              </>
+              <button type="button" onClick={() => comms.react(message.id)} aria-label="React with thumbs up">
+                👍
+              </button>
             )}
+            </span>
+            {!hideReactions &&
+              reactions.map(([emoji, users]) => (
+                <span key={emoji}>
+                  {emoji} {users.length}
+                </span>
+              ))}
             {latestMine && message.readBy.length > 1 && <span className="ml-auto">Seen</span>}
           </div>
         </div>
