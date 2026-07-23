@@ -340,10 +340,9 @@ export default function Comms() {
     const sender = comms.getUser(message.senderId);
     const reactions = Object.entries(message.reactions).filter(([, users]) => users.length > 0);
     const latestMine = mine && activeMessages[activeMessages.length - 1]?.id === message.id;
-    // DM reactions persist (message_reactions + the dm_reaction migration);
-    // quarter reactions still have no backing table, so persisted quarter
-    // messages keep them hidden.
-    const hideReactions = message.persisted === true && message.scope === 'quarter';
+    // Reactions persist for both DMs (message_reactions) and Quarters
+    // (quarter_message_reactions); deleted messages keep the row hidden.
+    const hideReactions = message.deleted === true;
     // Persisted messages carry an `attachments` array (possibly empty); mock messages carry a single `attachment`.
     const attachments = message.attachments ?? (message.attachment ? [message.attachment] : []);
     // Consecutive messages from the same sender cluster like any messenger:
