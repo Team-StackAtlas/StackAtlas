@@ -339,9 +339,9 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
     const candidates = pool
       .filter((p) => p.id !== pick1 && p.id !== pick2)
       .filter((p) => !q || norm(p.name).includes(q) || ('aliases' in p && (p.aliases ?? []).some((a) => norm(a).includes(q))));
-    // Once the first substance is picked, surface the most sensible second
-    // picks first: known pairings, then category overlap. Brands/stacks keep
-    // catalog order.
+    // Once the first item is picked, surface the most sensible second picks
+    // first: substances rank by known pairings + category overlap, brands by
+    // how many associated substances they share. Stacks keep catalog order.
     const first = tab === 'substance' && pick1 ? (pool.find((p) => p.id === pick1) as Substance | undefined) : undefined;
     if (first) {
       const firstCategories = new Set(getCanonicalCategories(first.paths.map((path) => path.category)));
@@ -353,6 +353,17 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
         return score;
       };
       const scored = new Map(candidates.map((p) => [p.id, relevance(p as Substance)]));
+      candidates.sort((a, b) => (scored.get(b.id) ?? 0) - (scored.get(a.id) ?? 0));
+    }
+    const firstBrand = tab === 'brand' && pick1 ? (pool.find((p) => p.id === pick1) as Brand | undefined) : undefined;
+    if (firstBrand) {
+      const firstProducts = new Set((firstBrand.products ?? []).map((n) => norm(n)));
+      const scored = new Map(
+        candidates.map((p) => [
+          p.id,
+          ((p as Brand).products ?? []).filter((n) => firstProducts.has(norm(n))).length,
+        ]),
+      );
       candidates.sort((a, b) => (scored.get(b.id) ?? 0) - (scored.get(a.id) ?? 0));
     }
     return candidates.slice(0, 8);

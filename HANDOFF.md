@@ -694,8 +694,12 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
   (e.g. `aria-label="Remove photo"`, `aria-label="Post actions"`,
   lightbox `role="dialog"`); focus rings via Tailwind `focus:` utilities on
   most interactive elements; **no systematic audit was performed** — keyboard
-  traversal of Comms and the bearing picker modal, and contrast checking of
-  emerald-on-white text, remain unchecked. Semantic headings used (h1–h3).
+  traversal of Comms and contrast checking of emerald-on-white text remain
+  unchecked. Semantic headings used (h1–h3). Note: the shared modal primitive
+  (`src/components/ui/Modal.tsx`) was re-verified post-audit and already
+  implements the full dialog contract — Escape close, Tab focus trap, initial
+  focus, focus restoration on close, body scroll lock, `aria-modal` +
+  `aria-labelledby` — so modals need no further a11y work.
 - **Sparse-evidence rendering (credibility-critical):**
   - Substance page with no linked brands renders explicit text: *“No brand
     records linked to this substance yet.”* (`w-imported-substance` capture;
