@@ -42,7 +42,7 @@ export default function Square() {
   const bearingParam = searchParams.get('bearing');
 
   const [feedType, setFeedTypeState] = useState<'For You' | 'Following'>(() => user ? (localStorage.getItem('stackatlas_square_tab') as 'For You' | 'Following') || 'For You' : 'For You');
-  const [followingFilter, setFollowingFilter] = useState<'All' | 'Users' | 'Substances' | 'Brands' | 'Stacks' | 'Albums'>('All');
+  const [followingFilter, setFollowingFilter] = useState<'All' | 'Users' | 'Substances' | 'Brands' | 'Stacks'>('All');
   const setFeedType = (next: 'For You' | 'Following') => {
     setFeedTypeState(next);
     if (user) localStorage.setItem('stackatlas_square_tab', next);
@@ -284,7 +284,7 @@ export default function Square() {
 
           {feedType === 'Following' && (
             <div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 hide-scrollbar">
-              {(['All', 'Users', 'Substances', 'Brands', 'Stacks', 'Albums'] as const).map((filter) => (
+              {(['All', 'Users', 'Substances', 'Brands', 'Stacks'] as const).map((filter) => (
                 <button key={filter} onClick={() => setFollowingFilter(filter)} className={cn('whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors', followingFilter === filter ? 'bg-slate-100 text-slate-900 dark:bg-zinc-800 dark:text-zinc-100' : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200')}>{filter}</button>
               ))}
             </div>

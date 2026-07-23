@@ -5,6 +5,9 @@ import type { NotificationDTO } from '../services/types';
 
 const LOCAL_KEY = 'stackatlas_notifications';
 const SETTINGS_KEY = 'stackatlas_notification_settings';
+// Read/mark actions notify every hook instance (page list, sidebar badge) so
+// counts stay in sync — same pattern useSaved uses.
+const CHANGE_EVENT = 'stackatlas:notificationsChanged';
 
 export type NotificationCategory = 'likes' | 'comments' | 'follows' | 'mentions' | 'albums';
 export type NotificationSettings = Record<NotificationCategory, boolean>;
@@ -28,7 +31,10 @@ function readLocal(userId?: string): NotificationDTO[] {
   } catch { return []; }
 }
 
-function writeLocal(rows: NotificationDTO[]) { localStorage.setItem(LOCAL_KEY, JSON.stringify(rows)); }
+function writeLocal(rows: NotificationDTO[]) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(rows));
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
 
 const MOCK_NOTIFICATIONS: NotificationDTO[] = [
   { id: 'mock-notif-post-like', kind: 'post_like', category: 'likes', title: '@atlas_member liked your Dispatch', link: '/post/p_caf_dispatch', targetType: 'post', targetId: 'p_caf_dispatch', metadata: { actorUsername: 'atlas_member' }, readAt: null, createdAt: '2026-06-15T10:00:00.000Z' },
@@ -69,6 +75,12 @@ export function useNotifications() {
   }, [backed, services, user]);
 
   useEffect(() => { refresh().catch(console.error); }, [refresh]);
+
+  useEffect(() => {
+    const onChange = () => { refresh().catch(console.error); };
+    window.addEventListener(CHANGE_EVENT, onChange);
+    return () => window.removeEventListener(CHANGE_EVENT, onChange);
+  }, [refresh]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.readAt).length, [notifications]);
 
