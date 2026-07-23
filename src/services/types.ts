@@ -122,6 +122,8 @@ export interface ProfileDTO {
   usernameLastChangedAt?: ISODate | null;
   role: UserRole;
   researchScope: 'Citizen' | 'Explorer';
+  /** Canonical goal-category names for ranking, synced across devices. */
+  goals: string[];
   isVerified: boolean;
   joinDate: ISODate;
   settings: ProfileSettings;
@@ -145,6 +147,7 @@ export type ProfileUpdate = Partial<
     | 'sex'
     | 'bodyFatPercentage'
     | 'settings'
+    | 'goals'
   >
 >;
 

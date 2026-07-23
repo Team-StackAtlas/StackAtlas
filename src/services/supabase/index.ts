@@ -74,6 +74,9 @@ function mapProfile(row: any, stats?: any, email?: string | null): ProfileDTO {
     usernameLastChangedAt: row.username_last_changed_at ?? null,
     role: row.role ?? 'User',
     researchScope: row.research_scope ?? 'Citizen',
+    // Absent until the profile_goals migration lands; defaults to empty so
+    // reads never fail on an older schema.
+    goals: Array.isArray(row.goals) ? row.goals : [],
     isVerified: !!row.is_verified,
     joinDate: row.created_at,
     settings: row.settings ?? {},
@@ -174,6 +177,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       if (patch.sex !== undefined) payload.sex = patch.sex || null;
       if (patch.bodyFatPercentage !== undefined) payload.body_fat_percentage = patch.bodyFatPercentage;
       if (patch.settings !== undefined) payload.settings = patch.settings;
+      if (patch.goals !== undefined) payload.goals = patch.goals;
       payload.updated_at = new Date().toISOString();
       const { data, error } = await client
         .from('profiles')

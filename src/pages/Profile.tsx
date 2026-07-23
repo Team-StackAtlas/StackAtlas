@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck, Target } from 'lucide-react';
 import { BRANDS, getPosts, STACKS, SUPPLEMENTS, USERS } from '../data/mockData';
-import { useUserScope } from '../context/UserScopeContext';
+import { useGoals } from '../hooks/useGoals';
 import { GoalsPicker } from '../components/GoalsPicker';
 import { usePosts } from '../context/PostsContext';
 import PostCard from '../components/PostCard';
@@ -41,7 +41,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { status, user, profile: authProfile, services, isBackendConfigured, refresh, signOut } = useAuth();
   const { toast } = useToast();
-  const { scope, updateScope } = useUserScope();
+  const { goals, setGoals } = useGoals();
   const { savedItems } = useSaved();
   const { hiddenItems, unhideItem } = useHiddenItems();
   const { following: followedItems, requests: followRequests, isFollowing, requestStatus, toggleFollow } = useFollowing();
@@ -73,6 +73,7 @@ export default function Profile() {
                 bio: mock.bio,
                 role: 'User',
                 researchScope: 'Citizen',
+                goals: [],
                 isVerified: !!mock.isVerified,
                 joinDate: new Date().toISOString(),
                 settings: {},
@@ -324,23 +325,19 @@ export default function Profile() {
           <div className="mb-1 flex items-center gap-2">
             <Target size={18} className="text-emerald-500" />
             <h2 className="text-lg font-bold">Your goals</h2>
-            {scope.goals.length > 0 && (
+            {goals.length > 0 && (
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                {scope.goals.length}
+                {goals.length}
               </span>
             )}
           </div>
           <p className="mb-4 text-sm text-slate-500 dark:text-zinc-400">
-            We use these to rank substances and discussion for you across the Map and Square. Changes save instantly.
+            We use these to rank substances and discussion for you across the Map and Square. Changes save instantly{isBackendConfigured ? ' and sync to your account' : ''}.
           </p>
           <GoalsPicker
-            selected={scope.goals}
+            selected={goals}
             onToggle={(name) =>
-              updateScope({
-                goals: scope.goals.includes(name)
-                  ? scope.goals.filter((g) => g !== name)
-                  : [...scope.goals, name],
-              })
+              setGoals(goals.includes(name) ? goals.filter((g) => g !== name) : [...goals, name])
             }
           />
         </div>
