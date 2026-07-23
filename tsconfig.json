@@ -27,5 +27,5 @@
     "noEmit": true
   },
   "include": ["src", "vite.config.ts"],
-  "exclude": ["node_modules", "dist", "tests", "scrape.js", "update_mock.cjs", "update_tags.cjs"]
+  "exclude": ["node_modules", "dist", "tests"]
 }
