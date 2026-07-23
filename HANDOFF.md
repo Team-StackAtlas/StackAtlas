@@ -482,10 +482,47 @@ directions. Remedy path (for whoever has DB access):
 stub files; or bypass history entirely by applying the three pending files
 via the SQL editor. **Do not run blind `supabase db push` until reconciled.**
 
-### Advisors
-**NOT RUN** — requires `get_advisors` (denied). Run both advisors first thing
-once access exists; the RLS-disabled-tables question (§3) overlaps with what
-the security advisor reports.
+### Advisors — RUN at 09:20 UTC (read access was restored late-session)
+
+**Security (49 lints):**
+- **1 ERROR — `public.profile_stats` view is SECURITY DEFINER** (bypasses the
+  querying user's RLS). Likely intentional (stats excluding deleted posts,
+  `20260720160000`), but should be converted to `security_invoker` or
+  explicitly documented as a deliberate bypass. Remediation:
+  https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view
+- **6 WARN — SECURITY DEFINER functions executable by `anon`:**
+  `approve_follow_request`, `community_comments_with_counts`,
+  `community_post_with_counts`, `community_posts_with_counts`,
+  `is_site_admin`, `is_site_owner`. The three `community_*` ones are legacy
+  0006-era; revoke anon execute across all six (each checks auth internally,
+  but anon shouldn't be able to invoke definer code at all).
+- 40 WARN — definer functions executable by `authenticated`: mostly by-design
+  (the admin RPC pattern re-checks roles internally); still worth a
+  revoke-by-default pass.
+- **1 WARN — public bucket `post-images` allows listing** (policy
+  `post_images_public_read`). ⚠️ **This bucket exists in NO committed
+  migration** — the shipped post-photos feature uses a text column, not a
+  bucket. It was created in the dashboard: further confirmed drift, and a
+  candidate for deletion if unused.
+- 1 WARN — leaked-password protection (HaveIBeenPwned check) is disabled in
+  Auth settings.
+
+**Performance (237 lints):**
+- 100 WARN `multiple_permissive_policies` — overlapping permissive policies
+  per role/action (e.g. `brand_star_ratings` SELECT for `anon`); each extra
+  policy is an extra per-row check. Consolidation pass warranted.
+- 55 WARN `auth_rls_initplan` — policies re-evaluate `auth.uid()` per row
+  (e.g. `profiles_write`); wrap as `(select auth.uid())` for the initplan
+  optimization.
+- 77 INFO unused indexes (young DB — revisit after real traffic).
+- 5 INFO unindexed FKs, all on legacy 0006-era `community_*` tables.
+
+**Drift is worse than timestamps:** remote migration `0006` is named
+`community_posts` while the local `0006_library.sql` is the library schema —
+the local files were renumbered/renamed at some point, so local and remote
+histories diverge structurally in the 000x range too. `supabase migration
+repair` will need a careful mapping, or accept SQL-editor-only application
+permanently.
 
 ### Generated types
 **NOT FOUND in repo; generation NOT POSSIBLE without DB access.** There is
