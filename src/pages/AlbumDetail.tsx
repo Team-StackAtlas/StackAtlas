@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { FolderLock, Globe, Lock, StickyNote } from 'lucide-react';
+import { FolderLock, Globe, Lock, Share2, StickyNote } from 'lucide-react';
 import { SOURCES } from '../data/mockData';
 import { EmptyState } from '../components/EmptyState';
 import { usePosts } from '../context/PostsContext';
@@ -120,6 +120,20 @@ export default function AlbumDetail() {
   const items = albumItems.filter((item) => item.albumId === album.id);
   const isPublic = album.privacy === 'public';
 
+  const shareAlbum = async () => {
+    const url = `${window.location.origin}/library/albums/${album!.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast(
+        isPublic
+          ? 'Album link copied to clipboard.'
+          : 'Link copied — make the album public so others can open it.',
+      );
+    } catch {
+      toast('Could not copy the link. Copy it from the address bar instead.', 'error');
+    }
+  };
+
   const togglePrivacy = async () => {
     if (savingPrivacy) return;
     const next = isPublic ? 'private' : 'public';
@@ -146,18 +160,28 @@ export default function AlbumDetail() {
             {isPublic ? <Globe size={12} /> : <Lock size={12} />}
             {album.privacy}
           </span>
-          {isOwner ? (
-            <button
-              onClick={togglePrivacy}
-              disabled={savingPrivacy}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-            >
-              {isPublic ? <Lock size={13} /> : <Globe size={13} />}
-              {savingPrivacy ? 'Saving…' : isPublic ? 'Make private' : 'Make public'}
-            </button>
-          ) : (
-            <ReportAction targetType="album" targetId={album.id} entityName={album.title} />
-          )}
+          <div className="flex items-center gap-2">
+            {(isPublic || isOwner) && (
+              <button
+                onClick={shareAlbum}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                <Share2 size={13} /> Share
+              </button>
+            )}
+            {isOwner ? (
+              <button
+                onClick={togglePrivacy}
+                disabled={savingPrivacy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                {isPublic ? <Lock size={13} /> : <Globe size={13} />}
+                {savingPrivacy ? 'Saving…' : isPublic ? 'Make private' : 'Make public'}
+              </button>
+            ) : (
+              <ReportAction targetType="album" targetId={album.id} entityName={album.title} />
+            )}
+          </div>
         </div>
 
         <h1 className="mt-3 text-3xl font-black">{album.title}</h1>
