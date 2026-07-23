@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { FolderLock, Globe, Lock } from 'lucide-react';
+import { FolderLock, Globe, Lock, StickyNote } from 'lucide-react';
 import { SOURCES } from '../data/mockData';
 import { EmptyState } from '../components/EmptyState';
 import { usePosts } from '../context/PostsContext';
 import { useAuth } from '../context/AuthContext';
 import { useLibrary } from '../hooks/useLibrary';
+import { useAlbumNotes } from '../hooks/useAlbumNotes';
 import { useFollowing } from '../hooks/useFollowing';
 import { useToast } from '../components/ui/ToastProvider';
 import { ReportAction } from '../components/ReportAction';
@@ -14,10 +15,85 @@ function label(type: string) {
   return type === 'dispatch' ? 'Dispatch' : type === 'signal' ? 'Signal' : type === 'source' ? 'Source' : 'External Link';
 }
 
+/** Owner-editable note on one album item ("Good info on dosing on page 2").
+ * Non-owners see the note as a caption when present. */
+function ItemNote({
+  note,
+  isOwner,
+  onSave,
+}: {
+  note: string | undefined;
+  isOwner: boolean;
+  onSave: (text: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(note ?? '');
+
+  if (!isOwner) {
+    return note ? (
+      <p className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+        <StickyNote size={15} className="mt-0.5 shrink-0" />
+        {note}
+      </p>
+    ) : null;
+  }
+
+  if (editing) {
+    return (
+      <div className="mt-3">
+        <textarea
+          value={draft}
+          autoFocus
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Add a note — e.g. “Good info on dosing on page 2”"
+          className="h-20 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-950"
+        />
+        <div className="mt-1.5 flex gap-2">
+          <button
+            onClick={() => { onSave(draft); setEditing(false); }}
+            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+          >
+            Save note
+          </button>
+          <button
+            onClick={() => { setDraft(note ?? ''); setEditing(false); }}
+            className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (note) {
+    return (
+      <button
+        onClick={() => { setDraft(note); setEditing(true); }}
+        className="mt-3 flex w-full items-start gap-2 rounded-xl bg-amber-50 p-3 text-left text-sm text-amber-900 transition-colors hover:bg-amber-100 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/15"
+      >
+        <StickyNote size={15} className="mt-0.5 shrink-0" />
+        <span className="flex-1">{note}</span>
+        <span className="shrink-0 text-xs font-medium text-amber-700 dark:text-amber-300">Edit</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+    >
+      <StickyNote size={14} /> Add a note
+    </button>
+  );
+}
+
 export default function AlbumDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isBackendConfigured } = useAuth();
   const { albums, albumItems, removeFromAlbum, updateAlbum } = useLibrary();
+  const { notes, setNote } = useAlbumNotes();
   const { isFollowing, toggleFollow } = useFollowing();
   const { toast } = useToast();
   const { posts: allPosts } = usePosts();
@@ -132,6 +208,7 @@ export default function AlbumDetail() {
                   </button>
                 )}
               </div>
+              <ItemNote note={notes[item.id]} isOwner={isOwner} onSave={(text) => setNote(item.id, text)} />
             </div>
           );
         })}
