@@ -127,6 +127,9 @@ export default function PostCard({ post }: PostCardProps) {
         <p className="text-[15px] leading-relaxed text-slate-600 dark:text-zinc-400">
           {truncateText(post.content, POST_CARD_BODY_PREVIEW_MAX_CHARS)}
         </p>
+        {post.imageUrl && (
+          <img src={post.imageUrl} alt="" loading="lazy" className="mt-3 max-h-96 w-full rounded-xl border border-slate-200 object-cover dark:border-zinc-800" />
+        )}
       </Link>
 
       {dispatchLine && (
