@@ -6,8 +6,10 @@ import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
 import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
 import { GlossaryText } from '../components/GlossaryText';
 import { EmptyState } from '../components/EmptyState';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export default function Glossary() {
+  usePageMeta('Glossary', 'Plain-language definitions for supplement and research terms.');
   const [terms, setTerms] = useState<GlossaryTerm[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

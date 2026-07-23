@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AtSign, Bell, BookMarked, Heart, MessageCircle, Settings, UserPlus, type LucideIcon } from 'lucide-react';
 import { useNotifications, type NotificationCategory } from '../hooks/useNotifications';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // Colored type badge per category, x.com-style, shown on the actor avatar.
 const CATEGORY_BADGES: Record<NotificationCategory, { Icon: LucideIcon; className: string }> = {
@@ -17,6 +18,7 @@ function timestampLabel(iso: string): string {
 }
 
 export default function Notifications() {
+  usePageMeta('Notifications');
   const { notifications, settings, setSettings, markAllRead, openNotification } = useNotifications();
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const [showSettings, setShowSettings] = useState(false);

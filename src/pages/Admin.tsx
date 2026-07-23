@@ -6,6 +6,7 @@ import { supabase } from '../services/supabase/client';
 import QuarterControls from '../components/admin/QuarterControls';
 import SectionErrorBoundary from '../components/admin/SectionErrorBoundary';
 import type { ModerationQueueItem, ProfileDTO } from '../services/types';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 type Tab = 'review' | 'suggest' | 'users' | 'deleted' | 'quarters' | 'research' | 'log';
 const tabs: [Tab, string][] = [
@@ -23,6 +24,7 @@ function isAdmin(profile: ProfileDTO | null) {
 }
 
 export default function Admin() {
+  usePageMeta('Admin');
   const { profile, user, services, isBackendConfigured } = useAuth();
   const [tab, setTab] = useState<Tab>('research');
   const [items, setItems] = useState<ModerationQueueItem[]>([]);

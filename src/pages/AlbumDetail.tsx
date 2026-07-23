@@ -9,6 +9,7 @@ import { useLibrary } from '../hooks/useLibrary';
 import { useFollowing } from '../hooks/useFollowing';
 import { useToast } from '../components/ui/ToastProvider';
 import { ReportAction } from '../components/ReportAction';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function label(type: string) {
   return type === 'dispatch' ? 'Dispatch' : type === 'signal' ? 'Signal' : type === 'source' ? 'Source' : 'External Link';
@@ -97,6 +98,7 @@ export default function AlbumDetail() {
   const { posts: allPosts } = usePosts();
   const [savingPrivacy, setSavingPrivacy] = useState(false);
   const album = albums.find((candidate) => candidate.id === id);
+  usePageMeta(album ? album.title : 'Album', album?.description ?? undefined);
 
   const unavailable = (
     <div className="mx-auto max-w-3xl px-4 pt-16">

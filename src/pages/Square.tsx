@@ -18,6 +18,7 @@ import { BEARING_CATEGORIES, getFilterBearings } from '../lib/bearings';
 import { getPostCommentCount } from '../lib/comments';
 import { EmptyState } from '../components/EmptyState';
 import SquareRail from '../components/SquareRail';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const SORT_OPTIONS = [
   { value: 'Highest Quality', icon: ArrowBigUp },
@@ -27,6 +28,7 @@ const SORT_OPTIONS = [
 ] as const;
 
 export default function Square() {
+  usePageMeta('The Square', 'Community Dispatches and Signals from real protocols.');
   const { scope } = useUserScope();
   const { activeTypes, activeAdmins, activeClassifications } = useFilters();
   const visibleClassifications = scope.accessLevel

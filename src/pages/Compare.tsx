@@ -36,6 +36,7 @@ import { cn } from '../lib/utils';
 import { getCanonicalCategories } from '../lib/bearings';
 import { ADMINISTRATION_META } from '../lib/administrationIcons';
 import { TYPE_TAGS, type AdministrationMethod, type Substance, type Brand, type Stack } from '../data/mockData';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 /** Administration values keep their emoji as the data key; show the clean label. */
 function adminLabel(method: string): string {
@@ -462,6 +463,7 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
 // --- page -------------------------------------------------------------------
 
 export default function Compare() {
+  usePageMeta('Compare', 'Side-by-side comparison of substances, brands, and stacks.');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();

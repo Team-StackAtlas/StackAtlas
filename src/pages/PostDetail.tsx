@@ -18,6 +18,7 @@ import {
   softDeleteSupabaseComment,
   toggleSupabaseCommentVote,
 } from '../services/posts';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 /** Full-screen viewer for an attached post photo; click anywhere or Esc closes. */
 function ImageLightbox({ url, onClose }: { url: string; onClose: () => void }) {
@@ -117,6 +118,7 @@ export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const { posts } = usePosts();
   const post = posts.find(p => p.id === id);
+  usePageMeta(post?.title ?? 'Post');
 
   const postLike = usePostLike(post?.id ?? '', post?.helpfulCount ?? 0, post?.author.id);
   const [comments, setComments] = useState<CommentNode[]>(() => (post ? readCommentOverrides(post.id) ?? ((post.commentItems ?? []) as CommentNode[]) : []));

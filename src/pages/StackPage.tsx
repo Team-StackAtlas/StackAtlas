@@ -15,6 +15,7 @@ import { useCatalog } from '../context/CatalogContext';
 import { supabase } from '../services/supabase/client';
 import { listStackSources, type PublicSource } from '../services/research';
 import { ResearchSourcesCard } from '../components/ResearchSourcesCard';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,6 +24,7 @@ export default function StackPage() {
   const { stacks: STACKS, substances: SUBSTANCES } = useCatalog();
   const { posts: allPosts } = usePosts();
   const stack = STACKS.find(s => s.id === id);
+  usePageMeta(stack?.name ?? 'Stack', stack?.description);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);

@@ -16,12 +16,14 @@ import { useCatalog } from '../context/CatalogContext';
 import { supabase } from '../services/supabase/client';
 import { listBrandSources, type PublicSource } from '../services/research';
 import { ResearchSourcesCard } from '../components/ResearchSourcesCard';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export default function BrandPage() {
   const { id } = useParams<{ id: string }>();
   const { brands: BRANDS, substances: SUPPLEMENTS } = useCatalog();
   const { posts: allPosts } = usePosts();
   const brand = BRANDS.find(b => b.id === id);
+  usePageMeta(brand?.name ?? 'Brand', brand?.description);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);

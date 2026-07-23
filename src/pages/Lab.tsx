@@ -8,6 +8,7 @@ import { CompareModal } from '../components/CompareModal';
 import AccessBadge from '../components/AccessBadge';
 import StarRating from '../components/StarRating';
 import { TYPE_TAGS, type Substance, type Brand, type Stack } from '../data/mockData';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 type CompareType = 'substance' | 'brand' | 'stack';
 type PickerItem = Substance | Brand | Stack;
@@ -139,6 +140,7 @@ const TOOLS: {
 ];
 
 export default function Lab() {
+  usePageMeta('The Lab', 'Compare substances, brands, and stacks, or browse the glossary.');
   const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
   const [pickerType, setPickerType] = useState<CompareType | null>(null);
   const [search, setSearch] = useState('');

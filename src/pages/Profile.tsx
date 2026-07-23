@@ -16,6 +16,7 @@ import { EmptyState } from '../components/EmptyState';
 import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 import { downscaleImage } from '../lib/imageUtils';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'following' | 'reports' | 'settings';
 
@@ -38,6 +39,7 @@ function fieldVisible(profile: ProfileDTO, key: keyof Required<ProfileSettings>,
 
 export default function Profile() {
   const { username } = useParams();
+  usePageMeta(username ? `@${username}` : 'Profile');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { status, user, profile: authProfile, services, isBackendConfigured, refresh, signOut } = useAuth();
