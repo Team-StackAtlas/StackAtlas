@@ -33,6 +33,7 @@ import { usePosts } from '../context/PostsContext';
 import AccessBadge from '../components/AccessBadge';
 import StarRating from '../components/StarRating';
 import { cn } from '../lib/utils';
+import { getCanonicalCategories } from '../lib/bearings';
 import { ADMINISTRATION_META } from '../lib/administrationIcons';
 import { TYPE_TAGS, type AdministrationMethod, type Substance, type Brand, type Stack } from '../data/mockData';
 
@@ -334,11 +335,27 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
 
   const results = useMemo(() => {
     const q = norm(query);
-    return pool
+    const candidates = pool
       .filter((p) => p.id !== pick1 && p.id !== pick2)
-      .filter((p) => !q || norm(p.name).includes(q) || ('aliases' in p && (p.aliases ?? []).some((a) => norm(a).includes(q))))
-      .slice(0, 8);
-  }, [pool, query, pick1, pick2]);
+      .filter((p) => !q || norm(p.name).includes(q) || ('aliases' in p && (p.aliases ?? []).some((a) => norm(a).includes(q))));
+    // Once the first substance is picked, surface the most sensible second
+    // picks first: known pairings, then category overlap. Brands/stacks keep
+    // catalog order.
+    const first = tab === 'substance' && pick1 ? (pool.find((p) => p.id === pick1) as Substance | undefined) : undefined;
+    if (first) {
+      const firstCategories = new Set(getCanonicalCategories(first.paths.map((path) => path.category)));
+      const relevance = (p: Substance) => {
+        let score = 0;
+        if (first.possiblePairings.some((n) => norm(n) === norm(p.name))) score += 4;
+        if (p.possiblePairings.some((n) => norm(n) === norm(first.name))) score += 4;
+        score += getCanonicalCategories(p.paths.map((path) => path.category)).filter((c) => firstCategories.has(c)).length;
+        return score;
+      };
+      const scored = new Map(candidates.map((p) => [p.id, relevance(p as Substance)]));
+      candidates.sort((a, b) => (scored.get(b.id) ?? 0) - (scored.get(a.id) ?? 0));
+    }
+    return candidates.slice(0, 8);
+  }, [pool, tab, query, pick1, pick2]);
 
   const ready = pick1 && pick2;
 
