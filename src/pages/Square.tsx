@@ -8,6 +8,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useUserScope } from '../context/UserScopeContext';
 import { useFilters } from '../context/FilterContext';
 import { useFollowing } from '../hooks/useFollowing';
+import { isBackendConfigured } from '../services/supabase/client';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
@@ -84,7 +85,8 @@ export default function Square() {
     // Feed Type Filtering — Following is public/social: posts by a followed
     // author or linked to a followed substance/stack/brand.
     if (feedType === 'Following') {
-      if (!user) return false;
+      // Backed mode requires sign-in; mock mode follows live in localStorage.
+      if (isBackendConfigured && !user) return false;
       const matches = [
         isFollowing('user', p.author.id) && 'Users',
         !!p.supplementId && isFollowing('substance', p.supplementId) && 'Substances',

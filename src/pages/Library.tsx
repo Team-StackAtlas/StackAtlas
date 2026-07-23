@@ -52,11 +52,13 @@ export default function Library() {
 
   async function submitAlbum(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    // currentTarget is nulled once the handler yields, so capture it pre-await.
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const title = String(form.get('title') ?? '').trim();
     if (!title) return;
     await createAlbum({ title, description: String(form.get('description') ?? '').trim() || undefined, privacy: form.get('privacy') === 'public' ? 'public' : 'private' });
-    event.currentTarget.reset();
+    formElement.reset();
     setShowAlbumForm(false);
   }
 
