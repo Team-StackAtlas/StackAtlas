@@ -4,6 +4,8 @@ import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
 import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
 
 interface GlossaryContextValue {
+  /** All loaded terms, in load order. */
+  terms: GlossaryTerm[];
   /** Lowercased term text -> term. */
   byLower: Map<string, GlossaryTerm>;
   /** Compiled matcher for all terms (longest-first, word-boundary aware), or null if none loaded. */
@@ -49,7 +51,7 @@ export function GlossaryProvider({ children }: { children: ReactNode }) {
       const key = t.term.toLowerCase();
       if (!byLower.has(key)) byLower.set(key, t);
     }
-    if (terms.length === 0) return { byLower, matcher: null };
+    if (terms.length === 0) return { terms, byLower, matcher: null };
 
     // Longest terms first so "Branched-Chain Amino Acid" wins over "Amino Acid".
     const alternation = terms
@@ -60,7 +62,7 @@ export function GlossaryProvider({ children }: { children: ReactNode }) {
     // Boundaries that respect letters, digits, and hyphens (so "Half-Life" and
     // "GABA" match as whole terms, not inside longer words).
     const matcher = new RegExp(`(?<![A-Za-z0-9-])(${alternation})(?![A-Za-z0-9-])`, 'gi');
-    return { byLower, matcher };
+    return { terms, byLower, matcher };
   }, [terms]);
 
   return <GlossaryContext.Provider value={value}>{children}</GlossaryContext.Provider>;
