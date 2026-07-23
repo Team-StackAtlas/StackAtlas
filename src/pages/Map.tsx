@@ -451,7 +451,7 @@ export default function Map() {
       {activeTab === 'Substances' && (
         <div className="px-4 pb-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1 flex-1">
+            <div className="flex overflow-x-auto hide-scrollbar scroll-fade-r sm:[mask-image:none] gap-2 pb-1 flex-1">
               {TYPE_TAGS.map(type => {
                 const isActive = activeTypes.includes(type.full);
                 const isPrioritized = prioritizedTypes.includes(type.full);
@@ -627,12 +627,12 @@ export default function Map() {
                     {isAdminLike && isHidden('stack', stack.id) && (
                       <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                     )}
-                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
-                      <div className="text-xs text-slate-500 dark:text-zinc-500">
+                    <div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
+                      <div className="whitespace-nowrap text-xs text-slate-500 dark:text-zinc-500">
                         {stack.substances.length} substances
                       </div>
                       {creator && (
-                        <div className="text-xs text-slate-500 dark:text-zinc-400">
+                        <div className="min-w-0 truncate text-xs text-slate-500 dark:text-zinc-400">
                           by <span className="font-medium text-slate-700 dark:text-zinc-300">@{creator.username}</span>
                         </div>
                       )}
