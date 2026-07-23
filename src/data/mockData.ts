@@ -217,6 +217,7 @@ export interface Post {
     id: string;
     username: string;
     displayName?: string;
+    avatarUrl?: string;
     isVerified: boolean;
     verificationType?: string;
     age?: number;

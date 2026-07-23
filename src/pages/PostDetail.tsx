@@ -216,8 +216,12 @@ export default function PostDetail() {
       <article className="p-6 md:p-8">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">
-              {post.author.username.charAt(0).toUpperCase()}
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-lg font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">
+              {post.author.avatarUrl ? (
+                <img src={post.author.avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                post.author.username.charAt(0).toUpperCase()
+              )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">

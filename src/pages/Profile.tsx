@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Activity, Bookmark, Calendar, EyeOff, LogOut, Settings, ShieldCheck, Target } from 'lucide-react';
 import { BRANDS, getPosts, STACKS, SUPPLEMENTS, USERS } from '../data/mockData';
@@ -15,6 +15,7 @@ import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
 import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
+import { downscaleImage } from '../lib/imageUtils';
 
 type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'following' | 'reports' | 'settings';
 
@@ -52,6 +53,10 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
   const [activeTab, setActiveTab] = useState<ProfileTab>(() => (searchParams.get('tab') as ProfileTab) || 'all');
   const [saving, setSaving] = useState(false);
+  // undefined = untouched (keep stored avatar), '' = removed, string = new upload.
+  const [avatarDraft, setAvatarDraft] = useState<string | undefined>(undefined);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => { setAvatarDraft(undefined); }, [isEditing]);
   const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
   const [ownReports, setOwnReports] = useState<{ id: string; targetType: string; targetLabel?: string; status: string; createdAt: string }[]>([]);
 
@@ -189,7 +194,7 @@ export default function Profile() {
         username: nextUsername,
         displayName,
         bio: String(form.get('bio') ?? '').trim() || undefined,
-        avatarUrl: String(form.get('avatarUrl') ?? '').trim() || undefined,
+        avatarUrl: avatarDraft,
         age: numberOrNull(form.get('age')),
         weight: numberOrNull(form.get('weight')),
         height: numberOrNull(form.get('height')),
@@ -312,7 +317,42 @@ export default function Profile() {
             <label className="text-sm font-medium">Display name<input name="displayName" defaultValue={shownProfile.displayName ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
           </div>
           <label className="block text-sm font-medium">Bio<textarea name="bio" defaultValue={shownProfile.bio ?? ''} className="mt-1 h-24 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
-          <label className="block text-sm font-medium">Avatar URL<input name="avatarUrl" defaultValue={shownProfile.avatarUrl ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+          <div>
+            <span className="block text-sm font-medium">Profile photo</span>
+            <div className="mt-2 flex items-center gap-3">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-xl font-bold text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
+                {(avatarDraft === undefined ? shownProfile.avatarUrl : avatarDraft) ? (
+                  <img src={avatarDraft === undefined ? shownProfile.avatarUrl : avatarDraft} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  shownProfile.username.charAt(0).toUpperCase()
+                )}
+              </span>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!file) return;
+                  try {
+                    setAvatarDraft(await downscaleImage(file, 256));
+                  } catch (err) {
+                    toast(err instanceof Error ? err.message : 'Could not read the image.', 'error');
+                  }
+                }}
+              />
+              <button type="button" onClick={() => avatarInputRef.current?.click()} className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                Upload photo
+              </button>
+              {(avatarDraft === undefined ? shownProfile.avatarUrl : avatarDraft) && (
+                <button type="button" onClick={() => setAvatarDraft('')} className="text-sm font-medium text-slate-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400">
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
           <div className="grid gap-3 sm:grid-cols-5">
             <label className="text-sm font-medium">Age<input name="age" type="number" defaultValue={shownProfile.age ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
             <label className="text-sm font-medium">Weight<input name="weight" type="number" step="0.1" defaultValue={shownProfile.weight ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>

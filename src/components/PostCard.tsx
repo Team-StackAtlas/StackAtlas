@@ -83,8 +83,12 @@ export default function PostCard({ post }: PostCardProps) {
     <article className="group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:border-zinc-700 dark:hover:bg-zinc-900">
       <header className="mb-3.5 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Link to={`/profile/${post.author.username}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-bold text-slate-700 ring-1 ring-slate-200 transition-opacity hover:opacity-80 dark:from-zinc-800 dark:to-zinc-800/60 dark:text-zinc-200 dark:ring-zinc-700">
-            {post.author.username.charAt(0).toUpperCase()}
+          <Link to={`/profile/${post.author.username}`} className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-sm font-bold text-slate-700 ring-1 ring-slate-200 transition-opacity hover:opacity-80 dark:from-zinc-800 dark:to-zinc-800/60 dark:text-zinc-200 dark:ring-zinc-700">
+            {post.author.avatarUrl ? (
+              <img src={post.author.avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              post.author.username.charAt(0).toUpperCase()
+            )}
           </Link>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">

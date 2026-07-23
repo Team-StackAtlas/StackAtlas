@@ -15,7 +15,7 @@ const POSTS_SELECT_BASE =
   'id, kind, title, content, domain, category, subcategory, quality_score, is_gold, ' +
   'structured_content, log_details, dispatch_protocol, created_at, stack_id, ' +
   'substances(slug), brands(slug), ' +
-  'profiles(id, username, display_name, is_verified, verification_type), ' +
+  'profiles(id, username, display_name, avatar_url, is_verified, verification_type), ' +
   'post_bearings(bearings(label)), post_votes(count), post_comments(count)';
 
 // image_url lands with the post_images migration; until it's applied the
@@ -43,6 +43,7 @@ function mapPostRow(row: any): Post {
       id: author.id ?? '',
       username: author.username ?? 'unknown',
       displayName: author.display_name ?? undefined,
+      avatarUrl: author.avatar_url ?? undefined,
       isVerified: !!author.is_verified,
       verificationType: author.verification_type ?? undefined,
     },
