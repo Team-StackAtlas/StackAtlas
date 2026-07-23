@@ -16,8 +16,15 @@ import { supabase } from '../services/supabase/client';
 import { listStackSources, type PublicSource } from '../services/research';
 import { ResearchSourcesCard } from '../components/ResearchSourcesCard';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { TYPE_TAGS } from '../data/mockData';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const RISK_STYLES: Record<'Low' | 'Moderate' | 'High', string> = {
+  Low: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
+  Moderate: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+  High: 'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300',
+};
 
 export default function StackPage() {
   const { id } = useParams<{ id: string }>();
@@ -112,19 +119,32 @@ export default function StackPage() {
               <div className="space-y-2">
                 {stack.substances.map((component, i) => {
                   const substance = SUBSTANCES.find(s => s.id === component.id);
+                  const tagLabels = (substance?.typeTags ?? [])
+                    .slice(0, 2)
+                    .map((tag) => TYPE_TAGS.find((t) => t.full === tag)?.label)
+                    .filter((label): label is string => Boolean(label));
+                  const subline = substance ? [substance.classification, ...tagLabels].join(' · ') : null;
                   return (
                     <Link
                       key={i}
                       to={`/substance/${component.id}`}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:bg-zinc-800"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:bg-zinc-800"
                     >
-                      <span className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-zinc-100">
+                      <span className="flex min-w-0 items-center gap-2.5">
                         {substance && <AccessBadge classification={substance.classification} />}
-                        {component.name}
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium text-slate-900 dark:text-zinc-100">{component.name}</span>
+                          {subline && <span className="block truncate text-xs text-slate-500 dark:text-zinc-400">{subline}</span>}
+                        </span>
                       </span>
-                      {substance?.averageDosage && (
-                        <span className="text-xs text-slate-500 dark:text-zinc-400">{substance.averageDosage}</span>
-                      )}
+                      <span className="flex shrink-0 items-center gap-2">
+                        {substance?.riskLevel && (
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${RISK_STYLES[substance.riskLevel]}`}>{substance.riskLevel}</span>
+                        )}
+                        {substance?.averageDosage && (
+                          <span className="text-xs text-slate-500 dark:text-zinc-400">{substance.averageDosage}</span>
+                        )}
+                      </span>
                     </Link>
                   );
                 })}
