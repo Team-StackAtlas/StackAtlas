@@ -494,13 +494,13 @@ export default function Comms() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search users to start a DM"
+                placeholder={tab === 'quarters' ? 'Search quarters' : 'Search users to start a DM'}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-950"
               />
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {query && (
+          {query && tab !== 'quarters' && (
             <div className="space-y-2">
               {matches.map((user) => {
                 const blocked = user.isPrivate && !user.followsViewer;
@@ -709,7 +709,11 @@ export default function Comms() {
                   <Plus size={14} /> Create Quarter
                 </button>
               </div>
-              {comms.quarters.map((quarter) => {
+              {comms.quarters.filter((quarter) => {
+                if (!query) return true;
+                const q = query.toLowerCase();
+                return quarter.title.toLowerCase().includes(q) || (quarter.description ?? '').toLowerCase().includes(q);
+              }).map((quarter) => {
                 const last = comms.messages.filter((m) => m.quarterId === quarter.id).at(-1);
                 const unread = comms.unreadQuarterCount(quarter.id);
                 const active = tab === 'quarters' && activeQuarter?.id === quarter.id;
