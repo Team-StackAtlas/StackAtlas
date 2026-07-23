@@ -1,5 +1,33 @@
 # StackAtlas — Handoff Master File (July 23, 2026)
 
+> **OVERNIGHT ADDENDUM (July 23, ~08:40–09:20 UTC).** After the main session
+> closed at 31 merged PRs, an authorized overnight push shipped six more:
+> - **#161** — fixed the catalog-cleanup migration (it referenced run-era
+>   tables an earlier migration had dropped; would have errored on apply),
+>   defined the previously-nonexistent `hide-scrollbar` utility, added mobile
+>   chip-row scroll fades, fixed the stack-card footer wrap.
+> - **#162** — per-route page titles + meta descriptions (`usePageMeta`),
+>   entity-aware on detail pages; OG/twitter baseline in index.html.
+> - **#163** — **importer phase 2**: `external_ref` stable IDs (E####/S####)
+>   as the strongest dedup identity end-to-end, variant natural key +
+>   supersede lifecycle, `research_queue`, `research_source_products`,
+>   `admin_set_source_external_refs` backfill RPC. 61/61 tests.
+> - **#164** — DM reactions persistence + two latent 0009 defects fixed
+>   (self-only SELECT policy, missing DELETE grant) + the #159 DM-avatar
+>   mapping gap.
+> - **#165** — quarter reactions: new `quarter_message_reactions` table,
+>   full Comms parity.
+> - **#166** — deleted dead root scripts (scrape.js, update_mock.cjs,
+>   update_tags.cjs) + Notifications "Unread" chip count badge.
+>
+> **Migration apply-list is now SIX files** (all additive, order-independent;
+> use the SQL editor until history drift is repaired — see §3.1):
+> `20260723050000_profile_goals`, `20260723060000_catalog_cleanup_noncanonical_substances`
+> (the FIXED version — do not use any earlier copy), `20260723070000_post_images`,
+> `20260723080000_importer_phase2_dataset_support`,
+> `20260723090000_dm_reaction_read_and_delete`,
+> `20260723100000_quarter_message_reactions`.
+
 Living handoff document for the autonomous "big push" development session.
 Covers: everything shipped, everything in flight, every open problem (blocked,
 unsure, or deliberately deferred), plus the operational playbooks needed to
@@ -8,7 +36,7 @@ continue the work without this session's context.
 - **Repo:** `Team-StackAtlas/StackAtlas`
 - **Working branch:** `claude/research-source-system-bmu9wg` (all work lands here, ships via squash-merge PRs to `main`, branch resets from `origin/main` after every merge)
 - **Session date:** July 23, 2026 (UTC)
-- **PRs merged this session:** 30 (approx. #131–#159; see ledger below).
+- **PRs merged this session:** 37 (approx. #131–#166; see ledger below + the overnight addendum above).
 
 ---
 

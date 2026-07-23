@@ -890,7 +890,7 @@ experience; language discipline (no medical-advice phrasing); zero
 TODO/ts-ignore hygiene.
 
 ### 10.5 Dead — delete (with confidence)
-- `scrape.js`, `update_mock.cjs`, `update_tags.cjs` (root) — 95%.
+- ~~scrape.js, update_mock.cjs, update_tags.cjs~~ — **DELETED in #166** (grep-verified zero references).
 - `/log/*` pages + `LogContext` + `user_logs`/`user_notes` keys — 85%
   (verify no deep links first).
 - Legacy `users`, `sources`, `test_results` tables — 75% (DB-side check
