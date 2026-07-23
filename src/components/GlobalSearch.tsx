@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Beaker, CornerDownLeft, FileText, Layers, Package, Search, X } from 'lucide-react';
+import { ArrowRight, Beaker, BookOpen, CornerDownLeft, FileText, Layers, Package, Search, X } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext';
 import { usePosts } from '../context/PostsContext';
+import { useGlossary } from '../context/GlossaryContext';
 import { cn } from '../lib/utils';
 
 interface ResultItem {
@@ -37,6 +38,7 @@ export function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { substances, brands, stacks } = useCatalog();
   const { posts } = usePosts();
+  const { terms: glossaryTerms } = useGlossary();
 
   const openSearch = () => {
     setQuery('');
@@ -99,8 +101,16 @@ export function GlobalSearch() {
           .slice(0, 5)
           .map((p) => ({ key: `post-${p.id}`, label: p.title, sublabel: `${p.type} · @${p.author.username}`, href: `/post/${p.id}` })),
       },
+      {
+        title: 'Glossary',
+        icon: BookOpen,
+        items: glossaryTerms
+          .filter((t) => matches(trimmed, t.term, t.definition))
+          .slice(0, 5)
+          .map((t) => ({ key: `term-${t.slug}`, label: t.term, sublabel: t.category ?? 'Term', href: `/glossary?term=${t.slug}` })),
+      },
     ].filter((group) => group.items.length > 0);
-  }, [query, substances, brands, stacks, posts]);
+  }, [query, substances, brands, stacks, posts, glossaryTerms]);
 
   const flatItems = useMemo(() => groups.flatMap((group) => group.items), [groups]);
 

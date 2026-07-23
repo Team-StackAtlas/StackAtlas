@@ -155,6 +155,38 @@ export default function Lab() {
 
   const filtered = items.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
+  // Quick-start pairs: possiblePairings entries that resolve to a real catalog
+  // substance, mutual pairings first. Links open the compare results directly.
+  const suggestedPairs = useMemo(() => {
+    const norm = (value: string) => value.trim().toLowerCase();
+    const byName = new Map(SUPPLEMENTS.map((s) => [norm(s.name), s]));
+    const seen = new Set<string>();
+    const pairs: { a: Substance; b: Substance; mutual: boolean }[] = [];
+    for (const a of SUPPLEMENTS) {
+      for (const pairingName of a.possiblePairings) {
+        const b = byName.get(norm(pairingName));
+        if (!b || b.id === a.id) continue;
+        const key = [a.id, b.id].sort().join('|');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const mutual = b.possiblePairings.some((n) => norm(n) === norm(a.name));
+        pairs.push({ a, b, mutual });
+      }
+    }
+    pairs.sort((x, y) => Number(y.mutual) - Number(x.mutual));
+    // Keep the row varied: no substance appears in more than one shown pair.
+    const used = new Set<string>();
+    const picked: typeof pairs = [];
+    for (const pair of pairs) {
+      if (picked.length === 4) break;
+      if (used.has(pair.a.id) || used.has(pair.b.id)) continue;
+      used.add(pair.a.id);
+      used.add(pair.b.id);
+      picked.push(pair);
+    }
+    return picked;
+  }, [SUPPLEMENTS]);
+
   const openPicker = (type: CompareType) => {
     setSearch('');
     setPickerType(type);
@@ -219,6 +251,26 @@ export default function Lab() {
           <ChevronRight size={16} className="shrink-0 text-slate-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-zinc-600" />
         </Link>
       </div>
+
+      {suggestedPairs.length > 0 && (
+        <div className="mt-8">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+            Popular comparisons
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {suggestedPairs.map(({ a, b }) => (
+              <Link
+                key={`${a.id}|${b.id}`}
+                to={`/compare?type=substance&id1=${a.id}&id2=${b.id}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
+              >
+                <GitCompare size={13} className="text-slate-400 dark:text-zinc-500" />
+                {a.name} <span className="font-normal text-slate-400 dark:text-zinc-500">vs</span> {b.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Base-item picker */}
       <Modal

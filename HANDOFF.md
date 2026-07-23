@@ -677,8 +677,12 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
     scrollbars).
   - ~~Stack card meta wrap at 390px~~ **FIXED July 23**
     (whitespace-nowrap + truncate, `src/pages/Map.tsx` stack card footer).
-  - Comms action row (Report/delete) is always-visible at ~70% opacity —
-    busy on touch, where hover-reveal can't work.
+  - ~~Comms action row (Report/delete) always-visible at ~70% opacity~~
+    **FIXED July 23**: action buttons (Report/delete/restore/react) now
+    hover-reveal on hover-capable devices (`[@media(hover:hover)]:opacity-0`
+    + `group-hover`/`focus-within` reveal); reaction counts and “Seen” stay
+    visible. Touch devices keep the always-visible row since hover-reveal
+    can’t work there.
   - Two button vocabularies coexist: pill buttons (rounded-full) in
     profile/comms headers vs rounded-xl CTAs elsewhere — deliberate-looking
     but undocumented.
@@ -694,18 +698,23 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
   (e.g. `aria-label="Remove photo"`, `aria-label="Post actions"`,
   lightbox `role="dialog"`); focus rings via Tailwind `focus:` utilities on
   most interactive elements; **no systematic audit was performed** — keyboard
-  traversal of Comms and the bearing picker modal, and contrast checking of
-  emerald-on-white text, remain unchecked. Semantic headings used (h1–h3).
+  traversal of Comms and contrast checking of emerald-on-white text remain
+  unchecked. Semantic headings used (h1–h3). Note: the shared modal primitive
+  (`src/components/ui/Modal.tsx`) was re-verified post-audit and already
+  implements the full dialog contract — Escape close, Tab focus trap, initial
+  focus, focus restoration on close, body scroll lock, `aria-modal` +
+  `aria-labelledby` — so modals need no further a11y work.
 - **Sparse-evidence rendering (credibility-critical):**
   - Substance page with no linked brands renders explicit text: *“No brand
     records linked to this substance yet.”* (`w-imported-substance` capture;
     `src/pages/SupplementPage.tsx` Brand Reliability card). ✅
   - Brand page transparency card lists testing report links when present
-    (`x-brand` capture: “Testing report 1/2”); **the zero-COA state needs
-    live verification against a prod brand with no documents — wording of an
-    explicit “No public COA located” state was NOT confirmed.** If it renders
-    an empty box instead, that is a credibility bug to fix in the polish
-    pass. (`src/pages/BrandPage.tsx` — check `transparency` empty branch.)
+    (`x-brand` capture: “Testing report 1/2”); ~~the zero-COA state needs
+    live verification~~ **VERIFIED July 23**: the empty branch renders
+    explicit text — *“No reviewed transparency records yet. Signals appear
+    here once documentation like COAs or third-party testing has been
+    reviewed.”* (`src/pages/BrandPage.tsx:161-168`, `hasAny` guard covers
+    chips + documentation_url + testing links). Not an empty box. ✅
   - “Unknown” classification is deliberately never rendered as a “?” badge
     anymore (#135).
 - **Medical-advice wording:** grep for “recommended dos(e|age)” returns
