@@ -177,6 +177,8 @@ export interface AlbumItem {
   savedItemType: SavedItemType;
   savedItemId: ID;
   addedAt: ISODate;
+  /** Owner's short annotation on this item ("Good info on dosing on page 2"). */
+  note?: string;
 }
 
 export type HideableType = 'substance' | 'brand' | 'stack' | 'tag';

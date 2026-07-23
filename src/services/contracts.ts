@@ -94,6 +94,7 @@ export interface LibraryService {
   listAlbumItems(albumId: ID): Promise<AlbumItem[]>;
   addAlbumItem(albumId: ID, item: SavedItem): Promise<void>;
   removeAlbumItem(albumItemId: ID): Promise<void>;
+  setAlbumItemNote(albumItemId: ID, note: string): Promise<void>;
 }
 
 export interface HiddenService {

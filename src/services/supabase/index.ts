@@ -311,7 +311,7 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     async listAlbumItems(albumId: ID) {
       const { data, error } = await client.from('library_album_items').select('*').eq('album_id', albumId).order('added_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((r: any) => ({ id: r.id, albumId: r.album_id, savedItemType: r.saved_item_type, savedItemId: r.saved_item_id, addedAt: r.added_at }));
+      return (data ?? []).map((r: any) => ({ id: r.id, albumId: r.album_id, savedItemType: r.saved_item_type, savedItemId: r.saved_item_id, addedAt: r.added_at, note: r.note ?? undefined }));
     },
     async addAlbumItem(albumId: ID, item: SavedItem) {
       const { error } = await client.from('library_album_items').upsert({ album_id: albumId, saved_item_type: item.itemType, saved_item_id: item.itemId });
@@ -319,6 +319,10 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
     },
     async removeAlbumItem(albumItemId: ID) {
       const { error } = await client.from('library_album_items').delete().eq('id', albumItemId);
+      if (error) throw error;
+    },
+    async setAlbumItemNote(albumItemId: ID, note: string) {
+      const { error } = await client.from('library_album_items').update({ note: note.trim() || null }).eq('id', albumItemId);
       if (error) throw error;
     },
   };

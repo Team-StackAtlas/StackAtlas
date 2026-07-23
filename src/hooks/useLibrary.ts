@@ -5,6 +5,10 @@ import type { AlbumItem, LibraryAlbum, SavedItem } from '../services/types';
 
 const ALBUMS_KEY = 'stackatlas_albums';
 const ITEMS_KEY = 'stackatlas_album_items';
+// One-time migration source: notes shipped in #146 lived in this separate map
+// keyed by album-item id. They now live on the item itself; on first local read
+// we fold them in and drop the legacy key.
+const LEGACY_NOTES_KEY = 'stackatlas_album_item_notes';
 
 function read<T>(key: string): T[] {
   try {
@@ -13,6 +17,21 @@ function read<T>(key: string): T[] {
   } catch { return []; }
 }
 function write<T>(key: string, value: T[]) { localStorage.setItem(key, JSON.stringify(value)); }
+
+/** Reads local album items, folding any legacy per-item notes onto them once. */
+function readLocalItems(): AlbumItem[] {
+  const items = read<AlbumItem>(ITEMS_KEY);
+  let legacy: Record<string, string> = {};
+  try {
+    const raw = localStorage.getItem(LEGACY_NOTES_KEY);
+    legacy = raw ? JSON.parse(raw) : {};
+  } catch { legacy = {}; }
+  if (!legacy || Object.keys(legacy).length === 0) return items;
+  const merged = items.map((item) => (item.note == null && legacy[item.id] ? { ...item, note: legacy[item.id] } : item));
+  write(ITEMS_KEY, merged);
+  localStorage.removeItem(LEGACY_NOTES_KEY);
+  return merged;
+}
 
 export function useLibrary() {
   const { isBackendConfigured, services, user } = useAuth();
@@ -31,7 +50,7 @@ export function useLibrary() {
     } else if (!isBackendConfigured) {
       await Promise.resolve().then(() => {
         setAlbums(read<LibraryAlbum>(ALBUMS_KEY));
-        setAlbumItems(read<AlbumItem>(ITEMS_KEY));
+        setAlbumItems(readLocalItems());
       });
     }
   }, [backed, isBackendConfigured, services, user]);
@@ -95,5 +114,17 @@ export function useLibrary() {
     await refresh();
   }, [albumItems, backed, refresh, requireAccount, services]);
 
-  return { albums, albumItems, createAlbum, updateAlbum, deleteAlbum, addToAlbum, removeFromAlbum, refresh };
+  const updateAlbumItemNote = useCallback(async (albumItemId: string, note: string) => {
+    if (!requireAccount()) return;
+    const trimmed = note.trim();
+    if (backed && services) {
+      await services.library.setAlbumItemNote(albumItemId, trimmed);
+      await refresh();
+    } else {
+      const next = albumItems.map((item) => item.id === albumItemId ? { ...item, note: trimmed || undefined } : item);
+      setAlbumItems(next); write(ITEMS_KEY, next);
+    }
+  }, [albumItems, backed, refresh, requireAccount, services]);
+
+  return { albums, albumItems, createAlbum, updateAlbum, deleteAlbum, addToAlbum, removeFromAlbum, updateAlbumItemNote, refresh };
 }

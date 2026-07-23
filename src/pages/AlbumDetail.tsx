@@ -6,7 +6,6 @@ import { EmptyState } from '../components/EmptyState';
 import { usePosts } from '../context/PostsContext';
 import { useAuth } from '../context/AuthContext';
 import { useLibrary } from '../hooks/useLibrary';
-import { useAlbumNotes } from '../hooks/useAlbumNotes';
 import { useFollowing } from '../hooks/useFollowing';
 import { useToast } from '../components/ui/ToastProvider';
 import { ReportAction } from '../components/ReportAction';
@@ -92,8 +91,7 @@ function ItemNote({
 export default function AlbumDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isBackendConfigured } = useAuth();
-  const { albums, albumItems, removeFromAlbum, updateAlbum } = useLibrary();
-  const { notes, setNote } = useAlbumNotes();
+  const { albums, albumItems, removeFromAlbum, updateAlbum, updateAlbumItemNote } = useLibrary();
   const { isFollowing, toggleFollow } = useFollowing();
   const { toast } = useToast();
   const { posts: allPosts } = usePosts();
@@ -232,7 +230,7 @@ export default function AlbumDetail() {
                   </button>
                 )}
               </div>
-              <ItemNote note={notes[item.id]} isOwner={isOwner} onSave={(text) => setNote(item.id, text)} />
+              <ItemNote note={item.note} isOwner={isOwner} onSave={(text) => updateAlbumItemNote(item.id, text)} />
             </div>
           );
         })}
