@@ -1,5 +1,27 @@
 # StackAtlas — Handoff Master File (July 23, 2026)
 
+> **MORNING CONTINUATION (July 23, ~09:45–10:20 UTC).** The push continued
+> after the overnight queue closed; three more PRs merged:
+> - **#167** — handoff docs refresh + the live Supabase advisor results
+>   folded into HANDOFF.md §4 (1 security ERROR: `profile_stats` definer
+>   view; 6 anon-executable definer functions; `post-images` bucket exists
+>   in no committed migration; HIBP protection off; 237 perf lints).
+> - **#168** — five UI improvements: Compare brand relevance (shared-product
+>   ranking), Comms hover-reveal message actions (`[@media(hover:hover)]`
+>   gate; touch keeps always-visible), Lab "Popular comparisons" quick-start
+>   chips from `possiblePairings` data, StackPage substance rows enriched
+>   with classification/type-tag sublines + risk pills, glossary terms in
+>   the ⌘K palette (deep-link to `/glossary?term=`). Plus HANDOFF.md
+>   corrections (Modal a11y already complete; zero-COA state verified).
+> - **#169** — smoke suite expanded with four regression tests for the
+>   above; fixed a latent test bug (the palette test had been passing
+>   against Map's inline search box — ⌘K raced listener mount); deleted
+>   dead `tests/scrape.spec.cjs`. 12/12 smoke + 61/61 unit locally and in CI.
+>
+> Dark-mode and 390px mobile sweeps of the new surfaces found no defects.
+> Session total: **40 merged PRs.** The six-migration apply-list below is
+> unchanged.
+
 > **OVERNIGHT ADDENDUM (July 23, ~08:40–09:20 UTC).** After the main session
 > closed at 31 merged PRs, an authorized overnight push shipped six more:
 > - **#161** — fixed the catalog-cleanup migration (it referenced run-era
@@ -36,7 +58,7 @@ continue the work without this session's context.
 - **Repo:** `Team-StackAtlas/StackAtlas`
 - **Working branch:** `claude/research-source-system-bmu9wg` (all work lands here, ships via squash-merge PRs to `main`, branch resets from `origin/main` after every merge)
 - **Session date:** July 23, 2026 (UTC)
-- **PRs merged this session:** 37 (approx. #131–#166; see ledger below + the overnight addendum above).
+- **PRs merged this session:** 40 (approx. #131–#169; see ledger below + the overnight addendum and morning continuation above).
 
 ---
 
