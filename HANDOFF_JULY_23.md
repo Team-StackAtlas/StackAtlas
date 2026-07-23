@@ -234,6 +234,22 @@ Supabase SQL editor. Order-independent, all idempotent. (Or restore my
 Supabase MCP access in a future session and say "apply the three pending
 migrations".)
 
+**⚠️ Migration-history drift (surfaced 07:48 UTC):** the Supabase GitHub
+integration's "Supabase Preview" check on `main` now fails with *"Remote
+migration versions not found in local migrations directory."* Almost
+certainly because migrations applied through the Supabase MCP earlier in the
+session were recorded in the remote `supabase_migrations.schema_migrations`
+history under versions that don't match the filenames committed to
+`supabase/migrations/`. Consequences and remedy:
+- `supabase db push` may refuse or mis-plan until the history is reconciled.
+  Run `supabase migration list --linked` to see the mismatch, then either add
+  matching local stub files for remote-only versions or
+  `supabase migration repair --status reverted <version>` for duplicates.
+  The SQL-editor route (pasting the three files) sidesteps the history
+  entirely and is the low-friction option.
+- This check is informational (always "skipped" on PRs; only runs on `main`
+  pushes) — it does not block merges or deploys.
+
 ### 3.2 Unsure / needs a product decision
 - **Data-URL images vs. storage buckets.** Post photos and avatars store
   downscaled JPEG **data-urls in text columns** (posts.image_url,
