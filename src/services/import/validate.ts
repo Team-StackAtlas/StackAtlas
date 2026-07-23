@@ -72,6 +72,7 @@ function isFourDigitYear(value: unknown): boolean {
  * `ExistingKeys.sourceKeys` from the database and to cross-reference a
  * finding's source_pmid/source_doi/source_url against a pack's own sources. */
 export function sourceKeyVariants(row: {
+  external_ref?: string | null;
   pmid?: string | null;
   doi?: string | null;
   url?: string | null;
@@ -80,11 +81,15 @@ export function sourceKeyVariants(row: {
   content_hash?: string | null;
 }): string[] {
   const keys: string[] = [];
+  const externalRef = trimmed(row.external_ref);
   const pmid = trimmed(row.pmid);
   const doi = trimmed(row.doi);
   const url = trimmed(row.url);
   const title = trimmed(row.title);
   const contentHash = trimmed(row.content_hash);
+  // A dataset-assigned stable ID (e.g. "S0001") is the strongest identity —
+  // it survives retitles, URL changes, and document edits.
+  if (externalRef) keys.push(`x:${externalRef.toLowerCase()}`);
   if (pmid) keys.push(`p:${pmid.toLowerCase()}`);
   if (doi) keys.push(`d:${doi.toLowerCase()}`);
   if (url) keys.push(`u:${url}`);

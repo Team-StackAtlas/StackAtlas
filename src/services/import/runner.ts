@@ -39,12 +39,23 @@ function errorMessage(err: unknown): string {
 }
 
 export async function fetchExistingKeys(client: SupabaseClient): Promise<ExistingKeys> {
+  // external_ref lands with the importer_phase2 migration; retry without the
+  // column so exists-detection keeps working until it's applied.
+  const fetchSources = async () => {
+    const withRef = await client
+      .from('research_sources')
+      .select('external_ref, pmid, doi, url, title, year, content_hash');
+    if (withRef.error && /external_ref/.test(withRef.error.message)) {
+      return client.from('research_sources').select('pmid, doi, url, title, year, content_hash');
+    }
+    return withRef;
+  };
   const [substancesRes, aliasesRes, brandsRes, stacksRes, sourcesRes] = await Promise.all([
     client.from('substances').select('slug, name'),
     client.from('substance_aliases').select('alias'),
     client.from('brands').select('slug'),
     client.from('stacks').select('component_signature'),
-    client.from('research_sources').select('pmid, doi, url, title, year, content_hash'),
+    fetchSources(),
   ]);
   if (substancesRes.error) throw substancesRes.error;
   if (aliasesRes.error) throw aliasesRes.error;
@@ -176,6 +187,34 @@ export async function runImport(
         } catch (err) {
           result.errors.push({ index: -1, message: errorMessage(err) });
           if (entity === 'substances') substancesFailed = true;
+        }
+      }
+    }
+
+    // Attach dataset-stable IDs (e.g. "S0001") to the sources just imported.
+    // Best-effort by design: before the importer_phase2 migration the RPC
+    // doesn't exist and this records a warning instead of failing the batch.
+    if (entity === 'sources' && !substancesFailed) {
+      const sourceRows = (pack.sources ?? []) as unknown as Record<string, unknown>[];
+      const refRows = indices
+        .map((i) => sourceRows[i])
+        .filter((row) => typeof row?.external_ref === 'string' && row.external_ref)
+        .map((row) => ({
+          external_ref: row.external_ref,
+          content_hash: row.content_hash ?? null,
+          pmid: row.pmid ?? null,
+          doi: row.doi ?? null,
+          url: row.url ?? null,
+        }));
+      if (refRows.length > 0) {
+        try {
+          const { error } = await client.rpc('admin_set_source_external_refs', { p_rows: refRows });
+          if (error) throw error;
+        } catch (err) {
+          result.warnings.push({
+            index: -1,
+            message: `external refs not attached (apply the importer_phase2 migration): ${errorMessage(err)}`,
+          });
         }
       }
     }

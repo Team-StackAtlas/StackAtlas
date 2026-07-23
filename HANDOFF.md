@@ -746,7 +746,17 @@ Plus a data-pack authoring kit in `docs/` and `scripts/export-mock-pack.ts`.
 `S0001` IDs / per-doc SHA-256 / resumable checkpoint / everything
 `needs_review` / never-publish-directly / preserve-history / full trace)
 
-**Honest distance: ~70% there. Specific missing pieces:**
+**UPDATE (July 23, overnight push):** deltas 1, 2, 4 (variant history), 6,
+and 7 below shipped as `supabase/migrations/20260723080000_importer_phase2_dataset_support.sql`
+(apply alongside the other pending migrations) + engine support: `external_ref`
+is now the strongest dedup identity in `sourceKeyVariants`, flows through pack
+JSON and CSV (`id`/`source_id`/`external_ref` headers), survives the pre-
+migration RPC harmlessly, and back-attaches via the new
+`admin_set_source_external_refs` RPC after import. Remaining: unified
+review_status vocabulary (delta 3), a per-row import checkpoint (delta 4's
+cursor half), and drift reconciliation (delta 8) — the last one is yours.
+
+**Honest distance at audit time: ~70% there. Specific missing pieces:**
 1. **Stable external IDs**: no `external_id`/`ledger_id` column on
    `research_sources`, findings, `brand_products`, or `product_variants` to
    carry `E0001`/`S0001` — the current dedup chain is content-based. Add
