@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { isBackendConfigured } from '../services/supabase/client';
 import { BEARING_GROUPS, CATEGORY_BEARING_SUGGESTIONS, getAllowedBearings } from '../lib/bearings';
+import { downscaleImage } from '../lib/imageUtils';
 
 
 type CreateType = 'Dispatch' | 'Signal';
@@ -131,27 +132,6 @@ function ErrorText({ children }: { children?: string }) {
 const POST_IMAGE_MAX_DIM = 1280;
 const POST_IMAGE_MAX_FILE = 10 * 1024 * 1024;
 
-/** Downscale to a bounded JPEG data-url so attached photos stay storable. */
-function downscalePostImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, POST_IMAGE_MAX_DIM / Math.max(image.width, image.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(image.width * scale);
-      canvas.height = Math.round(image.height * scale);
-      const context = canvas.getContext('2d');
-      if (!context) { reject(new Error('Could not process the image.')); return; }
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
-    };
-    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read the image.')); };
-    image.src = url;
-  });
-}
-
 function PostImagePicker({ value, onChange, onError }: {
   value: string | null;
   onChange: (dataUrl: string | null) => void;
@@ -163,7 +143,7 @@ function PostImagePicker({ value, onChange, onError }: {
     if (!file.type.startsWith('image/')) { onError('Only image files can be attached.'); return; }
     if (file.size > POST_IMAGE_MAX_FILE) { onError('Images must be under 10 MB.'); return; }
     try {
-      onChange(await downscalePostImage(file));
+      onChange(await downscaleImage(file, POST_IMAGE_MAX_DIM));
       onError('');
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Could not process the image.');
@@ -480,7 +460,7 @@ export default function Create() {
   // Signed-in author when backed; in mock mode posts publish to the local
   // store as the demo user so the flow works without an account.
   const author = user && profile
-    ? { id: user.id, username: profile.username, displayName: profile.displayName, isVerified: profile.isVerified }
+    ? { id: user.id, username: profile.username, displayName: profile.displayName, avatarUrl: profile.avatarUrl, isVerified: profile.isVerified }
     : !isBackendConfigured
       ? { id: USERS[0].id, username: USERS[0].username, displayName: USERS[0].displayName, isVerified: true }
       : null;
