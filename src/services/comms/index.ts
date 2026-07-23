@@ -45,11 +45,18 @@ export interface CommsMessageDTO {
   attachments: CommsAttachmentDTO[];
 }
 
+export interface CommsReactionDTO {
+  messageId: string;
+  userId: string;
+  emoji: string;
+}
+
 export interface CommsLoadResult {
   conversations: CommsConversationDTO[];
   messages: CommsMessageDTO[];
   profiles: CommsProfileDTO[];
   lastReadAt: Record<string, string | null>;
+  reactions: CommsReactionDTO[];
 }
 
 // An uploaded image/file attachment on a persisted DM or Quarter message.
@@ -207,7 +214,7 @@ export async function loadComms(client: SupabaseClient, viewerId: string): Promi
   (mine ?? []).forEach((row: any) => {
     lastReadAt[row.conversation_id] = row.last_read_at;
   });
-  if (ids.length === 0) return { conversations: [], messages: [], profiles: [], lastReadAt };
+  if (ids.length === 0) return { conversations: [], messages: [], profiles: [], lastReadAt, reactions: [] };
 
   const [convResult, participantResult, messageResult] = await Promise.all([
     client.from('conversations').select('id, status, requested_by').in('id', ids),
@@ -237,6 +244,7 @@ export async function loadComms(client: SupabaseClient, viewerId: string): Promi
         id: profile.id,
         username: profile.username,
         displayName: profile.display_name ?? undefined,
+        avatarUrl: profile.avatar_url ?? undefined,
       });
     }
   });
@@ -273,7 +281,51 @@ export async function loadComms(client: SupabaseClient, viewerId: string): Promi
     attachments: attachmentsByMessage.get(row.id) ?? [],
   }));
 
-  return { conversations, messages, profiles: Array.from(profilesById.values()), lastReadAt };
+  // Reactions on those messages. Before the dm_reaction migration the RLS
+  // select policy only returns the viewer's own rows — the UI still works,
+  // it just can't see other people's reactions until the policy lands.
+  const reactionsResult = messageIds.length
+    ? await client
+        .from('message_reactions')
+        .select('message_id, user_id, emoji')
+        .in('message_id', messageIds)
+    : { data: [] as any[], error: null };
+  if (reactionsResult.error) throw reactionsResult.error;
+  const reactions: CommsReactionDTO[] = (reactionsResult.data ?? []).map((row: any) => ({
+    messageId: row.message_id,
+    userId: row.user_id,
+    emoji: row.emoji,
+  }));
+
+  return { conversations, messages, profiles: Array.from(profilesById.values()), lastReadAt, reactions };
+}
+
+/**
+ * Adds or removes the viewer's reaction on a DM message. Removal needs the
+ * delete grant from the dm_reaction migration; callers treat failures as
+ * non-fatal and re-sync via refresh().
+ */
+export async function toggleDmReaction(
+  client: SupabaseClient,
+  messageId: string,
+  userId: string,
+  emoji: string,
+  active: boolean,
+): Promise<void> {
+  if (active) {
+    const { error } = await client
+      .from('message_reactions')
+      .delete()
+      .eq('message_id', messageId)
+      .eq('user_id', userId)
+      .eq('emoji', emoji);
+    if (error) throw error;
+  } else {
+    const { error } = await client
+      .from('message_reactions')
+      .insert({ message_id: messageId, user_id: userId, emoji });
+    if (error) throw error;
+  }
 }
 
 export async function sendCommsMessage(
