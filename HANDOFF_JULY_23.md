@@ -19,8 +19,26 @@
 >   dead `tests/scrape.spec.cjs`. 12/12 smoke + 61/61 unit locally and in CI.
 >
 > Dark-mode and 390px mobile sweeps of the new surfaces found no defects.
-> Session total: **40 merged PRs.** The six-migration apply-list below is
-> unchanged.
+> The six-migration apply-list below is unchanged.
+>
+> **Continued (~10:20–10:40 UTC):**
+> - **#171** — smoke tests for the two core journeys: signal composer
+>   publishes to the Square (incl. required-Bearings validation observed
+>   working), save-a-post surfaces in the Library.
+> - **#172** — album journey smoke test (save → create album → file item →
+>   album detail) + glossary matcher extracted to `src/lib/glossaryMatcher.ts`
+>   and unit-tested (boundaries, longest-first, escaping). 67 unit / 15 smoke.
+> - Full-app verification sweep: Login, Onboarding, Profile, Create,
+>   NotFound, album create/detail all healthy; Comms keyboard traversal
+>   verified (voice-note button gained an `aria-label` — shipped in the next
+>   PR alongside this note). Session total: **43 merged PRs.**
+>
+> ⚠️ **Vercel deploy rate limit hit (~10:30 UTC):** the free tier's 100
+> deployments/day cap was reached (today's PR cadence). GitHub Actions
+> `build` CI is unaffected and merges continue, but **merges to `main` will
+> not produce a fresh production deploy until the cap resets (~24h)** — the
+> site keeps serving the last successful deploy. No action needed; it
+> self-heals, or upgrade the Vercel plan to lift the cap.
 
 > **OVERNIGHT ADDENDUM (July 23, ~08:40–09:20 UTC).** After the main session
 > closed at 31 merged PRs, an authorized overnight push shipped six more:

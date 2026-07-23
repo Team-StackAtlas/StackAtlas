@@ -1034,6 +1034,7 @@ export default function Comms() {
                   </label>
                   <button
                     title={recording ? 'Stop recording' : 'Record a voice note'}
+                    aria-label={recording ? 'Stop recording' : 'Record a voice note'}
                     onClick={() => (recording ? stopVoice() : void startVoice())}
                     className={`rounded-full p-2.5 transition-colors ${recording ? 'animate-pulse bg-red-600 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'}`}
                   >
