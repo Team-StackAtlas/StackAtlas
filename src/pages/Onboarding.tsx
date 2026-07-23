@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import AccessBadge from '../components/AccessBadge';
 import { GoalsPicker } from '../components/GoalsPicker';
 import { useGoals } from '../hooks/useGoals';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const SCOPES: {
   level: AccessLevel;
@@ -63,6 +64,7 @@ const CLASSIFICATION_REFERENCE: { classification: Classification; name: string; 
 ];
 
 export default function Onboarding() {
+  usePageMeta('Get started');
   const navigate = useNavigate();
   const { scope, updateScope } = useUserScope();
   const { setGoals } = useGoals();

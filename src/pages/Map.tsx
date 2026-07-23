@@ -18,6 +18,7 @@ import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
 import { BEARING_CATEGORIES, getCanonicalCategories, getFilterBearings } from '../lib/bearings';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 type SearchableType = 'substance' | 'brand' | 'stack';
 type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
@@ -67,6 +68,7 @@ function LoadMoreButton({ remaining, onClick }: { remaining: number; onClick: ()
 }
 
 export default function Map() {
+  usePageMeta('The Map', 'Browse substances, brands, and stacks by goal category.');
   const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS, loading: catalogLoading } = useCatalog();
   const { scope } = useUserScope();
   const {

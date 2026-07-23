@@ -3,6 +3,7 @@ import { ArrowLeft, Crown, Image, ImageOff, Info, MessageSquare, Mic, Paperclip,
 import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VOICE_SECONDS = 60;
@@ -85,6 +86,7 @@ function MessageImage({ url, name }: { url: string; name: string }) {
 }
 
 export default function Comms() {
+  usePageMeta('Comms', 'Direct messages and Quarters.');
   const [query, setQuery] = useState('');
   const comms = useComms(query);
   const [tab, setTab] = useState<Tab>('messages');

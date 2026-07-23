@@ -8,6 +8,7 @@ import { useSaved, type SavedItem as HookSavedItem } from '../hooks/useSaved';
 import { useLibrary } from '../hooks/useLibrary';
 import { EmptyState } from '../components/EmptyState';
 import type { SavedItem, SavedItemType } from '../services/types';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 type Filter = 'all' | 'dispatch' | 'signal' | 'source' | 'album';
 
@@ -26,6 +27,7 @@ function label(type: string) {
 }
 
 export default function Library() {
+  usePageMeta('Library', 'Your saved posts, sources, and albums.');
   const { status } = useAuth();
   const { savedItems, unsaveItem } = useSaved();
   const { posts: allPosts } = usePosts();

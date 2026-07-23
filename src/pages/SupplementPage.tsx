@@ -38,6 +38,7 @@ import { EntityNotFound } from '../components/EntityNotFound';
 import { GlossaryText } from '../components/GlossaryText';
 import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
 import { displayName } from '../lib/substanceName';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 // 'mixed' reads as "Mixed results" here (not admin's shorter "Mixed") per the
 // public copy spec, so this map isn't reused from adminLabels.ts.
@@ -107,6 +108,7 @@ export default function SupplementPage() {
   const { substances: SUPPLEMENTS, brands: BRANDS } = useCatalog();
   const { posts: allPosts } = usePosts();
   const supplement = SUPPLEMENTS.find(s => s.id === id);
+  usePageMeta(supplement?.name ?? 'Substance', supplement?.description);
 
   const [isSuggestEditOpen, setIsSuggestEditOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);

@@ -4,6 +4,7 @@ import { Mail, Lock, Layers, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { validateUsername } from '../lib/account';
 import { useToast } from '../components/ui/ToastProvider';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function getAuthErrorMessage(err: unknown) {
   if (err instanceof Error) return err.message;
@@ -15,6 +16,7 @@ function getAuthErrorMessage(err: unknown) {
 }
 
 export default function Login() {
+  usePageMeta('Sign in');
   const { signIn, signUp, isBackendConfigured } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();

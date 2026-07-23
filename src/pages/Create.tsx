@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { isBackendConfigured } from '../services/supabase/client';
 import { BEARING_GROUPS, CATEGORY_BEARING_SUGGESTIONS, getAllowedBearings } from '../lib/bearings';
 import { downscaleImage } from '../lib/imageUtils';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 
 type CreateType = 'Dispatch' | 'Signal';
@@ -454,6 +455,7 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
 }
 
 export default function Create() {
+  usePageMeta('Create');
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { publishPost } = usePosts();
