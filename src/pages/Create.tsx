@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronDown, ClipboardList, HelpCircle, Radio, Search, X, ArrowRight } from 'lucide-react';
-import { SUPPLEMENTS, BRANDS, Post, Domain } from '../data/mockData';
+import { SUPPLEMENTS, BRANDS, USERS, Post, Domain } from '../data/mockData';
 import { usePosts } from '../context/PostsContext';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
+import { isBackendConfigured } from '../services/supabase/client';
 import { BEARING_GROUPS, CATEGORY_BEARING_SUGGESTIONS, getAllowedBearings } from '../lib/bearings';
 
 
@@ -416,6 +417,13 @@ export default function Create() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { publishPost } = usePosts();
+  // Signed-in author when backed; in mock mode posts publish to the local
+  // store as the demo user so the flow works without an account.
+  const author = user && profile
+    ? { id: user.id, username: profile.username, displayName: profile.displayName, isVerified: profile.isVerified }
+    : !isBackendConfigured
+      ? { id: USERS[0].id, username: USERS[0].username, displayName: USERS[0].displayName, isVerified: true }
+      : null;
   const [publishing, setPublishing] = useState(false);
   const [activeType, setActiveType] = useState<CreateType | null>(null);
   const [dispatchEntity, setDispatchEntity] = useState<EntityOption | null>(null);
@@ -452,7 +460,7 @@ export default function Create() {
   const handleDispatchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nextErrors: FormErrors = {};
-    if (!user || !profile) nextErrors.auth = 'Sign in with a complete profile before creating a post.';
+    if (!author) nextErrors.auth = 'Sign in with a complete profile before creating a post.';
     if (!dispatchEntity) nextErrors.entity = 'Choose a Substance.';
     if (!dispatchData.title.trim()) nextErrors.title = 'Title is required.';
     if (dispatchData.content.trim().length < MIN_DISPATCH_BODY_CHARS) nextErrors.content = `Content / Experience must be at least ${MIN_DISPATCH_BODY_CHARS} characters.`;
@@ -460,7 +468,7 @@ export default function Create() {
     if (!isPositiveNumber(duration.amount)) nextErrors.duration = 'Enter a valid numeric duration.';
     if (dispatchBearings.length < 1 || dispatchBearings.length > 5) nextErrors.bearings = 'Select 1-5 Bearings.';
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !dispatchEntity || !user || !profile) return;
+    if (Object.keys(nextErrors).length > 0 || !dispatchEntity || !author) return;
 
     const protocolEntries = [
       { substanceId: dispatchEntity.type === 'supplement' ? dispatchEntity.id : undefined, substanceName: primarySubstanceName, dose: formatDose(primaryProtocol.dose), frequency: formatFrequency(primaryProtocol.frequency) },
@@ -473,7 +481,7 @@ export default function Create() {
       type: 'Dispatch',
       title: dispatchData.title.trim(),
       content: dispatchData.content.trim(),
-      author: { id: user.id, username: profile.username, displayName: profile.displayName, isVerified: profile.isVerified },
+      author,
       domain: getEntityDomain(dispatchEntity),
       category: getEntityCategory(dispatchEntity),
       supplementId: dispatchEntity.type === 'supplement' ? dispatchEntity.id : undefined,
@@ -502,12 +510,12 @@ export default function Create() {
   const handleSignalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nextErrors: FormErrors = {};
-    if (!user || !profile) nextErrors.auth = 'Sign in with a complete profile before creating a post.';
+    if (!author) nextErrors.auth = 'Sign in with a complete profile before creating a post.';
     if (!signalData.title.trim()) nextErrors.title = 'Title is required.';
     if (!signalData.content.trim()) nextErrors.content = 'Body text is required.';
     if (signalBearings.length < 1 || signalBearings.length > 5) nextErrors.bearings = 'Select 1-5 Bearings.';
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || !user || !profile) return;
+    if (Object.keys(nextErrors).length > 0 || !author) return;
 
     const postId = `p${Math.round(e.timeStamp)}_${signalData.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 24)}`;
     const newPost: Post = {
@@ -515,7 +523,7 @@ export default function Create() {
       type: 'Signal',
       title: signalData.title.trim(),
       content: signalData.content.trim(),
-      author: { id: user.id, username: profile.username, displayName: profile.displayName, isVerified: profile.isVerified },
+      author,
       domain: getEntityDomain(signalEntity),
       category: signalEntity ? getEntityCategory(signalEntity) : 'General',
       supplementId: signalEntity?.type === 'supplement' ? signalEntity.id : undefined,
