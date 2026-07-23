@@ -64,26 +64,43 @@ export default function Profile() {
         const mock = username
           ? USERS.find((candidate) => candidate.username.toLowerCase() === username.toLowerCase())
           : USERS[0];
+        // Seed-post authors aren't in USERS; derive a profile from their posts
+        // so tapping an author name never dead-ends on "Profile not found."
+        const authored = !mock && username
+          ? getPosts().filter((post) => post.author.username.toLowerCase() === username.toLowerCase())
+          : [];
+        const author = authored[0]?.author;
+        const base = mock ?? (author
+          ? {
+              id: author.id,
+              username: author.username,
+              displayName: author.displayName,
+              bio: '',
+              isVerified: !!author.isVerified,
+              followersCount: authored.reduce((sum, post) => sum + post.helpfulCount, 0),
+              followingCount: 0,
+            }
+          : undefined);
         setProfile(
-          mock
+          base
             ? {
-                id: mock.id,
-                username: mock.username,
-                displayName: mock.displayName,
-                bio: mock.bio,
+                id: base.id,
+                username: base.username,
+                displayName: base.displayName,
+                bio: base.bio,
                 role: 'User',
                 researchScope: 'Citizen',
                 goals: [],
-                isVerified: !!mock.isVerified,
+                isVerified: !!base.isVerified,
                 joinDate: new Date().toISOString(),
                 settings: {},
                 siteRole: 'user',
                 accountStatus: 'active',
                 stats: {
-                  followersCount: mock.followersCount,
-                  followingCount: mock.followingCount,
-                  dispatchCount: getPosts().filter((post) => post.author.username === mock.username && post.type === 'Dispatch').length,
-                  signalCount: getPosts().filter((post) => post.author.username === mock.username && post.type === 'Signal').length,
+                  followersCount: base.followersCount,
+                  followingCount: base.followingCount,
+                  dispatchCount: getPosts().filter((post) => post.author.username === base.username && post.type === 'Dispatch').length,
+                  signalCount: getPosts().filter((post) => post.author.username === base.username && post.type === 'Signal').length,
                 },
               }
             : null,
