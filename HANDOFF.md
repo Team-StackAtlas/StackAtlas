@@ -743,9 +743,10 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
   - Comms own-message bubble was `emerald-600` + `opacity-70` metadata
     (**2.53**) → `emerald-700` + `opacity-90`.
   - Notification/nav count badges → `red-600` / `emerald-700`.
-  The audit script is not committed (it is a one-shot instrument, not a
-  test); re-run it from the PR description's method notes if the palette
-  changes again.
+  The sweep now ships as `tests/contrast.spec.ts` and runs in CI on every
+  PR (~15s), so a regression fails the build with the offending text, ratio,
+  and class list rather than shipping silently. Verified fail-closed by
+  injecting a `text-slate-300` regression: caught at 1.49:1.
 - **Sparse-evidence rendering (credibility-critical):**
   - Substance page with no linked brands renders explicit text: *“No brand
     records linked to this substance yet.”* (`w-imported-substance` capture;
