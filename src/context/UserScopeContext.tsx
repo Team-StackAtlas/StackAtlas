@@ -12,7 +12,6 @@ export interface UserScope {
 interface UserScopeContextType {
   scope: UserScope;
   updateScope: (newScope: Partial<UserScope>) => void;
-  isInitialized: boolean;
 }
 
 const UserScopeContext = createContext<UserScopeContextType | undefined>(undefined);
@@ -32,11 +31,9 @@ export const UserScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return fallback;
     }
   });
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('stackatlas_user_scope', JSON.stringify(scope));
-    setIsInitialized(true);
   }, [scope]);
 
   const updateScope = (newScope: Partial<UserScope>) => {
@@ -44,7 +41,7 @@ export const UserScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <UserScopeContext.Provider value={{ scope, updateScope, isInitialized }}>
+    <UserScopeContext.Provider value={{ scope, updateScope }}>
       {children}
     </UserScopeContext.Provider>
   );

@@ -972,7 +972,18 @@ reusable nearly as-is; the work is almost entirely in the schema deltas above.
 2. Images as data-urls in text columns instead of storage buckets.
 3. Three competing `review_status` vocabularies (enum vs two text+check
    sets).
-4. No token layer over Tailwind (rebrand = mass edit).
+4. No token layer over Tailwind (rebrand = mass edit). **Now evidenced, not
+   predicted:** the July 24 contrast work had to sweep 229 muted-text token
+   occurrences across 41 files, and shifting the action green touched 32 more
+   — for what is conceptually a two-value change. There are **716 `emerald-*`
+   references across 57 files**. Recommended fix: a `@theme` block in
+   `src/index.css` defining semantic tokens (`--color-action`,
+   `--color-action-hover`, tint/border/fg variants) that generate `bg-action`,
+   `text-action`, etc., with the variables re-pointed under `.dark` so most
+   `dark:` colour variants collapse entirely. **Deliberately not done
+   autonomously**: at 716 call sites it is an architectural change with a
+   large blast radius and the token vocabulary is a design decision worth
+   Domonic's input. Worth doing before any rebrand or a third palette pass.
 5. Dual-mode (mock/backed) logic interleaved in every hook — superb for
    demos, but every new feature must be written twice; a storage-adapter
    interface would halve that cost.
@@ -997,7 +1008,15 @@ TODO/ts-ignore hygiene.
 ### 10.5 Dead — delete (with confidence)
 - ~~scrape.js, update_mock.cjs, update_tags.cjs~~ — **DELETED in #166** (grep-verified zero references).
 - `/log/*` pages + `LogContext` + `user_logs`/`user_notes` keys — 85%
-  (verify no deep links first).
+  (verify no deep links first). **Verification done July 27: there are zero
+  links or `navigate()` calls to `/log/*` anywhere in `src/` (the apparent
+  hits are all `/login`), and `LogContext` is consumed only by those three
+  pages plus its provider in `main.tsx`. So they are reachable by typed URL
+  only.** Left in place deliberately: CLAUDE.md says to remove orphans a
+  change creates, not pre-existing dead code, and complete features can be
+  parked rather than abandoned. **This is a decision for Domonic** — if the
+  intake/notes feature is not coming back, deleting three pages, one context,
+  three routes, and two localStorage keys is a clean win.
 - Legacy `users`, `sources`, `test_results` tables — 75% (DB-side check
   needed).
 - `src/components/MockRolePanels.tsx` + `MockRoleContext` — 60% (may still

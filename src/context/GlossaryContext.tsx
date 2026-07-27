@@ -21,14 +21,13 @@ const GlossaryContext = createContext<GlossaryContextValue | undefined>(undefine
  * glossary can't load, `matcher` stays null and text renders unchanged.
  */
 export function GlossaryProvider({ children }: { children: ReactNode }) {
-  const [terms, setTerms] = useState<GlossaryTerm[]>([]);
+  // Seeded at init rather than in an effect: without a backend the terms are
+  // already known, so setting them synchronously in an effect only bought an
+  // extra render pass during which inline term-linking was still inert.
+  const [terms, setTerms] = useState<GlossaryTerm[]>(() => (supabase ? [] : MOCK_GLOSSARY_TERMS));
 
   useEffect(() => {
-    if (!supabase) {
-      // No backend: the seed glossary keeps inline term-linking alive in demos.
-      setTerms(MOCK_GLOSSARY_TERMS);
-      return;
-    }
+    if (!supabase) return;
     let cancelled = false;
     listGlossaryTerms(supabase)
       .then((rows) => {
