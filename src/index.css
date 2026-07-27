@@ -16,3 +16,23 @@
   mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
 }
+
+/* Respect the OS "reduce motion" setting: the app carries ~210 transitions
+   and a handful of animations, none of which carry meaning on their own.
+   Spinners are the exception — they signal that work is still in flight, so
+   they keep turning, just slower and without the flourish. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin {
+    animation: spin 1.5s linear infinite !important;
+  }
+}

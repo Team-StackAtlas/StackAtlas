@@ -3,6 +3,7 @@ import { Activity, Bandage, Bone, ChevronLeft, ChevronRight, Flame, HeartPulse, 
 import { BEARING_CATEGORIES } from '../lib/bearings';
 import { useGoals } from '../hooks/useGoals';
 import { cn } from '../lib/utils';
+import { scrollBehavior } from '../lib/motion';
 
 const DEFAULT_CATEGORY_ICON = Tag;
 
@@ -58,7 +59,7 @@ export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCa
   }, [updatePaddles]);
 
   const nudge = (direction: 1 | -1) => {
-    railRef.current?.scrollBy({ left: direction * railRef.current.clientWidth * 0.8, behavior: 'smooth' });
+    railRef.current?.scrollBy({ left: direction * railRef.current.clientWidth * 0.8, behavior: scrollBehavior() });
   };
 
   return (

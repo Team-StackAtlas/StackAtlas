@@ -747,6 +747,22 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
   PR (~15s), so a regression fails the build with the offending text, ratio,
   and class list rather than shipping silently. Verified fail-closed by
   injecting a `text-slate-300` regression: caught at 1.49:1.
+- **Reduced motion (added July 27).** `prefers-reduced-motion` had **no
+  support at all** — ~210 transitions and 24 animations ran regardless of the
+  OS setting. `src/index.css` now collapses transitions/animations under
+  `(prefers-reduced-motion: reduce)`, with one deliberate exception:
+  `.animate-spin` keeps turning (slower), because a frozen spinner removes
+  information rather than motion. CSS can't reach `scrollIntoView`/`scrollBy`,
+  whose behavior is a JS argument, so `src/lib/motion.ts` exposes
+  `scrollBehavior()` and the two call sites (Glossary term deep-link, bearing
+  rail arrows) use it. Guarded by `tests/reduced-motion.spec.ts`, which
+  includes a control assertion that motion *is* present without the
+  preference — otherwise the guard would pass on a page with no transitions
+  at all.
+- **Focus indicators and image alt text: audited July 27, no defects.**
+  Tab-cycled 30 stops each on Square/Substance/Library/Lab — every focusable
+  element renders a visible outline or ring; zero `<img>` without `alt`.
+  Recorded so the next pass doesn't redo it.
 - **Sparse-evidence rendering (credibility-critical):**
   - Substance page with no linked brands renders explicit text: *“No brand
     records linked to this substance yet.”* (`w-imported-substance` capture;
