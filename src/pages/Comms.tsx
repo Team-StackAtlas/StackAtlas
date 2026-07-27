@@ -69,7 +69,7 @@ function MessageImage({ url, name }: { url: string; name: string }) {
     return (
       <span className="mt-2 flex items-center gap-2 rounded-xl bg-black/10 px-3 py-2 text-xs dark:bg-white/10">
         <ImageOff size={14} className="shrink-0 opacity-70" />
-        <span className="truncate opacity-80">{name}</span>
+        <span className="truncate opacity-95">{name}</span>
       </span>
     );
   }
@@ -366,13 +366,13 @@ export default function Comms() {
         <div
           className={`max-w-[78%] px-3.5 py-2 text-sm shadow-sm ${
             mine
-              ? `bg-emerald-600 text-white ${grouped ? 'rounded-2xl rounded-tr-md' : 'rounded-2xl rounded-br-md'}`
+              ? `bg-emerald-700 text-white ${grouped ? 'rounded-2xl rounded-tr-md' : 'rounded-2xl rounded-br-md'}`
               : `bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-zinc-100 ${grouped ? 'rounded-2xl rounded-tl-md' : 'rounded-2xl rounded-bl-md'}`
           }`}
         >
           {!grouped && (
             <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span className="opacity-70">{mine ? 'You' : sender?.username} · {formatTime(message.createdAt)}</span>
+              <span className="opacity-90">{mine ? 'You' : sender?.username} · {formatTime(message.createdAt)}</span>
               {message.scope === 'quarter' && <QuarterRoleBadge role={quarterRoleOf(activeQuarter, message.senderId)} />}
             </div>
           )}
@@ -408,7 +408,7 @@ export default function Comms() {
               </button>
             );
           })}
-          <div className="mt-1.5 flex items-center gap-2 text-[11px] opacity-70 transition-opacity group-hover:opacity-100">
+          <div className="mt-1.5 flex items-center gap-2 text-[11px] opacity-90 transition-opacity group-hover:opacity-100">
             {/* Actions hide until hover where hover exists; touch devices keep them visible. */}
             <span className="flex items-center gap-2 transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-within:opacity-100">
             {message.scope === 'quarter' && <ReportAction targetType="quarter_message" targetId={message.id} entityName="Quarter message" />}
@@ -434,7 +434,7 @@ export default function Comms() {
                 onClick={() =>
                   runQuarterAction(() => comms.restoreQuarterMessage(message.id), 'Failed to restore message.')
                 }
-                className="text-emerald-600"
+                className="text-emerald-700"
               >
                 restore
               </button>
@@ -486,7 +486,7 @@ export default function Comms() {
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] font-semibold transition-colors ${
                     tab === name
                       ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50'
-                      : 'text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200'
                   }`}
                 >
                   {name === 'messages' ? 'Chats' : name === 'requests' ? 'Requests' : 'Quarters'}
@@ -499,7 +499,7 @@ export default function Comms() {
               ))}
             </div>
             <div className="relative mt-3">
-              <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-2.5 text-slate-500" size={16} />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -572,14 +572,14 @@ export default function Comms() {
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
                           <strong className={unread > 0 ? 'text-slate-900 dark:text-zinc-50' : ''}>@{other?.username}</strong>
-                          {last && <span className="shrink-0 text-[11px] text-slate-400 dark:text-zinc-500">{formatTime(last.createdAt)}</span>}
+                          {last && <span className="shrink-0 text-[11px] text-slate-500 dark:text-zinc-400">{formatTime(last.createdAt)}</span>}
                         </span>
                         <span className="flex items-center justify-between gap-2">
                           <p className={`truncate ${unread > 0 ? 'font-semibold text-slate-700 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-400'}`}>
                             {last ? (last.body || 'Attachment') : 'Say hello'}
                           </p>
                           {unread > 0 && (
-                            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[11px] font-bold text-white">
+                            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-emerald-700 px-1.5 text-[11px] font-bold text-white">
                               {unread}
                             </span>
                           )}
@@ -591,7 +591,7 @@ export default function Comms() {
               })}
               {pendingSentConversations.length > 0 && (
                 <div className="pt-2">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                     Pending
                   </p>
                   {pendingSentConversations.map((conversation) => {
@@ -605,7 +605,7 @@ export default function Comms() {
                         className="w-full rounded-xl border border-dashed border-slate-300 p-2.5 text-left text-sm transition-colors hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800/60"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-100 font-bold text-slate-500 dark:bg-zinc-800">
+                          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-100 font-bold text-slate-600 dark:bg-zinc-800">
                             {other?.avatarUrl ? <img src={other.avatarUrl} alt="" className="h-full w-full object-cover" /> : other?.avatarInitial}
                           </span>
                           <span className="min-w-0 flex-1">
@@ -638,7 +638,7 @@ export default function Comms() {
                     <div className="mt-2 flex gap-2">
                       <button
                         onClick={() => comms.acceptRequest(request.id)}
-                        className="rounded-lg bg-emerald-600 px-3 py-1 text-white"
+                        className="rounded-lg bg-emerald-700 px-3 py-1 text-white"
                       >
                         Accept
                       </button>
@@ -653,7 +653,7 @@ export default function Comms() {
                 );
               })}
               <div className="pt-2">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                   Quarter Invites
                 </p>
                 {comms.quarterInvites.length === 0 && (
@@ -669,7 +669,7 @@ export default function Comms() {
                     <div className="mt-2 flex gap-2">
                       <button
                         onClick={() => comms.acceptQuarterInvite(invite.id)}
-                        className="rounded-lg bg-emerald-600 px-3 py-1 text-white"
+                        className="rounded-lg bg-emerald-700 px-3 py-1 text-white"
                       >
                         Accept
                       </button>
@@ -713,7 +713,7 @@ export default function Comms() {
                       setError(err instanceof Error ? err.message : 'Could not create that Quarter.');
                     }
                   }}
-                  className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-50"
                 >
                   <Plus size={14} /> Create Quarter
                 </button>
@@ -733,20 +733,20 @@ export default function Comms() {
                   className={`w-full rounded-xl p-2.5 text-left text-sm transition-colors ${active ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-zinc-800/60'}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-300">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">
                       <Users size={18} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-2">
                         <strong className={unread > 0 ? 'text-slate-900 dark:text-zinc-50' : ''}>{quarter.title}</strong>
-                        {last && <span className="shrink-0 text-[11px] text-slate-400 dark:text-zinc-500">{formatTime(last.createdAt)}</span>}
+                        {last && <span className="shrink-0 text-[11px] text-slate-500 dark:text-zinc-400">{formatTime(last.createdAt)}</span>}
                       </span>
                       <span className="flex items-center justify-between gap-2">
                         <p className={`truncate ${unread > 0 ? 'font-semibold text-slate-700 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-400'}`}>
                           {last ? (last.body || 'Attachment') : `${quarter.memberIds.length} members`}
                         </p>
                         {unread > 0 && (
-                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[11px] font-bold text-white">
+                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-emerald-700 px-1.5 text-[11px] font-bold text-white">
                             {unread}
                           </span>
                         )}
@@ -789,7 +789,7 @@ export default function Comms() {
                 <button
                   onClick={() => setMobileThreadOpen(false)}
                   aria-label="Back to conversations"
-                  className="-ml-1 rounded-full p-1.5 text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
+                  className="-ml-1 rounded-full p-1.5 text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
                 >
                   <ArrowLeft size={18} />
                 </button>
@@ -824,11 +824,11 @@ export default function Comms() {
                 <button
                   onClick={() => setMobileThreadOpen(false)}
                   aria-label="Back to quarters"
-                  className="-ml-1 rounded-full p-1.5 text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
+                  className="-ml-1 rounded-full p-1.5 text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800 md:hidden"
                 >
                   <ArrowLeft size={18} />
                 </button>
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-300">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">
                   <Users size={17} />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -841,7 +841,7 @@ export default function Comms() {
                 <button
                   onClick={() => setShowQuarterInfo((value) => !value)}
                   aria-label="Quarter details"
-                  className={`rounded-full p-2 transition-colors ${showQuarterInfo ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'text-slate-500 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}`}
+                  className={`rounded-full p-2 transition-colors ${showQuarterInfo ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}`}
                 >
                   <Info size={18} />
                 </button>
@@ -873,7 +873,7 @@ export default function Comms() {
                     @{username}
                     <QuarterRoleBadge role={quarterRoleOf(activeQuarter, id)} />{' '}
                     {!activeQuarter.persisted && (isOwner || isMod) && id !== activeQuarter.ownerId && id !== comms.viewerId && <button onClick={() => comms.removeQuarterMember(activeQuarter.id, id)} className="ml-1 text-red-500">remove</button>}
-                    {!activeQuarter.persisted && isOwner && id !== comms.viewerId && !targetIsMod && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-600">promote</button>}
+                    {!activeQuarter.persisted && isOwner && id !== comms.viewerId && !targetIsMod && <button onClick={() => comms.promoteQuarterModerator(activeQuarter.id, id)} className="ml-1 text-emerald-700">promote</button>}
                     {!activeQuarter.persisted && isOwner && id !== comms.viewerId && targetIsMod && <button onClick={() => comms.removeQuarterModerator(activeQuarter.id, id)} className="ml-1 text-amber-600">remove mod</button>}
                     {activeQuarter.persisted && (isOwner || isMod) && id !== activeQuarter.ownerId && id !== comms.viewerId && (isOwner || !targetIsMod) && (
                       <button
@@ -897,7 +897,7 @@ export default function Comms() {
                             'Failed to promote member.',
                           )
                         }
-                        className="ml-1 text-emerald-600"
+                        className="ml-1 text-emerald-700"
                       >
                         promote
                       </button>
@@ -938,7 +938,7 @@ export default function Comms() {
                         setError(err instanceof Error ? err.message : `Could not invite @${inviteUsername.trim()}. Check the username and try again.`);
                       }
                     }}
-                    className="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                    className="rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white disabled:opacity-50"
                   >
                     Invite
                   </button>
@@ -988,7 +988,7 @@ export default function Comms() {
               {showPersistedAttach && (
                 <label
                   title={attachSending ? 'Uploading…' : 'Attach a file'}
-                  className={`cursor-pointer rounded-full p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 ${attachSending ? 'animate-pulse' : ''}`}
+                  className={`cursor-pointer rounded-full p-2.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 ${attachSending ? 'animate-pulse' : ''}`}
                 >
                   <Paperclip size={19} />
                   <input
@@ -1006,7 +1006,7 @@ export default function Comms() {
               )}
               {showRichComposer && (
                 <>
-                  <label title="Send an image or GIF" className="cursor-pointer rounded-full p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                  <label title="Send an image or GIF" className="cursor-pointer rounded-full p-2.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
                     <Image size={19} />
                     <input
                       hidden
@@ -1019,7 +1019,7 @@ export default function Comms() {
                       }}
                     />
                   </label>
-                  <label title="Send a file" className="cursor-pointer rounded-full p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+                  <label title="Send a file" className="cursor-pointer rounded-full p-2.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
                     <Paperclip size={19} />
                     <input
                       hidden
@@ -1036,7 +1036,7 @@ export default function Comms() {
                     title={recording ? 'Stop recording' : 'Record a voice note'}
                     aria-label={recording ? 'Stop recording' : 'Record a voice note'}
                     onClick={() => (recording ? stopVoice() : void startVoice())}
-                    className={`rounded-full p-2.5 transition-colors ${recording ? 'animate-pulse bg-red-600 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'}`}
+                    className={`rounded-full p-2.5 transition-colors ${recording ? 'animate-pulse bg-red-600 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'}`}
                   >
                     <Mic size={19} />
                   </button>
@@ -1059,7 +1059,7 @@ export default function Comms() {
                 onClick={() => send()}
                 disabled={!draft.trim()}
                 aria-label="Send"
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors hover:bg-emerald-500 disabled:opacity-40"
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-emerald-700 text-white transition-colors hover:bg-emerald-800 disabled:opacity-40"
               >
                 <Send size={18} />
               </button>

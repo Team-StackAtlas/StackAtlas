@@ -172,7 +172,7 @@ export default function CreateStackModal({ isOpen, onClose }: CreateStackModalPr
             {/* Search and Add */}
             <div className="relative mb-2">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
                 size={18}
               />
               <input
@@ -206,7 +206,7 @@ export default function CreateStackModal({ isOpen, onClose }: CreateStackModalPr
                       <span className="text-sm font-medium text-slate-900 dark:text-zinc-100">
                         {sub.name}
                       </span>
-                      <Plus size={16} className="text-slate-400" />
+                      <Plus size={16} className="text-slate-500" />
                     </button>
                   ))
                 ) : (
@@ -230,7 +230,7 @@ export default function CreateStackModal({ isOpen, onClose }: CreateStackModalPr
           <button
             type="submit"
             disabled={belowMinimum}
-            className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Submit Stack
           </button>

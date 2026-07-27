@@ -48,11 +48,11 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
       )}
 
       <div className="mb-1 flex items-start justify-between gap-2">
-        <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-600 dark:text-zinc-50 dark:group-hover:text-emerald-400">
+        <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">
           {acronym ? (
             <>
               <span>{acronym}</span>
-              <span className="font-medium text-slate-400 dark:text-zinc-500"> · {primary}</span>
+              <span className="font-medium text-slate-500 dark:text-zinc-400"> · {primary}</span>
             </>
           ) : (
             <span className="line-clamp-2">{primary}</span>
@@ -62,7 +62,7 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
       </div>
 
       {altNames.length > 0 && (
-        <p className="mb-2 truncate text-[11px] text-slate-400 dark:text-zinc-500" title={altNames.join(' · ')}>
+        <p className="mb-2 truncate text-[11px] text-slate-500 dark:text-zinc-400" title={altNames.join(' · ')}>
           {altNames.slice(0, 3).join(' · ')}
         </p>
       )}
@@ -92,7 +92,7 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
             const TagIcon = TYPE_TAG_ICONS[tag];
             return typeInfo ? (
               <span key={tag} className="inline-flex min-w-0 items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400" title={tag}>
-                {TagIcon && <TagIcon size={12} className="shrink-0 text-slate-400 dark:text-zinc-500" />}
+                {TagIcon && <TagIcon size={12} className="shrink-0 text-slate-500 dark:text-zinc-400" />}
                 <span className="truncate">{typeInfo.label}</span>
               </span>
             ) : null;

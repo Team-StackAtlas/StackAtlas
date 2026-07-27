@@ -58,7 +58,7 @@ export default function AccountSettingsPanel() {
     return (
       <div className="mb-6 flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900/50">
         <span className="text-slate-600 dark:text-zinc-400">Sign in to manage your account.</span>
-        <Link to="/login" className="rounded-lg bg-emerald-500 px-3 py-1.5 font-medium text-white hover:bg-emerald-600">
+        <Link to="/login" className="rounded-lg bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-800">
           Sign in
         </Link>
       </div>
@@ -127,7 +127,7 @@ export default function AccountSettingsPanel() {
             className="accent-emerald-500"
           />
         </label>
-        <p className="mt-1 text-xs text-slate-400 dark:text-zinc-500">
+        <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
           Saved &amp; hidden items are always private. Following is public and drives your feed.
         </p>
       </div>
@@ -135,13 +135,13 @@ export default function AccountSettingsPanel() {
       <button
         onClick={save}
         disabled={saving}
-        className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+        className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 disabled:opacity-50"
       >
         {saving ? 'Saving…' : 'Save settings'}
       </button>
 
       {profile?.stats && (
-        <p className="text-xs text-slate-400 dark:text-zinc-500">
+        <p className="text-xs text-slate-500 dark:text-zinc-400">
           {profile.stats.followersCount} followers · {profile.stats.followingCount} following ·{' '}
           {profile.stats.dispatchCount} dispatches
         </p>

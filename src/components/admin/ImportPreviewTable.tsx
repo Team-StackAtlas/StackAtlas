@@ -165,7 +165,7 @@ export default function ImportPreviewTable({
                             {row.issues.length} issue{row.issues.length === 1 ? '' : 's'}
                           </button>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                          <span className="text-xs text-slate-500">—</span>
                         )}
                       </td>
                     </tr>

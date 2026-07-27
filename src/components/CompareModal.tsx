@@ -80,7 +80,7 @@ function BrandSubline({ item }: { item: Brand }) {
         <StarRating value={item.userRating} size={12} />
         {item.userRating.toFixed(1)}
       </span>
-      <span className="inline-flex shrink-0 items-center gap-1 text-slate-400 dark:text-zinc-500">
+      <span className="inline-flex shrink-0 items-center gap-1 text-slate-500 dark:text-zinc-400">
         <Truck size={12} />
         {item.shippingReliability.toFixed(1)} shipping
       </span>
@@ -205,13 +205,13 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
 
       <div className="border-b border-slate-200 p-4 dark:border-zinc-800">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={17} />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400" size={17} />
           <input
             type="text"
             placeholder={`Search ${type}s to compare...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
+            className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
           />
         </div>
       </div>
@@ -226,10 +226,10 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
-              <SearchX size={20} className="text-slate-400 dark:text-zinc-500" />
+              <SearchX size={20} className="text-slate-500 dark:text-zinc-400" />
             </div>
             <p className="text-sm font-medium text-slate-700 dark:text-zinc-300">No {type}s found</p>
-            <p className="max-w-xs text-xs text-slate-500 dark:text-zinc-500">
+            <p className="max-w-xs text-xs text-slate-500 dark:text-zinc-400">
               {searchQuery ? `No matches for "${searchQuery}". Try a different search.` : `No other ${type}s available yet.`}
             </p>
           </div>

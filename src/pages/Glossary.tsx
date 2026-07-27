@@ -115,7 +115,7 @@ export default function Glossary() {
 
       <>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -148,7 +148,7 @@ export default function Glossary() {
             searchResults ? (
               // Search: flat, relevance-ranked list.
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                   {resultCount} {resultCount === 1 ? 'result' : 'results'}
                 </p>
                 <div className="space-y-3">
@@ -164,7 +164,7 @@ export default function Glossary() {
                   <section key={group.category}>
                     <div className="mb-3 flex items-baseline gap-2 border-b border-slate-200 pb-2 dark:border-zinc-800">
                       <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-200">{group.category}</h2>
-                      <span className="text-xs text-slate-400 dark:text-zinc-500">{group.items.length}</span>
+                      <span className="text-xs text-slate-500 dark:text-zinc-400">{group.items.length}</span>
                     </div>
                     <div className="space-y-3">
                       {group.items.map((entry) => (

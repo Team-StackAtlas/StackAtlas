@@ -58,7 +58,7 @@ export default function Login() {
   };
 
   const inputClass =
-    'flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 pl-10 text-base outline-none transition-all placeholder:text-slate-400 focus:border-slate-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 md:text-sm sm:h-12';
+    'flex h-11 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 pl-10 text-base outline-none transition-all placeholder:text-slate-500 focus:border-slate-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 md:text-sm sm:h-12';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4 dark:from-zinc-950 dark:to-zinc-900">
@@ -73,7 +73,7 @@ export default function Login() {
 
               <div className="space-y-2 sm:space-y-3">
                 <h1 className="text-2xl font-black uppercase tracking-tighter text-slate-900 dark:text-zinc-50 sm:text-3xl">
-                  Stack<span className="text-emerald-600 dark:text-emerald-400">Atlas</span>
+                  Stack<span className="text-emerald-700 dark:text-emerald-400">Atlas</span>
                 </h1>
                 <p className="text-sm font-medium text-slate-500 dark:text-zinc-400 sm:text-base">
                   {mode === 'signup' ? 'Create your account' : 'Sign in to continue'}
@@ -97,7 +97,7 @@ export default function Login() {
                     <div className="space-y-1.5 text-left">
                       <label className="text-sm font-medium text-slate-700 dark:text-zinc-300" htmlFor="username">Username</label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                         <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} className={inputClass} placeholder="yourname" />
                       </div>
                     </div>
@@ -105,14 +105,14 @@ export default function Login() {
                   <div className="space-y-1.5 text-left">
                     <label className="text-sm font-medium text-slate-700 dark:text-zinc-300" htmlFor="email">Email</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                       <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="you@example.com" required />
                     </div>
                   </div>
                   <div className="space-y-1.5 text-left">
                     <label className="text-sm font-medium text-slate-700 dark:text-zinc-300" htmlFor="password">Password</label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                       <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" required />
                     </div>
                   </div>
@@ -122,7 +122,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={!isBackendConfigured || submitting}
-                    className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500 sm:h-12"
+                    className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-800 sm:h-12"
                   >
                     {submitting ? 'Please wait…' : mode === 'signup' ? 'Create account' : 'Sign in'}
                   </button>

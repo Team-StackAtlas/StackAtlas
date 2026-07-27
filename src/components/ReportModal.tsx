@@ -86,10 +86,10 @@ export default function ReportModal({ isOpen, onClose, entityName, targetType, t
     <Modal isOpen={isOpen} onClose={handleClose} title={`Report ${entityName}`}>
       {isSuccess ? (
         <div className="space-y-4 p-5 text-sm text-slate-600 dark:text-zinc-300">
-          <div className="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-400">
             <CheckCircle size={18} /> {message}
           </div>
-          <button type="button" onClick={handleClose} className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400">
+          <button type="button" onClick={handleClose} className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 dark:text-zinc-950 dark:hover:bg-emerald-400">
             Done
           </button>
         </div>

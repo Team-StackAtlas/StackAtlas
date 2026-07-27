@@ -10,7 +10,7 @@ const LOG_TYPES: Record<LogType, { title: string; icon: LucideIcon; color: strin
   mood: { title: 'Mood', icon: Sun, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10' },
   symptoms: { title: 'Symptoms', icon: Activity, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-500/10' },
   side_effects: { title: 'Side Effects', icon: AlertTriangle, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-500/10' },
-  workout: { title: 'Workout', icon: Dumbbell, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+  workout: { title: 'Workout', icon: Dumbbell, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
   bloodwork: { title: 'Bloodwork', icon: Droplet, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-500/10' },
 };
 
@@ -101,9 +101,9 @@ export default function LogEntry() {
                 {[
                   { icon: Angry, label: 'Awful', color: 'text-red-500 dark:text-red-400' },
                   { icon: Frown, label: 'Bad', color: 'text-orange-500 dark:text-orange-400' },
-                  { icon: Meh, label: 'Okay', color: 'text-slate-400 dark:text-zinc-500' },
+                  { icon: Meh, label: 'Okay', color: 'text-slate-500 dark:text-zinc-400' },
                   { icon: Smile, label: 'Good', color: 'text-emerald-500 dark:text-emerald-400' },
-                  { icon: Laugh, label: 'Great', color: 'text-emerald-600 dark:text-emerald-400' },
+                  { icon: Laugh, label: 'Great', color: 'text-emerald-700 dark:text-emerald-400' },
                 ].map(m => (
                   <button
                     key={m.label}
@@ -237,14 +237,14 @@ export default function LogEntry() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any other details..."
-              className="w-full h-24 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 transition-all resize-none placeholder:text-slate-400 dark:placeholder:text-zinc-600 text-slate-900 dark:text-zinc-100"
+              className="w-full h-24 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500/50 transition-all resize-none placeholder:text-slate-500 dark:placeholder:text-zinc-600 text-slate-900 dark:text-zinc-100"
             />
           </div>
 
           <div className="pt-4">
             <button 
               type="submit"
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+              className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
             >
               Save {config.title} Log
             </button>

@@ -186,9 +186,9 @@ export default function QuarterControls({
               >
                 <div className="flex min-w-0 items-center gap-2">
                   {expanded ? (
-                    <ChevronDown size={16} className="shrink-0 text-slate-400" />
+                    <ChevronDown size={16} className="shrink-0 text-slate-500" />
                   ) : (
-                    <ChevronRight size={16} className="shrink-0 text-slate-400" />
+                    <ChevronRight size={16} className="shrink-0 text-slate-500" />
                   )}
                   <div className="min-w-0">
                     <p className="font-semibold">{quarter.title}</p>
@@ -284,11 +284,11 @@ export default function QuarterControls({
                                   </span>
                                   {deleted && <Badge tone="red">Deleted</Badge>}
                                 </div>
-                                <p className={deleted ? 'mt-1 italic text-slate-400' : 'mt-1'}>
+                                <p className={deleted ? 'mt-1 italic text-slate-500' : 'mt-1'}>
                                   {message.body}
                                 </p>
                                 {deleted && message.deletionReason && (
-                                  <p className="mt-1 text-xs text-slate-400">
+                                  <p className="mt-1 text-xs text-slate-500">
                                     Reason: {message.deletionReason}
                                   </p>
                                 )}

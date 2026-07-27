@@ -73,7 +73,7 @@ function ExpandableValue({ text }: { text: string }) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="mt-1.5 text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+        className="mt-1.5 text-xs font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
       >
         {open ? 'Show less' : 'Show more'}
       </button>
@@ -93,7 +93,7 @@ function sentenceCase(value: string): string {
 function StatRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
     <div className="py-3 first:pt-0 last:pb-0">
-      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         {icon}
         {label}
       </div>
@@ -216,7 +216,7 @@ export default function SupplementPage() {
                 {displayAcronym ? (
                   <>
                     <span>{displayAcronym}</span>
-                    <span className="font-bold text-slate-400 dark:text-zinc-500"> · {displayPrimary}</span>
+                    <span className="font-bold text-slate-500 dark:text-zinc-400"> · {displayPrimary}</span>
                   </>
                 ) : displayPrimary}
               </h1>
@@ -234,7 +234,7 @@ export default function SupplementPage() {
                   const TagIcon = TYPE_TAG_ICONS[tag];
                   return typeInfo ? (
                     <span key={`type-${i}`} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 text-sm font-medium text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700" title={tag}>
-                      {TagIcon && <TagIcon size={14} className="text-slate-400 dark:text-zinc-500" />}
+                      {TagIcon && <TagIcon size={14} className="text-slate-500 dark:text-zinc-400" />}
                       {typeInfo.label}
                     </span>
                   ) : null;
@@ -256,7 +256,7 @@ export default function SupplementPage() {
               <GlossaryText>{supplement.description}</GlossaryText>
             </p>
             {altNames.length > 0 && (
-              <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-zinc-500">
+              <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-zinc-400">
                 <span className="font-semibold text-slate-600 dark:text-zinc-400">Also known as:</span>{' '}
                 {altNames.join(' · ')}
               </p>
@@ -270,7 +270,7 @@ export default function SupplementPage() {
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold transition-colors shadow-sm ${
                   isFollowing('substance', supplement.id)
                     ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
-                    : 'bg-emerald-500 text-white dark:text-zinc-950 hover:bg-emerald-600 dark:hover:bg-emerald-400'
+                    : 'bg-emerald-700 text-white hover:bg-emerald-800 dark:hover:bg-emerald-600'
                 }`}
               >
                 {isFollowing('substance', supplement.id) ? 'Following' : 'Follow Substance'}
@@ -285,7 +285,7 @@ export default function SupplementPage() {
             <div className="flex gap-2 w-full">
               <button
                 onClick={() => setIsSuggestEditOpen(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
               >
                 <Edit3 size={14} />
                 Suggest Edit
@@ -301,7 +301,7 @@ export default function SupplementPage() {
         {/* Facts rail — surfaces first on mobile, sits to the right on desktop */}
         <aside className="order-1 lg:order-2">
           <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50 lg:sticky lg:top-6">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-zinc-500">At a glance</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400">At a glance</h3>
 
             <div className="rounded-xl bg-emerald-50/70 p-3 ring-1 ring-inset ring-emerald-500/10 dark:bg-emerald-500/5 dark:ring-emerald-400/10">
               <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
@@ -324,10 +324,10 @@ export default function SupplementPage() {
                 className={`mt-2.5 border-t border-emerald-500/10 pt-2.5 dark:border-emerald-400/10 ${globalAverageDose ? 'cursor-pointer' : ''}`}
                 onClick={() => globalAverageDose && navigate(`/square?substance=${supplement.id}&filter=dosage`)}
               >
-                <p className="mb-0.5 flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-500"><Users size={11} /> Global average</p>
+                <p className="mb-0.5 flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-500"><Users size={11} /> Global average</p>
                 <p className="text-sm font-semibold text-slate-900 dark:text-zinc-100">
                   {globalAverageDose ? (
-                    <>{globalAverageDose} <span className="text-xs font-normal text-slate-500">(Comprehensive Dispatches)</span></>
+                    <>{globalAverageDose} <span className="text-xs font-normal text-slate-500 dark:text-zinc-400">(Comprehensive Dispatches)</span></>
                   ) : (
                     <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">Not enough Comprehensive Dispatch data</span>
                   )}
@@ -362,12 +362,12 @@ export default function SupplementPage() {
               )}
               {popularBrand && (
                 <StatRow icon={<Star size={12} />} label="Most popular brand">
-                  <Link to={`/brand/${popularBrand.id}`} className="text-sm font-semibold text-slate-900 hover:text-emerald-600 dark:text-zinc-100 dark:hover:text-emerald-400">{popularBrand.name}</Link>
+                  <Link to={`/brand/${popularBrand.id}`} className="text-sm font-semibold text-slate-900 hover:text-emerald-700 dark:text-zinc-100 dark:hover:text-emerald-400">{popularBrand.name}</Link>
                 </StatRow>
               )}
             </div>
 
-            <p className="text-[11px] leading-snug text-slate-400 dark:text-zinc-500">
+            <p className="text-[11px] leading-snug text-slate-500 dark:text-zinc-400">
               For informational purposes only — not medical advice. Consult a qualified professional before changing any regimen.
             </p>
           </div>
@@ -398,10 +398,10 @@ export default function SupplementPage() {
       {findings.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
           <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Microscope size={20} className="text-slate-400 dark:text-zinc-500" />
+            <Microscope size={20} className="text-slate-500 dark:text-zinc-400" />
             Research Findings
           </h3>
-          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-400">
             Findings from reviewed sources. Informational only — not medical advice.
           </p>
           <div className="space-y-4">
@@ -433,13 +433,13 @@ export default function SupplementPage() {
                   </div>
                   <p className="mt-2 text-sm text-slate-600 dark:text-zinc-300"><GlossaryText>{finding.summary}</GlossaryText></p>
                   {metaParts.length > 0 && (
-                    <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">{metaParts.join(' · ')}</p>
+                    <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">{metaParts.join(' · ')}</p>
                   )}
                   {finding.limitations && (
-                    <p className="mt-1 text-xs italic text-slate-400 dark:text-zinc-500">Limitations: <GlossaryText>{finding.limitations}</GlossaryText></p>
+                    <p className="mt-1 text-xs italic text-slate-500 dark:text-zinc-400">Limitations: <GlossaryText>{finding.limitations}</GlossaryText></p>
                   )}
                   {finding.source && (
-                    <p className="mt-2 text-xs text-slate-500 dark:text-zinc-500">
+                    <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">
                       {sourceHref ? (
                         <a
                           href={sourceHref}
@@ -473,7 +473,7 @@ export default function SupplementPage() {
             <Activity size={20} className="text-emerald-500" />
             Subjective Effects
           </h3>
-          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mb-4 text-xs text-slate-500 dark:text-zinc-400">
             Commonly reported first-hand experiences. Anecdotal, not medical claims.
           </p>
           <ul className="grid gap-2 sm:grid-cols-2">
@@ -491,7 +491,7 @@ export default function SupplementPage() {
       {supplement.possiblePairings.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <Beaker size={20} className="text-slate-400 dark:text-zinc-500" />
+            <Beaker size={20} className="text-slate-500 dark:text-zinc-400" />
             Possible Pairings
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -501,7 +501,7 @@ export default function SupplementPage() {
                 <Link
                   key={i}
                   to={`/substance/${match.id}`}
-                  className="rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3 py-1 text-sm text-slate-700 dark:text-zinc-300 hover:border-emerald-300 dark:hover:border-emerald-600 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                  className="rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3 py-1 text-sm text-slate-700 dark:text-zinc-300 hover:border-emerald-300 dark:hover:border-emerald-600 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
                 >
                   + {pairing}
                 </Link>
@@ -518,7 +518,7 @@ export default function SupplementPage() {
       {/* Brands */}
       <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
         <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-          <Package size={20} className="text-slate-400 dark:text-zinc-500" />
+          <Package size={20} className="text-slate-500 dark:text-zinc-400" />
           Brand Reliability
         </h3>
         {relatedBrands.length > 0 ? (
@@ -527,15 +527,15 @@ export default function SupplementPage() {
               <div key={brand.id} className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h4 className="font-semibold text-slate-900 dark:text-zinc-100">{brand.name}</h4>
-                  <div className="flex items-center gap-1 text-sm font-medium text-amber-500 dark:text-amber-400">
-                    <Star size={14} className="fill-amber-500 dark:fill-amber-400" />
+                  <div className="flex items-center gap-1 text-sm font-medium text-amber-700 dark:text-amber-400">
+                    <Star size={14} className="fill-amber-600 dark:fill-amber-400" />
                     {brand.userRating}/5
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="block text-slate-500 dark:text-zinc-500 mb-1">Shipping</span>
+                    <span className="block text-slate-500 dark:text-zinc-400 mb-1">Shipping</span>
                     <div className="flex items-center gap-1.5">
                       <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-zinc-800 overflow-hidden">
                         <div
@@ -547,8 +547,8 @@ export default function SupplementPage() {
                     </div>
                   </div>
                   <div>
-                    <span className="block text-slate-500 dark:text-zinc-500 mb-1">Contamination</span>
-                    <span className={`font-medium ${brand.contaminationReports > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                    <span className="block text-slate-500 dark:text-zinc-400 mb-1">Contamination</span>
+                    <span className={`font-medium ${brand.contaminationReports > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                       {brand.contaminationReports} Reports
                     </span>
                   </div>
@@ -556,7 +556,7 @@ export default function SupplementPage() {
 
                 {brand.thirdPartyTestingLinks.length > 0 && (
                   <div className="mt-4 pt-3 border-t border-slate-200 dark:border-zinc-800/50">
-                    <span className="block text-xs text-slate-500 dark:text-zinc-500 mb-2">3rd Party Testing</span>
+                    <span className="block text-xs text-slate-500 dark:text-zinc-400 mb-2">3rd Party Testing</span>
                     <div className="flex flex-wrap gap-2">
                       {brand.thirdPartyTestingLinks.map((link, i) => (
                         <a
@@ -589,7 +589,7 @@ export default function SupplementPage() {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Related Dispatches & Signals</h2>
           <button
             onClick={() => navigate(`/square?substance=${supplement.id}`)}
-            className="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
+            className="text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
           >
             View all in Square <ArrowLeft className="rotate-180" size={16} />
           </button>

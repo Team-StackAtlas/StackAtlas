@@ -263,7 +263,7 @@ export default function Profile() {
         <div className="h-28 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 sm:h-32" />
         <div className="px-5 pb-5">
           <div className="flex items-end justify-between">
-            <div className="-mt-11 flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 text-3xl font-bold text-slate-500 shadow-md dark:border-zinc-900 dark:bg-zinc-800 dark:text-zinc-400">
+            <div className="-mt-11 flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 text-3xl font-bold text-slate-600 shadow-md dark:border-zinc-900 dark:bg-zinc-800 dark:text-zinc-400">
               {showAvatar && shownProfile.avatarUrl ? <img src={shownProfile.avatarUrl} alt="" className="h-full w-full object-cover" /> : shownProfile.username.charAt(0).toUpperCase()}
             </div>
             {isOwnProfile ? (
@@ -293,7 +293,7 @@ export default function Profile() {
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-2"><p className="text-sm font-medium text-slate-500 dark:text-zinc-400">@{shownProfile.username}</p>{!isOwnProfile && <ReportAction targetType="profile" targetId={shownProfile.id} entityName={`@${shownProfile.username}`} />}</div>
             {shownProfile.bio && <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-zinc-300">{shownProfile.bio}</p>}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-slate-500 dark:text-zinc-500">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-slate-500 dark:text-zinc-400">
               <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>
               <span className="flex items-center gap-1"><Activity size={13} /> <strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.dispatchCount ?? 0}</strong> Dispatches</span>
               <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.signalCount ?? 0}</strong> Signals</span>
@@ -305,7 +305,7 @@ export default function Profile() {
         {showBodyStats && bodyStats.length > 0 && (
           <div className="mx-5 mb-5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50 sm:grid-cols-5">
             {bodyStats.map(([label, value]) => (
-              <div key={label}><div className="text-xs text-slate-500 dark:text-zinc-500">{label}</div><div className="font-semibold">{value}</div></div>
+              <div key={label}><div className="text-xs text-slate-500 dark:text-zinc-400">{label}</div><div className="font-semibold">{value}</div></div>
             ))}
           </div>
         )}
@@ -322,7 +322,7 @@ export default function Profile() {
           <div>
             <span className="block text-sm font-medium">Profile photo</span>
             <div className="mt-2 flex items-center gap-3">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-xl font-bold text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-xl font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
                 {(avatarDraft === undefined ? shownProfile.avatarUrl : avatarDraft) ? (
                   <img src={avatarDraft === undefined ? shownProfile.avatarUrl : avatarDraft} alt="" className="h-full w-full object-cover" />
                 ) : (
@@ -373,9 +373,9 @@ export default function Profile() {
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-xs text-slate-500 dark:text-zinc-500">Saved items, hidden items, drafts, private notes, email, internal IDs, and body fields with toggles off stay private.</p>
+            <p className="mt-3 text-xs text-slate-500 dark:text-zinc-400">Saved items, hidden items, drafts, private notes, email, internal IDs, and body fields with toggles off stay private.</p>
           </div>
-          <button disabled={saving} className="rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>
+          <button disabled={saving} className="rounded-xl bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>
         </form>
       )}
 
@@ -425,7 +425,7 @@ export default function Profile() {
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><EyeOff size={18} /> Hidden Items</h2>
             {hiddenItemsCount === 0 ? <EmptyState description="No hidden items yet. Hidden items are private." /> : hiddenGroups.map((group) => {
               const groupItems: HiddenItem[] = hiddenItems[group.key];
-              return <section key={group.key} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</h3>{groupItems.length ? groupItems.map((item) => <div key={`${item.type}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{item.name}</span><button onClick={() => unhideItem(item.type, item.id)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Unhide</button></div>) : <p className="text-sm text-slate-500">None hidden.</p>}</section>;
+              return <section key={group.key} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</h3>{groupItems.length ? groupItems.map((item) => <div key={`${item.type}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{item.name}</span><button onClick={() => unhideItem(item.type, item.id)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Unhide</button></div>) : <p className="text-sm text-slate-500">None hidden.</p>}</section>;
             })}
           </div>
         ) : activeTab === 'following' && isOwnProfile ? (
@@ -451,5 +451,5 @@ function FollowingManagement({ followedItems, followRequests, incomingRequests, 
     ['Stacks', 'stack', (id: string) => STACKS.find((item) => item.id === id)?.name ?? id],
     ['Public Albums', 'album', (id: string) => id],
   ] as const;
-  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">Following</h2><p className="mb-4 text-sm text-slate-500">Only you can see and manage these lists.</p>{incomingRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Follow requests</h3>{incomingRequests.map((request) => <div key={request.requesterId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{request.username ?? request.requesterId}</span><span className="flex gap-2"><button onClick={() => onResolveRequest(request.requesterId, true)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Approve</button><button onClick={() => onResolveRequest(request.requesterId, false)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Reject</button></span></div>)}</section>}{followRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Pending requests</h3>{followRequests.map((request) => <div key={request.targetId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{USERS.find((item) => item.id === request.targetId)?.username ?? request.targetId}</span><button onClick={() => onUnfollow('user', request.targetId)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Cancel request</button></div>)}</section>}{sections.map(([label, type, nameFor]) => { const items = followedItems.filter((item) => item.targetType === type); return <section key={type} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>{items.length ? items.map((item) => <div key={`${item.targetType}-${item.targetId}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{nameFor(item.targetId)}</span><button onClick={() => onUnfollow(item.targetType, item.targetId)} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white">Unfollow</button></div>) : <p className="text-sm text-slate-500">None followed.</p>}</section>; })}</div>;
+  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">Following</h2><p className="mb-4 text-sm text-slate-500">Only you can see and manage these lists.</p>{incomingRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Follow requests</h3>{incomingRequests.map((request) => <div key={request.requesterId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{request.username ?? request.requesterId}</span><span className="flex gap-2"><button onClick={() => onResolveRequest(request.requesterId, true)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Approve</button><button onClick={() => onResolveRequest(request.requesterId, false)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Reject</button></span></div>)}</section>}{followRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Pending requests</h3>{followRequests.map((request) => <div key={request.targetId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{USERS.find((item) => item.id === request.targetId)?.username ?? request.targetId}</span><button onClick={() => onUnfollow('user', request.targetId)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Cancel request</button></div>)}</section>}{sections.map(([label, type, nameFor]) => { const items = followedItems.filter((item) => item.targetType === type); return <section key={type} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>{items.length ? items.map((item) => <div key={`${item.targetType}-${item.targetId}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{nameFor(item.targetId)}</span><button onClick={() => onUnfollow(item.targetType, item.targetId)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Unfollow</button></div>) : <p className="text-sm text-slate-500">None followed.</p>}</section>; })}</div>;
 }

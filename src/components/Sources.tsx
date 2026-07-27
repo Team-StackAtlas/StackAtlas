@@ -25,7 +25,7 @@ export default function Sources({ targetType, targetId, section, label = 'Source
 
   return (
     <div className="mt-3 border-t border-slate-100 pt-3 dark:border-zinc-800/50">
-      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
         {label}
       </p>
       <ul className="space-y-1.5">
@@ -35,15 +35,15 @@ export default function Sources({ targetType, targetId, section, label = 'Source
               href={source.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-start gap-1.5 text-xs text-slate-600 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-400"
+              className="group flex items-start gap-1.5 text-xs text-slate-600 hover:text-emerald-700 dark:text-zinc-400 dark:hover:text-emerald-400"
             >
               <ExternalLink size={12} className="mt-0.5 shrink-0" />
               <span>
                 <span className="font-medium group-hover:underline">{source.title}</span>
                 {source.publisher && (
-                  <span className="text-slate-400 dark:text-zinc-500"> — {source.publisher}</span>
+                  <span className="text-slate-500 dark:text-zinc-400"> — {source.publisher}</span>
                 )}
-                <span className="ml-1 rounded bg-slate-100 px-1 py-0.5 text-[10px] uppercase tracking-wide text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
+                <span className="ml-1 rounded bg-slate-100 px-1 py-0.5 text-[10px] uppercase tracking-wide text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
                   {source.sourceType}
                 </span>
               </span>

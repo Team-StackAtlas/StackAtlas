@@ -22,7 +22,7 @@ export default function StarRating({ value, size = 16, className }: StarRatingPr
               className="absolute inset-0 overflow-hidden"
               style={{ width: `${fill * 100}%` }}
             >
-              <Star size={size} className="text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400" />
+              <Star size={size} className="text-amber-600 dark:text-amber-400 fill-amber-600 dark:fill-amber-400" />
             </span>
           </span>
         );

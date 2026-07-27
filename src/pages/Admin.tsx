@@ -114,7 +114,7 @@ export default function Admin() {
           <button
             key={value}
             onClick={() => setTab(value)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === value ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === value ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
           >
             {label}
           </button>
@@ -150,7 +150,7 @@ export default function Admin() {
             />
             <button
               onClick={async () => services && setUsers(await services.moderation.listUsers(query))}
-              className="rounded-xl bg-emerald-600 px-4 py-2 text-white"
+              className="rounded-xl bg-emerald-700 px-4 py-2 text-white"
             >
               Search
             </button>

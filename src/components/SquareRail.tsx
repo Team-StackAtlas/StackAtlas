@@ -40,7 +40,7 @@ function SubstanceLine({ substance, meta }: { substance: Substance; meta?: React
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold text-slate-900 dark:text-zinc-100">{substance.name}</span>
-        <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-zinc-500">
+        <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-zinc-400">
           {meta ?? (
             <>
               <AccessBadge classification={substance.classification} />
@@ -83,7 +83,7 @@ export default function SquareRail({ posts }: { posts: Post[] }) {
 
           {trending.length > 0 && (
             <div className="mb-3">
-              <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+              <p className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 <TrendingUp size={12} /> Most discussed
               </p>
               <div className="space-y-1">
@@ -91,7 +91,7 @@ export default function SquareRail({ posts }: { posts: Post[] }) {
                   <div key={substance.id} className="flex items-center gap-2.5 rounded-xl px-1 py-1.5">
                     <SubstanceLine
                       substance={substance}
-                      meta={<span className="text-slate-500 dark:text-zinc-500">{count} {count === 1 ? 'post' : 'posts'}</span>}
+                      meta={<span className="text-slate-500 dark:text-zinc-400">{count} {count === 1 ? 'post' : 'posts'}</span>}
                     />
                   </div>
                 ))}
@@ -101,7 +101,7 @@ export default function SquareRail({ posts }: { posts: Post[] }) {
 
           {suggestions.length > 0 && (
             <div className={trending.length > 0 ? 'border-t border-slate-100 pt-3 dark:border-zinc-800/60' : ''}>
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                 Suggested to follow
               </p>
               <div className="space-y-1">
@@ -121,7 +121,7 @@ export default function SquareRail({ posts }: { posts: Post[] }) {
             </div>
           )}
 
-          <Link to="/map" className="mt-2 block text-center text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">
+          <Link to="/map" className="mt-2 block text-center text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             Explore the Map
           </Link>
         </div>

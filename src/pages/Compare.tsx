@@ -94,7 +94,7 @@ function SectionCard({ title, icon: Icon, children }: { title: string; icon: Luc
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
       <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-300">
-        <Icon size={16} className="text-slate-400 dark:text-zinc-500" />
+        <Icon size={16} className="text-slate-500 dark:text-zinc-400" />
         {title}
       </h2>
       {children}
@@ -108,15 +108,15 @@ function FactRow({ label, icon: Icon, a, b, same }: { label: string; icon: Lucid
   return (
     <div className="py-3 first:pt-0 last:pb-0">
       <div className="mb-1.5 flex items-center gap-1.5">
-        <Icon size={13} className="text-slate-400 dark:text-zinc-500" />
+        <Icon size={13} className="text-slate-500 dark:text-zinc-400" />
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-400">{label}</span>
         {same && (
-          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
+          <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
             Same
           </span>
         )}
       </div>
-      <div className={cn('grid grid-cols-2 gap-3 text-sm', same ? 'text-slate-400 dark:text-zinc-500' : 'text-slate-900 dark:text-zinc-100 font-medium')}>
+      <div className={cn('grid grid-cols-2 gap-3 text-sm', same ? 'text-slate-500 dark:text-zinc-400' : 'text-slate-900 dark:text-zinc-100 font-medium')}>
         <div>{a}</div>
         <div>{b}</div>
       </div>
@@ -175,13 +175,13 @@ function OverlapSection({
           <div>
             <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">Only {nameA}</p>
             <div className="flex flex-wrap gap-1.5">
-              {onlyA.length > 0 ? onlyA.map((value) => chip(value, 'neutral')) : <span className="text-xs text-slate-400 dark:text-zinc-600">—</span>}
+              {onlyA.length > 0 ? onlyA.map((value) => chip(value, 'neutral')) : <span className="text-xs text-slate-500 dark:text-zinc-600">—</span>}
             </div>
           </div>
           <div>
             <p className="mb-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">Only {nameB}</p>
             <div className="flex flex-wrap gap-1.5">
-              {onlyB.length > 0 ? onlyB.map((value) => chip(value, 'neutral')) : <span className="text-xs text-slate-400 dark:text-zinc-600">—</span>}
+              {onlyB.length > 0 ? onlyB.map((value) => chip(value, 'neutral')) : <span className="text-xs text-slate-500 dark:text-zinc-600">—</span>}
             </div>
           </div>
         </div>
@@ -234,7 +234,7 @@ function IdentityCard({ type, item }: { type: CompareType; item: Substance | Bra
       )}
       <Link
         to={`${ENTITY_ROUTE[type]}/${item.id}`}
-        className="mt-3 inline-flex w-fit items-center gap-1 text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+        className="mt-3 inline-flex w-fit items-center gap-1 text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
       >
         View {type}
         <ArrowUpRight size={14} />
@@ -271,10 +271,10 @@ function PickerSlot({ item, type, placeholder, onClear }: { item: (Substance | B
   if (!item) {
     return (
       <div className="flex h-full min-h-[92px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 p-4 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
           <Search size={16} />
         </span>
-        <span className="text-sm font-medium text-slate-400 dark:text-zinc-500">{placeholder}</span>
+        <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">{placeholder}</span>
       </div>
     );
   }
@@ -299,7 +299,7 @@ function PickerSlot({ item, type, placeholder, onClear }: { item: (Substance | B
         {type === 'stack' && <p className="text-xs text-slate-500 dark:text-zinc-400">{(item as Stack).substances.length} substances</p>}
         {substance && <p className="truncate text-xs text-slate-500 dark:text-zinc-400">{substance.classification}</p>}
       </div>
-      <button onClick={onClear} aria-label={`Remove ${item.name}`} className="shrink-0 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
+      <button onClick={onClear} aria-label={`Remove ${item.name}`} className="shrink-0 rounded-full p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200">
         <X size={16} />
       </button>
     </div>
@@ -415,7 +415,7 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
       {ready ? (
         <button
           onClick={() => navigate(`/compare?type=${tab}&id1=${pick1}&id2=${pick2}`)}
-          className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-3 font-bold text-white shadow-sm transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
+          className="mb-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 font-bold text-white shadow-sm transition-colors hover:bg-emerald-800 dark:text-zinc-950 dark:hover:bg-emerald-400"
         >
           Compare {item1!.name} vs {item2!.name}
           <ArrowRight size={18} />
@@ -423,12 +423,12 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
       ) : (
         <div className="mb-6">
           <div className="relative">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${PICKER_TABS.find((t) => t.key === tab)!.label.toLowerCase()}…`}
-              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             />
           </div>
           <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-800">
@@ -459,10 +459,10 @@ function ComparePicker({ initialType, initialId }: { initialType: CompareType | 
                 );
               })
             ) : (
-              <p className="bg-white px-4 py-6 text-center text-sm text-slate-400 dark:bg-zinc-900/50 dark:text-zinc-500">No matches.</p>
+              <p className="bg-white px-4 py-6 text-center text-sm text-slate-500 dark:bg-zinc-900/50 dark:text-zinc-400">No matches.</p>
             )}
           </div>
-          <p className="mt-2 text-center text-xs text-slate-400 dark:text-zinc-500">
+          <p className="mt-2 text-center text-xs text-slate-500 dark:text-zinc-400">
             {pick1 ? 'Pick one more to compare.' : 'Pick two to compare.'}
           </p>
         </div>
@@ -506,7 +506,7 @@ export default function Compare() {
   const pulse = (posts: typeof allPosts) => {
     const dispatches = posts.filter((p) => p.type === 'Dispatch').length;
     const signals = posts.filter((p) => p.type === 'Signal').length;
-    if (dispatches === 0 && signals === 0) return <span className="text-slate-400 dark:text-zinc-500">No posts yet</span>;
+    if (dispatches === 0 && signals === 0) return <span className="text-slate-500 dark:text-zinc-400">No posts yet</span>;
     return (
       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="inline-flex items-center gap-1"><Pill size={13} className="text-emerald-500" /> {dispatches} {dispatches === 1 ? 'Dispatch' : 'Dispatches'}</span>
@@ -526,7 +526,7 @@ export default function Compare() {
     risk ? (
       <span className={cn('inline-flex rounded-full px-2.5 py-1 text-xs font-bold', RISK_STYLES[risk])}>{risk}</span>
     ) : (
-      <span className="text-slate-400 dark:text-zinc-500">Not assessed</span>
+      <span className="text-slate-500 dark:text-zinc-400">Not assessed</span>
     );
 
   const substanceChip = (value: string, tone: 'neutral' | 'shared' | 'warn') => {

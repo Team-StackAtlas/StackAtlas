@@ -699,8 +699,11 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
 - **Accessibility:** aria-labels present on icon buttons in the code driven
   (e.g. `aria-label="Remove photo"`, `aria-label="Post actions"`,
   lightbox `role="dialog"`); focus rings via Tailwind `focus:` utilities on
-  most interactive elements; **no systematic audit was performed** — contrast
-  checking of emerald-on-white text remains unchecked. Keyboard traversal of
+  most interactive elements. **Contrast: audited and fixed July 24** — a
+  programmatic WCAG sweep (12 routes × light/dark, every text-bearing element
+  measured against its resolved background) found 100+ AA failures; all are
+  now fixed and the sweep reports **zero failures**. See the contrast section
+  below. Keyboard traversal of
   Comms was verified July 23 (Playwright Tab-cycle): the full cycle reaches
   the tab bar, DM search, request Accept/Decline, per-message actions (the
   hover-reveal wrapper is `focus-within`-visible, so keyboard users see
@@ -711,6 +714,38 @@ Screenshots: **30 files in `handoff-screenshots/`** (desktop 1440×900 + mobile
   implements the full dialog contract — Escape close, Tab focus trap, initial
   focus, focus restoration on close, body scroll lock, `aria-modal` +
   `aria-labelledby` — so modals need no further a11y work.
+- **Contrast audit (July 24) — what changed and why.** Method: Playwright
+  walks every visible element that owns text, resolves the true background by
+  climbing ancestors (skipping gradient-backed nodes, which can't reduce to
+  one color), rasterizes both colors through a canvas — necessary because
+  Tailwind v4 emits `oklch()` that regex parsing silently mishandles — and
+  applies the AA thresholds (4.5:1 normal, 3:1 large ≥24px or ≥18.66px bold).
+  Failures found and fixed:
+  - `text-slate-400` muted metadata on light surfaces measured **2.5–2.63**
+    (timestamps, "At a glance", "Sources", rating counts, section labels).
+    → `text-slate-500`, and `text-slate-600` where it sits on a slate-100
+    chip (which measured 4.35).
+  - `dark:text-zinc-500` measured **4.12** throughout dark mode →
+    `dark:text-zinc-400`. (116 + 113 token occurrences swept, 41 files.)
+  - `AccessBadge` E/C/F glyphs measured **2.35** (`-500` fills with tinted
+    text) → `-700`/`-600` fills with pure white.
+  - Star rating: the numeric "4.8/5" measured **2.04**, the worst finding in
+    the app → `text-amber-700`; star glyphs → `amber-600` (meaningful
+    graphics need 3:1 under 1.4.11).
+  - White-on-emerald CTAs measured **2.47** at `emerald-500` and **3.65** at
+    `emerald-600`. **The action green is now `emerald-700` everywhere** —
+    fills and link text both — which measures 5.5:1 and unifies what had been
+    three shades (500/600/700) doing the same job. This is a deliberate,
+    visible brand shift (two steps deeper); screenshot-checked on
+    Square/Substance/Library in both themes before keeping it. If you prefer
+    the lighter green, the accessible alternative is keeping `emerald-500`
+    only behind text ≥18.66px bold.
+  - Comms own-message bubble was `emerald-600` + `opacity-70` metadata
+    (**2.53**) → `emerald-700` + `opacity-90`.
+  - Notification/nav count badges → `red-600` / `emerald-700`.
+  The audit script is not committed (it is a one-shot instrument, not a
+  test); re-run it from the PR description's method notes if the palette
+  changes again.
 - **Sparse-evidence rendering (credibility-critical):**
   - Substance page with no linked brands renders explicit text: *“No brand
     records linked to this substance yet.”* (`w-imported-substance` capture;

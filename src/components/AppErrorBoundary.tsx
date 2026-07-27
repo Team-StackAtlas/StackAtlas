@@ -75,7 +75,7 @@ export default class AppErrorBoundary extends Component<Props, State> {
         </div>
         <button
           onClick={this.handleReload}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 font-semibold text-white shadow-sm transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
+          className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 font-semibold text-white shadow-sm transition-colors hover:bg-emerald-800 dark:text-zinc-950 dark:hover:bg-emerald-400"
         >
           <RefreshCw size={16} />
           Reload

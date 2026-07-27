@@ -40,7 +40,7 @@ function BrandSubline({ item }: { item: Brand }) {
         <StarRating value={item.userRating} size={12} />
         {item.userRating.toFixed(1)}
       </span>
-      <span className="inline-flex shrink-0 items-center gap-1 text-slate-400 dark:text-zinc-500">
+      <span className="inline-flex shrink-0 items-center gap-1 text-slate-500 dark:text-zinc-400">
         <Truck size={12} />
         {item.shippingReliability.toFixed(1)} shipping
       </span>
@@ -227,7 +227,7 @@ export default function Lab() {
               <span className="block text-sm font-bold text-slate-800 dark:text-zinc-100">
                 {tool.name}
               </span>
-              <span className="text-xs text-slate-500 dark:text-zinc-500">{tool.description}</span>
+              <span className="text-xs text-slate-500 dark:text-zinc-400">{tool.description}</span>
             </div>
             <ChevronRight size={16} className="shrink-0 text-slate-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-zinc-600" />
           </button>
@@ -244,7 +244,7 @@ export default function Lab() {
             <span className="block text-sm font-bold text-slate-800 dark:text-zinc-100">
               Glossary
             </span>
-            <span className="text-xs text-slate-500 dark:text-zinc-500">
+            <span className="text-xs text-slate-500 dark:text-zinc-400">
               Plain-language definitions for supplement and research terms.
             </span>
           </div>
@@ -254,7 +254,7 @@ export default function Lab() {
 
       {suggestedPairs.length > 0 && (
         <div className="mt-8">
-          <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
             Popular comparisons
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -264,8 +264,8 @@ export default function Lab() {
                 to={`/compare?type=substance&id1=${a.id}&id2=${b.id}`}
                 className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-slate-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
               >
-                <GitCompare size={13} className="text-slate-400 dark:text-zinc-500" />
-                {a.name} <span className="font-normal text-slate-400 dark:text-zinc-500">vs</span> {b.name}
+                <GitCompare size={13} className="text-slate-500 dark:text-zinc-400" />
+                {a.name} <span className="font-normal text-slate-500 dark:text-zinc-400">vs</span> {b.name}
               </Link>
             ))}
           </div>
@@ -281,14 +281,14 @@ export default function Lab() {
       >
         <div className="border-b border-slate-200 p-4 dark:border-zinc-800">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={17} />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400" size={17} />
             <input
               type="text"
               autoFocus
               placeholder={`Search ${pickerType ?? ''}s...`}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
+              className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
             />
           </div>
         </div>
@@ -302,10 +302,10 @@ export default function Lab() {
           ) : (
             <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
-                <SearchX size={20} className="text-slate-400 dark:text-zinc-500" />
+                <SearchX size={20} className="text-slate-500 dark:text-zinc-400" />
               </div>
               <p className="text-sm font-medium text-slate-700 dark:text-zinc-300">No {pickerType}s found</p>
-              <p className="max-w-xs text-xs text-slate-500 dark:text-zinc-500">
+              <p className="max-w-xs text-xs text-slate-500 dark:text-zinc-400">
                 {search ? `No matches for "${search}". Try a different search.` : `No ${pickerType}s available yet.`}
               </p>
             </div>

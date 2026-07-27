@@ -72,7 +72,7 @@ export default function Layout() {
               />
             </div>
             <h2 className="text-xl font-black tracking-tighter text-slate-900 dark:text-zinc-100 uppercase">
-              Stack<span className="text-emerald-600 dark:text-emerald-500">Atlas</span>
+              Stack<span className="text-emerald-700 dark:text-emerald-500">Atlas</span>
             </h2>
           </Link>
         </div>
@@ -86,19 +86,19 @@ export default function Layout() {
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : 'text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-zinc-200',
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-zinc-200',
                 )}
               >
                 <item.icon size={20} className={cn(isActive && 'fill-emerald-500/20')} />
                 <span className="font-medium">{item.name}</span>
                 {item.name === 'Notifications' && unreadCount > 0 && (
-                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
                     {unreadCount}
                   </span>
                 )}
                 {item.name === 'Comms' && commsCounts.total > 0 && (
-                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-emerald-700 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm">
                     {commsCounts.total}
                   </span>
                 )}
@@ -110,7 +110,7 @@ export default function Layout() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
@@ -120,7 +120,7 @@ export default function Layout() {
           <button
             type="button"
             onClick={() => setIsPrivacyModalOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
               <Shield size={16} />
@@ -129,7 +129,7 @@ export default function Layout() {
           </button>
           <Link
             to="/profile"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
           >
             <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800">
               {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" /> : <User size={16} />}
@@ -200,19 +200,19 @@ export default function Layout() {
                 className={cn(
                   'flex flex-col items-center justify-center w-full h-full gap-1 transition-colors',
                   isActive
-                    ? 'text-emerald-600 dark:text-emerald-500'
-                    : 'text-slate-500 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-300',
+                    ? 'text-emerald-700 dark:text-emerald-500'
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-300',
                 )}
               >
                 <span className="relative">
                   <item.icon size={20} className={cn(isActive && 'fill-emerald-500/20')} />
                   {item.name === 'Notifications' && unreadCount > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white">
+                    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold leading-none text-white">
                       {unreadCount}
                     </span>
                   )}
                   {item.name === 'Comms' && commsCounts.total > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold leading-none text-white">
+                    <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-700 px-1 text-[9px] font-bold leading-none text-white">
                       {commsCounts.total}
                     </span>
                   )}
