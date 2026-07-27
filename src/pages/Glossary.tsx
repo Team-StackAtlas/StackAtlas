@@ -7,6 +7,7 @@ import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
 import { GlossaryText } from '../components/GlossaryText';
 import { EmptyState } from '../components/EmptyState';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { scrollBehavior } from '../lib/motion';
 
 export default function Glossary() {
   usePageMeta('Glossary', 'Plain-language definitions for supplement and research terms.');
@@ -51,7 +52,7 @@ export default function Glossary() {
   useEffect(() => {
     if (!activeTerm || !loaded) return;
     const el = document.getElementById(`term-${activeTerm}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el) el.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
   }, [activeTerm, loaded]);
 
   // Relevance rank for search: exact term match, then term-starts-with, then
