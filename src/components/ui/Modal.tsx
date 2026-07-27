@@ -135,7 +135,7 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
+                className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
               >
                 <X size={20} />
               </button>
@@ -147,7 +147,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="absolute right-4 top-4 z-10 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+              className="absolute right-4 top-4 z-10 rounded-full p-1 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
             >
               <X size={20} />
             </button>

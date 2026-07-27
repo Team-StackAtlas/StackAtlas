@@ -166,7 +166,7 @@ export function GlobalSearch() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3.5 dark:border-zinc-800">
-              <Search size={18} className="shrink-0 text-slate-400 dark:text-zinc-500" />
+              <Search size={18} className="shrink-0 text-slate-500 dark:text-zinc-400" />
               <input
                 ref={inputRef}
                 value={query}
@@ -174,12 +174,12 @@ export function GlobalSearch() {
                 onKeyDown={onInputKeyDown}
                 placeholder="Search substances, brands, stacks, posts…"
                 aria-label="Search query"
-                className="w-full bg-transparent text-[15px] text-slate-900 outline-none placeholder:text-slate-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+                className="w-full bg-transparent text-[15px] text-slate-900 outline-none placeholder:text-slate-500 dark:text-zinc-100 dark:placeholder:text-zinc-500"
               />
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close search"
-                className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                className="shrink-0 rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
               >
                 <X size={16} />
               </button>
@@ -189,7 +189,7 @@ export function GlobalSearch() {
               {trimmed.length < 2 && (
                 <div className="px-4 py-10 text-center">
                   <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
-                    <Search size={20} className="text-slate-400 dark:text-zinc-500" />
+                    <Search size={20} className="text-slate-500 dark:text-zinc-400" />
                   </div>
                   <p className="text-sm text-slate-500 dark:text-zinc-400">
                     Keep typing to search…
@@ -199,12 +199,12 @@ export function GlobalSearch() {
               {trimmed.length >= 2 && groups.length === 0 && (
                 <div className="px-4 py-10 text-center">
                   <p className="text-sm font-medium text-slate-600 dark:text-zinc-300">No matches for &ldquo;{trimmed}&rdquo;</p>
-                  <p className="mt-1 text-sm text-slate-400 dark:text-zinc-500">Try a different term.</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">Try a different term.</p>
                 </div>
               )}
               {groups.map((group) => (
                 <div key={group.title} className="mb-1">
-                  <p className="flex items-center gap-1.5 px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-zinc-500">
+                  <p className="flex items-center gap-1.5 px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
                     <group.icon size={12} />
                     {group.title}
                   </p>
@@ -224,13 +224,13 @@ export function GlobalSearch() {
                       >
                         <span className={cn(
                           'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                          isActive ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500',
+                          isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400',
                         )}>
                           <group.icon size={15} />
                         </span>
                         <span className={cn('min-w-0 flex-1 truncate font-medium', isActive ? 'text-slate-900 dark:text-zinc-50' : 'text-slate-700 dark:text-zinc-200')}>{item.label}</span>
                         {item.sublabel && (
-                          <span className="shrink-0 text-xs text-slate-400 dark:text-zinc-500">{item.sublabel}</span>
+                          <span className="shrink-0 text-xs text-slate-500 dark:text-zinc-400">{item.sublabel}</span>
                         )}
                         <ArrowRight size={15} className={cn('shrink-0 text-emerald-500 transition-opacity', isActive ? 'opacity-100' : 'opacity-0')} />
                       </button>
@@ -241,7 +241,7 @@ export function GlobalSearch() {
             </div>
 
             {flatItems.length > 0 && (
-              <div className="flex items-center gap-4 border-t border-slate-200 px-4 py-2.5 text-[11px] text-slate-400 dark:border-zinc-800 dark:text-zinc-500">
+              <div className="flex items-center gap-4 border-t border-slate-200 px-4 py-2.5 text-[11px] text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
                 <span className="inline-flex items-center gap-1">
                   <kbd className="rounded border border-slate-200 px-1 py-0.5 font-semibold dark:border-zinc-700">↑</kbd>
                   <kbd className="rounded border border-slate-200 px-1 py-0.5 font-semibold dark:border-zinc-700">↓</kbd>

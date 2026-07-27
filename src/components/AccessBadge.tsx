@@ -6,11 +6,13 @@ interface ClassificationBadgeProps {
   className?: string;
 }
 
+// Deeper fills + pure white glyphs: at 10px bold these badges need a 4.5:1
+// ratio, which the -500 fills with tinted text missed (measured 2.35).
 const STYLES: Record<Classification, string> = {
-  Everyday: 'bg-emerald-500 text-emerald-50',
-  Clinical: 'bg-blue-500 text-blue-50',
-  Frontier: 'bg-purple-500 text-purple-50',
-  Unknown: 'bg-slate-400 text-white dark:bg-zinc-600',
+  Everyday: 'bg-emerald-700 text-white',
+  Clinical: 'bg-blue-600 text-white',
+  Frontier: 'bg-purple-600 text-white',
+  Unknown: 'bg-slate-600 text-white dark:bg-zinc-600',
 };
 
 const LABELS: Record<Classification, string> = {

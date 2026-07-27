@@ -73,7 +73,7 @@ function GlossaryMark({ label, term, depth }: { label: string; term: GlossaryTer
           className="absolute left-0 top-full z-50 mt-1.5 block w-72 max-w-[80vw] cursor-default rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
         >
           {term.category && (
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
               {term.category}
             </span>
           )}
@@ -85,7 +85,7 @@ function GlossaryMark({ label, term, depth }: { label: string; term: GlossaryTer
           </span>
           <Link
             to={`/glossary?term=${term.slug}`}
-            className="mt-2 inline-block text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+            className="mt-2 inline-block text-xs font-semibold text-emerald-700 hover:text-emerald-700 dark:text-emerald-400"
           >
             Full entry →
           </Link>

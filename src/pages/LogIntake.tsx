@@ -67,7 +67,7 @@ export default function LogIntake() {
         {view === 'list' && (
           <button 
             onClick={() => setView('form')}
-            className="px-4 py-1.5 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-colors"
+            className="px-4 py-1.5 bg-emerald-700 text-white text-sm font-medium rounded-full hover:bg-emerald-800 transition-colors"
           >
             Log Intake
           </button>
@@ -128,7 +128,7 @@ export default function LogIntake() {
                   onClick={() => { setIntakeType('substance'); setSelectedId(''); }}
                   className={cn(
                     "flex-1 py-2 rounded-xl text-sm font-medium border transition-colors",
-                    intakeType === 'substance' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                    intakeType === 'substance' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
                   )}
                 >
                   Substance
@@ -138,7 +138,7 @@ export default function LogIntake() {
                   onClick={() => { setIntakeType('stack'); setSelectedId(''); }}
                   className={cn(
                     "flex-1 py-2 rounded-xl text-sm font-medium border transition-colors",
-                    intakeType === 'stack' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                    intakeType === 'stack' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
                   )}
                 >
                   Stack
@@ -236,7 +236,7 @@ export default function LogIntake() {
 
             <button 
               type="submit"
-              className="w-full bg-emerald-500 text-white font-medium py-3.5 rounded-xl hover:bg-emerald-600 transition-colors shadow-sm"
+              className="w-full bg-emerald-700 text-white font-medium py-3.5 rounded-xl hover:bg-emerald-800 transition-colors shadow-sm"
             >
               Save Intake Log
             </button>

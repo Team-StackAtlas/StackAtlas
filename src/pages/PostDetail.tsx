@@ -219,7 +219,7 @@ export default function PostDetail() {
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-zinc-100">Post Not Found</h2>
         <p className="mb-6 text-slate-500 dark:text-zinc-400">The post you are looking for does not exist.</p>
-        <Link to="/square" className="font-medium text-emerald-600 hover:underline dark:text-emerald-400">Return to Square</Link>
+        <Link to="/square" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">Return to Square</Link>
       </div>
     );
   }
@@ -316,7 +316,7 @@ export default function PostDetail() {
           </section>
         )}
 
-        <div className="mt-8 flex items-center gap-6 border-t border-slate-200 pt-6 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-500">
+        <div className="mt-8 flex items-center gap-6 border-t border-slate-200 pt-6 text-sm font-semibold text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
           <LikeCount postAuthorId={post.author.id} currentUserId={user?.id ?? null} count={postLike.count} liked={postLike.liked} onToggle={postLike.toggleLike} />
           <a href="#comments" className="inline-flex items-center gap-2 transition-colors hover:text-blue-600 dark:hover:text-blue-400" aria-label={`${discussionCount} comments`}><MessageCircle size={20} />{discussionCount}</a>
         </div>
@@ -327,7 +327,7 @@ export default function PostDetail() {
         {commentError && <p className="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{commentError}</p>}
         <form onSubmit={addComment} className="mb-5 flex gap-2">
           <input name="content" placeholder="Add a comment" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" />
-          <button className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white">Post</button>
+          <button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">Post</button>
         </form>
         {comments.length > 0 ? (
           <div className="divide-y divide-slate-100 dark:divide-zinc-800">
@@ -352,12 +352,12 @@ function CommentThread({ postId, comment, depth, currentUserId, replyingTo, onRe
     <div className="py-3" style={{ marginLeft: `${Math.min(depth, 4) * 18}px` }}>
       <div className="border-l border-slate-200 pl-3 dark:border-zinc-800">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm"><span className="font-semibold text-slate-900 dark:text-zinc-100">@{comment.author}</span><span className="text-xs text-slate-500 dark:text-zinc-500">{new Date(comment.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
-          {!comment.deleted && <div className="flex items-center gap-1"><ReportAction targetType={depth === 0 ? 'comment' : 'reply'} targetId={`${postId}:${comment.id}`} entityName={comment.content.slice(0, 60) || 'comment'} />{currentUserId && <button onClick={() => onDelete(comment.id)} className="rounded-full p-1 text-slate-400 hover:text-red-600" aria-label="Delete comment"><Trash2 size={14}/></button>}</div>}
+          <div className="flex items-center gap-2 text-sm"><span className="font-semibold text-slate-900 dark:text-zinc-100">@{comment.author}</span><span className="text-xs text-slate-500 dark:text-zinc-400">{new Date(comment.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+          {!comment.deleted && <div className="flex items-center gap-1"><ReportAction targetType={depth === 0 ? 'comment' : 'reply'} targetId={`${postId}:${comment.id}`} entityName={comment.content.slice(0, 60) || 'comment'} />{currentUserId && <button onClick={() => onDelete(comment.id)} className="rounded-full p-1 text-slate-500 hover:text-red-600" aria-label="Delete comment"><Trash2 size={14}/></button>}</div>}
         </div>
         <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-zinc-300">{comment.content}</p>
         {!comment.deleted && <div className="mt-2 flex items-center gap-4 text-xs font-medium text-slate-500 dark:text-zinc-400"><button onClick={() => onLike(comment.id)} className="inline-flex items-center gap-1 hover:text-rose-600"><Heart size={15} className={liked ? 'fill-current text-rose-600' : ''}/>{comment.likes ?? comment.likedBy?.length ?? 0}</button><button onClick={() => onReply(replyingTo === comment.id ? null : comment.id)} className="inline-flex items-center gap-1 hover:text-blue-600"><Reply size={15}/> Reply</button></div>}
-        {replyingTo === comment.id && <form onSubmit={(event) => onSubmitReply(event, comment.id)} className="mt-3 flex gap-2"><input name="content" placeholder="Write a reply" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" /><button className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-white">Reply</button></form>}
+        {replyingTo === comment.id && <form onSubmit={(event) => onSubmitReply(event, comment.id)} className="mt-3 flex gap-2"><input name="content" placeholder="Write a reply" className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950" /><button className="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-semibold text-white">Reply</button></form>}
         {(comment.replies ?? []).map(reply => <CommentThread key={reply.id} postId={postId} comment={reply} depth={depth + 1} currentUserId={currentUserId} replyingTo={replyingTo} onReply={onReply} onSubmitReply={onSubmitReply} onLike={onLike} onDelete={onDelete} />)}
       </div>
     </div>
@@ -371,7 +371,7 @@ function LikeCount({ postAuthorId, currentUserId, count, liked, onToggle }: { po
   if (!isAuthor) return <button type="button" onClick={onToggle} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} className={liked ? 'fill-current text-rose-600' : undefined} />{count}</button>;
   return (
     <span className="relative inline-flex items-center gap-2">
-      <button onClick={onToggle} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} className={liked ? 'fill-current text-rose-600' : undefined} />{count}</button><button type="button" onClick={() => setOpen((value) => !value)} className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200">View</button>
+      <button onClick={onToggle} className="inline-flex items-center gap-2 transition-colors hover:text-rose-600" aria-label={`${count} hearts`}><Heart size={20} className={liked ? 'fill-current text-rose-600' : undefined} />{count}</button><button type="button" onClick={() => setOpen((value) => !value)} className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-zinc-200">View</button>
       {open && <span className="absolute left-0 top-8 z-10 w-48 rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg dark:border-zinc-800 dark:bg-zinc-900"><strong className="mb-2 block text-slate-900 dark:text-zinc-100">Liked by</strong>{likers.map((name) => <span key={name} className="block py-0.5">@{name}</span>)}</span>}
     </span>
   );

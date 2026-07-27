@@ -93,15 +93,15 @@ export default function PostCard({ post }: PostCardProps) {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <Link to={`/profile/${post.author.username}`} className="truncate text-sm font-semibold text-slate-900 hover:underline dark:text-zinc-100">{post.author.username}</Link>
-              {post.author.isVerified && <ShieldCheck size={14} className="shrink-0 text-emerald-600 dark:text-emerald-500" />}
+              {post.author.isVerified && <ShieldCheck size={14} className="shrink-0 text-emerald-700 dark:text-emerald-500" />}
             </div>
-            <p className="truncate text-xs text-slate-500 dark:text-zinc-500">{[post.author.displayName, `${formatDistanceToNow(new Date(post.createdAt))} ago`].filter(Boolean).join(' · ')}</p>
+            <p className="truncate text-xs text-slate-500 dark:text-zinc-400">{[post.author.displayName, `${formatDistanceToNow(new Date(post.createdAt))} ago`].filter(Boolean).join(' · ')}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <SaveButton id={post.id} type={post.type} metadata={getSavedPostMetadata(post)} />
           <div className="group/actions relative">
-            <button type="button" aria-label="Post actions" className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"><MoreHorizontal size={16} /></button>
+            <button type="button" aria-label="Post actions" className="rounded-full p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"><MoreHorizontal size={16} /></button>
             <div className="invisible absolute right-0 top-8 z-20 w-36 rounded-xl border border-slate-200 bg-white p-1 opacity-0 shadow-lg transition group-hover/actions:visible group-hover/actions:opacity-100 dark:border-zinc-800 dark:bg-zinc-900"><ReportAction targetType="post" targetId={post.id} entityName={post.title} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 dark:text-zinc-300 dark:hover:bg-red-500/10 dark:hover:text-red-300" /></div>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function PostCard({ post }: PostCardProps) {
           </span>
           {linkedEntity && (
             <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-              {EntityIcon && <EntityIcon size={12} className="shrink-0 text-slate-400 dark:text-zinc-500" />}
+              {EntityIcon && <EntityIcon size={12} className="shrink-0 text-slate-500 dark:text-zinc-400" />}
               <span className="truncate">{linkedEntity.label}</span>
             </span>
           )}
@@ -138,7 +138,7 @@ export default function PostCard({ post }: PostCardProps) {
 
       {dispatchLine && (
         <div className="mt-3.5 flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-700 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300">
-          <FlaskConical size={15} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
+          <FlaskConical size={15} className="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-500" />
           <span className="min-w-0 font-medium leading-relaxed">{dispatchLine}</span>
         </div>
       )}
@@ -153,15 +153,15 @@ export default function PostCard({ post }: PostCardProps) {
         </div>
       )}
 
-      <footer className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3 text-sm font-semibold text-slate-500 dark:border-zinc-800/80 dark:text-zinc-500">
+      <footer className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3 text-sm font-semibold text-slate-500 dark:border-zinc-800/80 dark:text-zinc-400">
         <button type="button" onClick={toggleLike} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label={`${count} hearts`}>
           <Heart size={16} className={liked ? 'fill-current text-rose-600' : undefined} />{count}
         </button>
         <Link to={`/post/${post.id}#comments`} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 dark:hover:text-blue-400" aria-label={`${commentCount} comments`}>
           <MessageCircle size={16} />{commentCount}
         </Link>
-        <button type="button" onClick={() => void sharePost()} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400" aria-label="Share post">
-          {copied ? <><Check size={16} className="text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400">Copied</span></> : <Share size={16} />}
+        <button type="button" onClick={() => void sharePost()} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400" aria-label="Share post">
+          {copied ? <><Check size={16} className="text-emerald-500" /><span className="text-emerald-700 dark:text-emerald-400">Copied</span></> : <Share size={16} />}
         </button>
       </footer>
     </article>

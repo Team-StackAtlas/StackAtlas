@@ -208,18 +208,18 @@ export default function Square() {
         </div>
         <div className="w-full px-4">
           <div className="flex gap-2 py-3">
-            <Link to="/create" aria-label="Create a post" className="hidden md:inline-flex items-center gap-2 h-10 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm shrink-0 order-last">
+            <Link to="/create" aria-label="Create a post" className="hidden md:inline-flex items-center gap-2 h-10 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm shrink-0 order-last">
               <Plus size={16} />
               Create
             </Link>
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search the Square…"
-                className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm focus:outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/15 focus:bg-white dark:focus:bg-zinc-900 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500"
+                className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm focus:outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/15 focus:bg-white dark:focus:bg-zinc-900 transition-all placeholder:text-slate-500 dark:placeholder:text-zinc-500"
               />
             </div>
             <button
@@ -253,7 +253,7 @@ export default function Square() {
             <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-200 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
               {bearingParam}
             </span>
-            <Link to="/square" className="text-sm font-medium text-emerald-600 dark:text-emerald-500 hover:underline ml-1">
+            <Link to="/square" className="text-sm font-medium text-emerald-700 dark:text-emerald-500 hover:underline ml-1">
               Clear
             </Link>
           </div>
@@ -343,7 +343,7 @@ export default function Square() {
       </div>
 
       {/* Floating Action Button (Mobile) */}
-      <Link to="/create" className="md:hidden fixed bottom-20 right-4 h-14 w-14 flex items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-500 transition-colors z-40">
+      <Link to="/create" className="md:hidden fixed bottom-20 right-4 h-14 w-14 flex items-center justify-center rounded-full bg-emerald-700 text-white shadow-lg hover:bg-emerald-800 transition-colors z-40">
         <Plus size={24} />
       </Link>
 

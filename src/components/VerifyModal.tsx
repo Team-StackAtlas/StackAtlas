@@ -41,7 +41,7 @@ export default function VerifyModal({ isOpen, onClose, onVerify }: VerifyModalPr
                 <h3 className="mb-1 text-sm font-medium text-slate-800 dark:text-zinc-200">
                   Upload Government ID
                 </h3>
-                <p className="mb-3 text-xs text-slate-500 dark:text-zinc-500">
+                <p className="mb-3 text-xs text-slate-500 dark:text-zinc-400">
                   Driver's license, passport, or national ID card.
                 </p>
                 <button
@@ -60,7 +60,7 @@ export default function VerifyModal({ isOpen, onClose, onVerify }: VerifyModalPr
                 </button>
               </div>
 
-              <p className="text-center text-xs text-slate-500 dark:text-zinc-500">
+              <p className="text-center text-xs text-slate-500 dark:text-zinc-400">
                 Your data is encrypted and deleted immediately after verification. We do not store
                 your ID.
               </p>
@@ -79,7 +79,7 @@ export default function VerifyModal({ isOpen, onClose, onVerify }: VerifyModalPr
             </p>
             <button
               onClick={onVerify}
-              className="w-full rounded-lg bg-emerald-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-600 dark:text-zinc-950 dark:hover:bg-emerald-400"
+              className="w-full rounded-lg bg-emerald-700 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 dark:text-zinc-950 dark:hover:bg-emerald-400"
             >
               Continue to StackAtlas
             </button>

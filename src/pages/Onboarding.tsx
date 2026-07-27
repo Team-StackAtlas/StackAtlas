@@ -117,7 +117,7 @@ export default function Onboarding() {
             </button>
             <button
               onClick={() => handleComplete(selectedGoals)}
-              className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 dark:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors shadow-sm"
             >
               {selectedGoals.length > 0 ? `Finish with ${selectedGoals.length} ${selectedGoals.length === 1 ? 'goal' : 'goals'}` : 'Finish'}
               <ChevronRight size={18} />
@@ -174,7 +174,7 @@ export default function Onboarding() {
 
           <div className="bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
             <h4 className="text-sm font-bold text-slate-900 dark:text-zinc-100 mb-4 uppercase tracking-wider flex items-center gap-2">
-              <Info size={16} className="text-slate-400 dark:text-zinc-500" />
+              <Info size={16} className="text-slate-500 dark:text-zinc-400" />
               Classifications
             </h4>
             <div className="space-y-3">
@@ -194,7 +194,7 @@ export default function Onboarding() {
             <button
               onClick={() => selectedLevel && setStep('goals')}
               disabled={!selectedLevel}
-              className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 dark:bg-emerald-700 dark:hover:bg-emerald-800 transition-colors shadow-sm"
             >
               Next: Your Goals <ChevronRight size={18} />
             </button>

@@ -23,9 +23,9 @@ export function EmptyState({ icon: Icon, title, description, action, className }
       {description && <p className="mx-auto mt-1.5 max-w-sm text-sm text-slate-500 dark:text-zinc-400">{description}</p>}
       {action && (
         'to' in action ? (
-          <Link to={action.to} className="mt-5 inline-flex items-center rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">{action.label}</Link>
+          <Link to={action.to} className="mt-5 inline-flex items-center rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">{action.label}</Link>
         ) : (
-          <button type="button" onClick={action.onClick} className="mt-5 inline-flex items-center rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">{action.label}</button>
+          <button type="button" onClick={action.onClick} className="mt-5 inline-flex items-center rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">{action.label}</button>
         )
       )}
     </div>

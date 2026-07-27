@@ -28,7 +28,7 @@ export function GoalsPicker({ selected, onToggle }: { selected: string[]; onTogg
             <span
               className={cn(
                 'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
-                active ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-zinc-600',
+                active ? 'border-emerald-500 bg-emerald-700 text-white' : 'border-slate-300 dark:border-zinc-600',
               )}
             >
               {active && <Check size={12} />}

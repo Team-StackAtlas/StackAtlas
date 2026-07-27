@@ -239,7 +239,7 @@ export default function SourceLibrary({ client }: { client: SupabaseClient | nul
                 ))}
               </div>
             )}
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-500">
               {[entry.pmid && `PMID ${entry.pmid}`, entry.doi && `DOI ${entry.doi}`]
                 .filter(Boolean)
                 .join(' · ') || 'No PMID or DOI'}

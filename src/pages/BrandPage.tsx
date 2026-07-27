@@ -70,7 +70,7 @@ export default function BrandPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsSuggestEditOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
               >
                 <Edit3 size={14} />
                 Suggest Edit
@@ -86,7 +86,7 @@ export default function BrandPage() {
 
             <button
               onClick={() => toggleFollow('brand', brand.id)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg ${isFollowing('brand', brand.id) ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-200' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg ${isFollowing('brand', brand.id) ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-200' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}
             >
               {isFollowing('brand', brand.id) ? 'Following' : 'Follow Brand'}
             </button>
@@ -115,7 +115,7 @@ export default function BrandPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
              <div className="bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-slate-200 dark:border-zinc-800">
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Average Rating</p>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mb-1">Average Rating</p>
                 {ratingSummary.hasEnough && ratingSummary.average !== null ? (
                   <div className="flex items-center gap-2">
                     <StarRating value={ratingSummary.average} />
@@ -124,15 +124,15 @@ export default function BrandPage() {
                 ) : (
                   <p className="text-sm text-slate-500 dark:text-zinc-400">Not enough ratings yet</p>
                 )}
-                <p className="mt-0.5 text-[11px] text-slate-400 dark:text-zinc-500">{ratingSummary.count} ratings</p>
+                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">{ratingSummary.count} ratings</p>
              </div>
              <div className="bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-slate-200 dark:border-zinc-800">
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Shipping Reliability</p>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mb-1">Shipping Reliability</p>
                 <p className="text-lg font-semibold text-slate-900 dark:text-zinc-100">{brand.shippingReliability} / 5</p>
              </div>
              <div className="bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-slate-200 dark:border-zinc-800">
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mb-1">Contamination Reports</p>
-                <p className={`text-lg font-semibold ${brand.contaminationReports > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mb-1">Contamination Reports</p>
+                <p className={`text-lg font-semibold ${brand.contaminationReports > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                   {brand.contaminationReports}
                 </p>
              </div>
@@ -140,7 +140,7 @@ export default function BrandPage() {
 
           {/* Transparency signals: reviewed documentation facts, never rankings. */}
           <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-500">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
               Transparency Signals
             </p>
             {(() => {
@@ -267,7 +267,7 @@ export default function BrandPage() {
                         {product.ingredients.map((ing, j) => (
                           <li key={j} className="flex justify-between gap-2">
                             <span>{ing.name}{ing.notes ? ` (${ing.notes})` : ''}</span>
-                            {ing.amount && <span className="text-slate-500 dark:text-zinc-500">{ing.amount}</span>}
+                            {ing.amount && <span className="text-slate-500 dark:text-zinc-400">{ing.amount}</span>}
                           </li>
                         ))}
                       </ul>
@@ -323,7 +323,7 @@ export default function BrandPage() {
               <PostCard key={post.id} post={post} />
             ))
           ) : (
-            <div className="text-center py-12 text-slate-500 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
+            <div className="text-center py-12 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
               <p>No posts yet for this brand.</p>
             </div>
           )}

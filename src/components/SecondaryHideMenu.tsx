@@ -39,7 +39,7 @@ export function SecondaryHideMenu({ id, name, type, tagType, align = 'right', bu
           event.stopPropagation();
           setIsOpen((open) => !open);
         }}
-        className={buttonClassName || 'rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'}
+        className={buttonClassName || 'rounded-full p-1.5 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200'}
       >
         <MoreHorizontal size={16} />
       </button>

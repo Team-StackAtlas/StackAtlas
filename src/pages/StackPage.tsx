@@ -79,7 +79,7 @@ export default function StackPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsSuggestEditOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400 bg-slate-100 dark:bg-zinc-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-slate-200 dark:border-zinc-700"
               >
                 <Edit3 size={14} />
                 Suggest Edit
@@ -95,7 +95,7 @@ export default function StackPage() {
 
             <button
               onClick={() => toggleFollow('stack', stack.id)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg ${isFollowing('stack', stack.id) ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-200' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg ${isFollowing('stack', stack.id) ? 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-200' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}
             >
               {isFollowing('stack', stack.id) ? 'Following' : 'Follow Stack'}
             </button>
@@ -175,7 +175,7 @@ export default function StackPage() {
           {relatedDispatches.length > 0 ? (
             relatedDispatches.map(post => <PostCard key={post.id} post={post} />)
           ) : (
-            <div className="text-center py-8 text-slate-500 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
+            <div className="text-center py-8 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800 rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
               <p>No Dispatches yet for this stack.</p>
             </div>
           )}

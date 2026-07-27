@@ -59,11 +59,11 @@ export function ResearchSourcesCard({
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 shadow-sm">
       <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-        <FileText size={20} className="text-slate-400 dark:text-zinc-500" />
+        <FileText size={20} className="text-slate-500 dark:text-zinc-400" />
         Sources
-        <span className="text-sm font-normal text-slate-400 dark:text-zinc-500">({sources.length})</span>
+        <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">({sources.length})</span>
       </h3>
-      <p className="mb-4 text-xs text-slate-500 dark:text-zinc-500">
+      <p className="mb-4 text-xs text-slate-500 dark:text-zinc-400">
         Research and reference material on file for this {entityNoun}, grouped by evidence type.
         Listing a source is not an endorsement.
       </p>
@@ -71,9 +71,9 @@ export function ResearchSourcesCard({
         {groupSourcesByType(sources).map(({ type, label, Icon, items }) => (
           <div key={type}>
             <div className="mb-2 flex items-center gap-2">
-              <Icon size={15} className="shrink-0 text-slate-400 dark:text-zinc-500" />
+              <Icon size={15} className="shrink-0 text-slate-500 dark:text-zinc-400" />
               <h4 className="text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-zinc-300">{label}</h4>
-              <span className="text-xs text-slate-400 dark:text-zinc-500">{items.length}</span>
+              <span className="text-xs text-slate-500 dark:text-zinc-400">{items.length}</span>
               <span className="ml-1 h-px flex-1 bg-slate-100 dark:bg-zinc-800" />
             </div>
             <ul className="space-y-2">
@@ -81,7 +81,7 @@ export function ResearchSourcesCard({
                 const href = sourceHref(source);
                 return (
                   <li key={source.id} className="flex items-start gap-2 text-sm">
-                    <ExternalLink size={14} className="mt-0.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                    <ExternalLink size={14} className="mt-0.5 shrink-0 text-slate-500 dark:text-zinc-400" />
                     <span className="text-slate-600 dark:text-zinc-300">
                       {href ? (
                         <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
@@ -90,8 +90,8 @@ export function ResearchSourcesCard({
                       ) : (
                         <span className="font-medium">{source.title}</span>
                       )}
-                      {source.publication && <span className="text-slate-400 dark:text-zinc-500"> — {source.publication}</span>}
-                      {source.year != null && <span className="text-slate-400 dark:text-zinc-500"> ({source.year})</span>}
+                      {source.publication && <span className="text-slate-500 dark:text-zinc-400"> — {source.publication}</span>}
+                      {source.year != null && <span className="text-slate-500 dark:text-zinc-400"> ({source.year})</span>}
                     </span>
                   </li>
                 );

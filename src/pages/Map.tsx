@@ -293,7 +293,7 @@ export default function Map() {
   };
 
   const syncIndicator = catalogLoading ? (
-    <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-zinc-500">
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400">
       <Loader2 size={12} className="animate-spin" /> Syncing catalog&hellip;
     </span>
   ) : undefined;
@@ -322,7 +322,7 @@ export default function Map() {
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
               feedType === 'For You'
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                ? "border-emerald-500 text-emerald-700 dark:text-emerald-400"
                 : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
             )}
           >
@@ -333,7 +333,7 @@ export default function Map() {
             className={cn(
               "flex-1 py-3 text-sm font-semibold transition-colors border-b-2",
               feedType === 'Following'
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                ? "border-emerald-500 text-emerald-700 dark:text-emerald-400"
                 : "border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100"
             )}
           >
@@ -351,7 +351,7 @@ export default function Map() {
               onClick={() => setActiveTab(tab as 'Substances' | 'Brands' | 'Stacks')}
               className={cn(
                 "flex-1 py-3 text-sm font-medium transition-colors relative",
-                activeTab === tab ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+                activeTab === tab ? "text-emerald-700 dark:text-emerald-400" : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
               )}
             >
               {tab}
@@ -366,7 +366,7 @@ export default function Map() {
       {/* Search Bar */}
       <div className="p-4 relative z-20">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 dark:text-zinc-400" />
           <input
             type="search"
             placeholder={`Search substances, brands, stacks...`}
@@ -374,7 +374,7 @@ export default function Map() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            className="w-full h-10 pl-10 pr-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-sm"
+            className="w-full h-10 pl-10 pr-4 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all placeholder:text-slate-500 dark:placeholder:text-zinc-500 shadow-sm"
           />
           {isSearchFocused && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto">
@@ -390,7 +390,7 @@ export default function Map() {
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors border-t border-slate-100 dark:border-zinc-800/50 first:border-0"
                       onClick={() => handleSearchClick(recent)}
                     >
-                      <Search className="h-4 w-4 text-slate-400" />
+                      <Search className="h-4 w-4 text-slate-500" />
                       <div className="flex-1">
                         <div className="text-sm font-medium text-slate-900 dark:text-zinc-100">{recent.name}</div>
                         <div className="text-xs text-slate-500 dark:text-zinc-400 capitalize">{recent.type}</div>
@@ -411,7 +411,7 @@ export default function Map() {
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors border-t border-slate-100 dark:border-zinc-800/50 first:border-0"
                       onClick={() => handleSearchClick({ id: result.id, name: result.name, type: result.type })}
                     >
-                      <Search className="h-4 w-4 text-slate-400" />
+                      <Search className="h-4 w-4 text-slate-500" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <div className="truncate text-sm font-medium text-slate-900 dark:text-zinc-100">{result.name}</div>
@@ -420,7 +420,7 @@ export default function Map() {
                           )}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-zinc-400 capitalize">{result.matchedOn}</div>
-                        <p className="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-zinc-500">{result.description}</p>
+                        <p className="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-zinc-400">{result.description}</p>
                       </div>
                     </Link>
                   ))}
@@ -469,7 +469,7 @@ export default function Map() {
                       isActive
                         ? isPrioritized
                           ? "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 shadow-sm"
-                          : "bg-emerald-500 text-white border-emerald-500 shadow-sm dark:bg-emerald-500 dark:border-emerald-500"
+                          : "bg-emerald-700 text-white border-emerald-500 shadow-sm dark:bg-emerald-700 dark:border-emerald-500"
                         : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:border-slate-300 hover:bg-slate-50 dark:hover:border-zinc-600 dark:hover:bg-zinc-800"
                     )}
                   >
@@ -485,7 +485,7 @@ export default function Map() {
               className={cn(
                 'ml-2 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-all border flex items-center gap-1.5 shadow-sm',
                 advancedFilterCount > 0
-                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  ? 'bg-emerald-700 text-white border-emerald-500'
                   : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700',
               )}
             >
@@ -536,10 +536,10 @@ export default function Map() {
                   className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:shadow-black/30"
                 >
                   <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-600 dark:text-zinc-50 dark:group-hover:text-emerald-400">{brand.name}</h3>
+                    <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">{brand.name}</h3>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-600 ring-1 ring-inset ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/25">
-                        <Star size={12} className="fill-amber-500 dark:fill-amber-400" />
+                        <Star size={12} className="fill-amber-600 dark:fill-amber-400" />
                         {brand.userRating}
                       </span>
                       <SecondaryHideMenu id={brand.id} name={brand.name} type="brand" />
@@ -560,12 +560,12 @@ export default function Map() {
                         {brand.contaminationReports} contamination {brand.contaminationReports === 1 ? 'report' : 'reports'}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
                         <ShieldCheck size={14} />
                         No contamination reports
                       </span>
                     )}
-                    <span className="inline-flex shrink-0 items-center gap-1 text-slate-400 dark:text-zinc-500" title={`Shipping reliability ${brand.shippingReliability}/5`}>
+                    <span className="inline-flex shrink-0 items-center gap-1 text-slate-500 dark:text-zinc-400" title={`Shipping reliability ${brand.shippingReliability}/5`}>
                       <Truck size={13} />
                       {brand.shippingReliability}/5
                     </span>
@@ -590,7 +590,7 @@ export default function Map() {
                   {syncIndicator}
                   <button
                     onClick={() => setIsCreateStackOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors shadow-sm"
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors shadow-sm"
                   >
                     <Plus size={16} />
                     Create Stack
@@ -609,7 +609,7 @@ export default function Map() {
                     className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm flex flex-col h-full"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                         {stack.name}
                       </h3>
                       <div className="flex items-center gap-2">
@@ -630,7 +630,7 @@ export default function Map() {
                       <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
                     )}
                     <div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
-                      <div className="whitespace-nowrap text-xs text-slate-500 dark:text-zinc-500">
+                      <div className="whitespace-nowrap text-xs text-slate-500 dark:text-zinc-400">
                         {stack.substances.length} substances
                       </div>
                       {creator && (

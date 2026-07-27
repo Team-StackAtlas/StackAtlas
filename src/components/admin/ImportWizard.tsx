@@ -268,10 +268,10 @@ export default function ImportWizard({
             <span
               className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                 step === s
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-emerald-700 text-white'
                   : STEP_ORDER.indexOf(step) > i
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
-                    : 'bg-slate-100 text-slate-400 dark:bg-zinc-800'
+                    : 'bg-slate-100 text-slate-600 dark:bg-zinc-800'
               }`}
             >
               {i + 1}
@@ -297,12 +297,12 @@ export default function ImportWizard({
                 : 'border-slate-200 dark:border-zinc-700'
             }`}
           >
-            <Upload className="mx-auto text-slate-400" size={28} />
+            <Upload className="mx-auto text-slate-500" size={28} />
             <p className="mt-2 text-sm text-slate-600 dark:text-zinc-400">
               Upload research files or a ZIP archive, or drag them here
             </p>
-            <p className="mt-1 text-xs text-slate-400">Accepts .json, .csv, .md, .markdown, and .zip — drop several files, or a whole folder.</p>
-            <p className="mt-0.5 text-xs text-slate-400">Data packs and research-agent packages (substances / brands / products / evidence / source_ledger) are both recognized automatically.</p>
+            <p className="mt-1 text-xs text-slate-500">Accepts .json, .csv, .md, .markdown, and .zip — drop several files, or a whole folder.</p>
+            <p className="mt-0.5 text-xs text-slate-500">Data packs and research-agent packages (substances / brands / products / evidence / source_ledger) are both recognized automatically.</p>
             {dropError && (
               <p className="mx-auto mt-3 max-w-md rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
                 {dropError}
@@ -412,7 +412,7 @@ export default function ImportWizard({
                         <Badge tone={fileKindTone(f.kind)}>{fileKindLabel(f.kind)}</Badge>
                         <Badge tone={fileStatusTone(f.status)}>{fileStatusLabel(f.status)}</Badge>
                       </div>
-                      {f.path !== f.name && <p className="mt-0.5 text-xs text-slate-400">{f.path}</p>}
+                      {f.path !== f.name && <p className="mt-0.5 text-xs text-slate-500">{f.path}</p>}
                       {f.message && <p className="mt-1 text-xs text-slate-500">{f.message}</p>}
                       {f.entityCounts && Object.keys(f.entityCounts).length > 0 && (
                         <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -468,7 +468,7 @@ export default function ImportWizard({
                 <button
                   onClick={() => void goToReview()}
                   disabled={!pack}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   Continue to Review
                 </button>
@@ -495,7 +495,7 @@ export default function ImportWizard({
                 <button
                   onClick={() => setStep('execute')}
                   disabled={!report.ok}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   Continue to Import
                 </button>
@@ -538,7 +538,7 @@ export default function ImportWizard({
                 <button
                   onClick={() => void runTheImport()}
                   disabled={!canExecute || importing || !client}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {importing && <Loader2 size={14} className="animate-spin" />}
                   {importing ? 'Importing…' : 'Import'}

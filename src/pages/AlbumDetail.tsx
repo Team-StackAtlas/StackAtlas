@@ -51,7 +51,7 @@ function ItemNote({
         <div className="mt-1.5 flex gap-2">
           <button
             onClick={() => { onSave(draft); setEditing(false); }}
-            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+            className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
           >
             Save note
           </button>
@@ -82,7 +82,7 @@ function ItemNote({
   return (
     <button
       onClick={() => setEditing(true)}
-      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
     >
       <StickyNote size={14} /> Add a note
     </button>
@@ -150,7 +150,7 @@ export default function AlbumDetail() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6">
-      <Link to="/library" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
+      <Link to="/library" className="text-sm text-emerald-700 hover:underline dark:text-emerald-400">
         Back to Library
       </Link>
 
@@ -187,7 +187,7 @@ export default function AlbumDetail() {
         <h1 className="mt-3 text-3xl font-black">{album.title}</h1>
         {album.description && <p className="mt-2 text-slate-600 dark:text-zinc-400">{album.description}</p>}
 
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-zinc-500">
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-zinc-400">
           <span>
             By @{album.ownerUsername ?? 'owner'} · Created {new Date(album.createdAt).toLocaleString()} · Updated{' '}
             {new Date(album.updatedAt).toLocaleString()}
@@ -197,7 +197,7 @@ export default function AlbumDetail() {
               <span>{isFollowing('album', album.id) ? 1 : 0} followers</span>
               <button
                 onClick={() => toggleFollow('album', album.id)}
-                className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-600"
+                className="rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-800"
               >
                 {isFollowing('album', album.id) ? 'Following' : 'Follow'}
               </button>
@@ -221,7 +221,7 @@ export default function AlbumDetail() {
                   </span>
                   <h2 className="mt-2 font-bold">{title || `${label(item.savedItemType)} unavailable`}</h2>
                   {href && (
-                    <a href={href} className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
+                    <a href={href} className="text-sm text-emerald-700 hover:underline dark:text-emerald-400">
                       Open
                     </a>
                   )}

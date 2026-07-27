@@ -53,7 +53,7 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
                     )}
                   >
                     <span className="flex items-center gap-2.5">
-                      <AdminIcon size={16} className={isActive ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-zinc-500'} />
+                      <AdminIcon size={16} className={isActive ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-400'} />
                       {meta.label}
                     </span>
                     <div className={cn(
@@ -109,7 +109,7 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
         </button>
         <button
           onClick={onClose}
-          className="rounded-xl bg-emerald-500 px-6 py-2 font-medium text-white shadow-sm transition-colors hover:bg-emerald-600"
+          className="rounded-xl bg-emerald-700 px-6 py-2 font-medium text-white shadow-sm transition-colors hover:bg-emerald-800"
         >
           {hasSelection ? 'Apply Filters' : 'Done'}
         </button>

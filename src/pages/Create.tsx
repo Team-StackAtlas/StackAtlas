@@ -111,7 +111,7 @@ function getCompanionOptions(entity: EntityOption | null): EntityOption[] {
 function InfoTooltip({ label, text }: { label: string; text: string }) {
   return (
     <span className="relative inline-flex">
-      <span tabIndex={0} role="button" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()} className="peer rounded-full text-slate-400 transition-colors hover:text-slate-700 focus:text-slate-700 focus:outline-none dark:text-zinc-500 dark:hover:text-zinc-200 dark:focus:text-zinc-200" aria-label={label}>
+      <span tabIndex={0} role="button" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()} className="peer rounded-full text-slate-500 transition-colors hover:text-slate-700 focus:text-slate-700 focus:outline-none dark:text-zinc-400 dark:hover:text-zinc-200 dark:focus:text-zinc-200" aria-label={label}>
         <HelpCircle size={16} />
       </span>
       <span role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 w-56 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-left text-xs font-medium leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-100 peer-hover:opacity-100 peer-focus:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 sm:w-72">
@@ -161,7 +161,7 @@ function PostImagePicker({ value, onChange, onError }: {
           </button>
         </div>
       ) : (
-        <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-400 hover:text-emerald-600 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
+        <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-emerald-400 hover:text-emerald-700 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
           <ImagePlus size={16} /> Add photo
         </button>
       )}
@@ -214,14 +214,14 @@ function EntityCombobox({ label, kind, selected, selectedLabel, onSelect, onClea
       <FieldLabel>{label}{required && <span className="text-red-500"> *</span>}</FieldLabel>
       {selected ? (
         <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-          <span className="font-medium text-emerald-700 dark:text-emerald-300">{selectedLabel ?? selected.name} <span className="text-xs text-emerald-600/70 dark:text-emerald-300/70">{kind === 'dispatch' ? 'Substance' : getEntityTypeLabel(selected.type)}</span></span>
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">{selectedLabel ?? selected.name} <span className="text-xs text-emerald-700/70 dark:text-emerald-300/70">{kind === 'dispatch' ? 'Substance' : getEntityTypeLabel(selected.type)}</span></span>
           <button type="button" onClick={() => onClearSelected ? onClearSelected() : onSelect(null)} className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-500/20" aria-label={onClearSelected ? 'Remove companion substance' : 'Clear entity'}>
             <X size={16} />
           </button>
         </div>
       ) : (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
             type="search"
             value={query}
@@ -241,7 +241,7 @@ function EntityCombobox({ label, kind, selected, selectedLabel, onSelect, onClea
                   onClick={() => { onSelect(option); setQuery(''); setIsOpen(false); }}
                   className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-zinc-700"
                 >
-                  {option.name} <span className="ml-2 text-xs text-slate-400">{kind === 'dispatch' ? 'Substance' : getEntityTypeLabel(option.type)}</span>
+                  {option.name} <span className="ml-2 text-xs text-slate-500">{kind === 'dispatch' ? 'Substance' : getEntityTypeLabel(option.type)}</span>
                 </button>
               )) : (
                 <div className="px-4 py-3 text-sm text-slate-500 dark:text-zinc-400">No matching entity found.</div>
@@ -371,7 +371,7 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
         {isOpen && (
           <div className="mt-3 space-y-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search Bearings..." className="w-full rounded-xl border border-slate-200 bg-transparent py-2 pl-10 pr-3 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
             </div>
             <div>
@@ -384,7 +384,7 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
                 ))}
               </div>
             </div>
-            <button type="button" onClick={() => { setActiveGroupName(suggested.length > 0 ? 'Suggested' : groupList[0]?.name ?? ''); setIsBrowsingAll(true); }} className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Browse all Bearings</button>
+            <button type="button" onClick={() => { setActiveGroupName(suggested.length > 0 ? 'Suggested' : groupList[0]?.name ?? ''); setIsBrowsingAll(true); }} className="text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400">Browse all Bearings</button>
           </div>
         )}
       </div>
@@ -398,7 +398,7 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
             </div>
             <div className="sticky top-0 z-10 space-y-3 border-b border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input value={modalQuery} onChange={e => setModalQuery(e.target.value)} placeholder="Search all Bearings..." className="w-full rounded-xl border border-slate-200 bg-transparent py-2 pl-10 pr-3 text-sm focus:border-emerald-500 focus:outline-none dark:border-zinc-700" />
               </div>
               <div className="flex flex-wrap gap-2">
@@ -444,7 +444,7 @@ function BearingPicker({ mode, selected, entity, onChange, error }: {
               </div>
             </div>
             <div className="flex justify-end border-t border-slate-200 p-4 dark:border-zinc-800">
-              <button type="button" onClick={() => setIsBrowsingAll(false)} className="rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-white hover:bg-emerald-600">Done</button>
+              <button type="button" onClick={() => setIsBrowsingAll(false)} className="rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800">Done</button>
             </div>
           </div>
         </div>
@@ -633,7 +633,7 @@ export default function Create() {
                       </li>
                     ))}
                   </ul>
-                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-emerald-700 dark:text-emerald-400">
                     Start a Dispatch <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
@@ -663,7 +663,7 @@ export default function Create() {
                 </div>
               </button>
             </div>
-            <p className="mt-6 text-center text-xs text-slate-400 dark:text-zinc-500">
+            <p className="mt-6 text-center text-xs text-slate-500 dark:text-zinc-400">
               Not sure? A Dispatch is for something you tried; a Signal is for everything else.
             </p>
           </div>
@@ -717,7 +717,7 @@ export default function Create() {
                 <ErrorText>{errors.dose ?? errors.duration}</ErrorText>
                 <div>
                   {!isClarificationOpen ? (
-                    <button type="button" onClick={() => setIsClarificationOpen(true)} className="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Add dose/frequency note</button>
+                    <button type="button" onClick={() => setIsClarificationOpen(true)} className="text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400">Add dose/frequency note</button>
                   ) : (
                     <div>
                       <FieldLabel>Dose/frequency note</FieldLabel>
@@ -728,7 +728,7 @@ export default function Create() {
               </div>
             </div>
             {errors.publish && <ErrorText>{errors.publish}</ErrorText>}
-            <div className="flex justify-end"><button type="submit" disabled={publishing} className="rounded-xl bg-emerald-500 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-60">{publishing ? 'Publishing…' : 'Submit Dispatch'}</button></div>
+            <div className="flex justify-end"><button type="submit" disabled={publishing} className="rounded-xl bg-emerald-700 px-6 py-3 font-medium text-white transition-colors hover:bg-emerald-800 disabled:opacity-60">{publishing ? 'Publishing…' : 'Submit Dispatch'}</button></div>
           </form>
         ) : (
           <form onSubmit={handleSignalSubmit} className="space-y-8">

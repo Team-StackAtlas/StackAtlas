@@ -120,7 +120,7 @@ export default function LogNotes() {
 
                     {(substance || stack || note.linkedDate) && (
                       <div className="flex flex-wrap gap-2 text-xs">
-                        {substance && <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md">Substance: {substance.name}</span>}
+                        {substance && <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-md">Substance: {substance.name}</span>}
                         {stack && <span className="px-2 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-md">Stack: {stack.name}</span>}
                         {note.linkedDate && <span className="px-2 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md">Date: {note.linkedDate}</span>}
                       </div>
