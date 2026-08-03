@@ -157,7 +157,9 @@ export default function Layout() {
             <h1 className="text-lg font-semibold tracking-tight">{getPageTitle()}</h1>
 
             <div className="flex items-center gap-2">
-              <GlobalSearch />
+              {/* Hotkey lives on the desktop instance; two live hotkey
+                  listeners would open two stacked dialogs on Cmd/Ctrl+K. */}
+              <GlobalSearch enableHotkey={false} />
               <button
                 type="button"
                 onClick={toggleTheme}
