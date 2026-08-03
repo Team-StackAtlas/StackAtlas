@@ -307,9 +307,9 @@ export default function SupplementPage() {
               <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
                 <Activity size={12} /> Reported dose range
               </p>
-              <p className="mt-1 text-xl font-bold text-slate-900 dark:text-zinc-100">
-                {supplement.clinicalBaseline?.dosage || supplement.averageDosage}
-              </p>
+              <div className="mt-1">
+                <ExpandableValue text={supplement.clinicalBaseline?.dosage || supplement.averageDosage} />
+              </div>
               {supplement.clinicalBaseline?.links && supplement.clinicalBaseline.links.length > 0 && (
                 <a
                   href={supplement.clinicalBaseline.links[0]}

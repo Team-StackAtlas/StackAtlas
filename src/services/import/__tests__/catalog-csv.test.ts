@@ -40,9 +40,11 @@ describe('parseSubstanceCatalogCsv', () => {
     expect(bySlug['ligandrol'].classification).toBe('Frontier');
     expect(bySlug['mystery-compound'].classification).toBe('Unknown');
 
-    // aliases and type_tags split
+    // aliases split; type_tags lead with the inferred canonical tag (what the
+    // Map's filter chips match) followed by the raw dataset taxonomy
     expect(bySlug['retinol'].aliases).toEqual(['Vitamin A1', 'preformed vitamin A']);
-    expect(bySlug['retinol'].type_tags).toEqual(['Nutrient', 'Vitamin A vitamer']);
+    expect(bySlug['retinol'].type_tags).toEqual(['💊 Supplement', 'Nutrient', 'Vitamin A vitamer']);
+    expect(bySlug['semaglutide'].type_tags).toContain('🧬 Peptide');
     // description built from metadata
     expect(bySlug['retinol'].description).toContain('Vitamin A vitamer');
     expect(bySlug['retinol'].description).toContain('Catalog domain: Nutrient.');

@@ -24,6 +24,7 @@ import { slugify } from './validate';
 import { extractZip, ZipLimitError } from './zip';
 import { parseCsvRows } from './parse-csv';
 import { convertResearchPackage, isResearchPackageEntry } from './research-package';
+import { inferTypeTags } from '../../lib/typeTagInference';
 
 const KNOWN_TOP_LEVEL_KEYS = new Set<string>([
   'kind',
@@ -458,8 +459,19 @@ export function parseSubstanceCatalogCsv(text: string): { pack: DataPack | null;
       .filter(Boolean);
     if (aliases.length) row.aliases = aliases;
 
-    const typeTags = [...new Set([category, subcategory].filter(Boolean))];
+    // Canonical tags first (what the Map's type-filter chips match), then the
+    // raw dataset taxonomy, which the catalog reader still mines for
+    // big-category inference.
+    const canonicalTags = [...new Set([category, subcategory].flatMap((value) => inferTypeTags(value)))];
+    const typeTags = [...new Set([...canonicalTags, category, subcategory].filter(Boolean))];
     if (typeTags.length) row.type_tags = typeTags;
+    if (canonicalTags.length === 0 && (category || subcategory)) {
+      issues.push({
+        path: `csv:row${rowNumber}`,
+        message: `row ${rowNumber}: category "${[category, subcategory].filter(Boolean).join(' / ')}" maps to no known type tag — "${canonicalName}" won't appear under any type filter`,
+        severity: 'warning',
+      });
+    }
 
     substances.push(row);
   }

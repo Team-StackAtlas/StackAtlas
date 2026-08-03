@@ -95,6 +95,11 @@ function PickerRow({ item, type, onSelect }: { item: PickerItem; type: CompareTy
           {type === 'brand' && <BrandSubline item={item as Brand} />}
           {type === 'stack' && <StackSubline item={item as Stack} />}
         </span>
+        {'description' in item && item.description && (
+          <span className="mt-1 block text-xs leading-snug text-slate-500 line-clamp-2 dark:text-zinc-400">
+            {item.description}
+          </span>
+        )}
       </span>
 
       <ChevronRight

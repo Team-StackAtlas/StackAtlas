@@ -16,6 +16,7 @@ import {
   type HealthLabel,
 } from '../../data/mockData';
 import { inferCanonicalCategories } from '../../lib/categoryInference';
+import { inferTypeTags } from '../../lib/typeTagInference';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -40,13 +41,18 @@ const BRAND_SELECT =
 
 const STACK_SELECT = 'id, name, description, creator_id, status, created_at, stack_components(substance_id)';
 
-/** Matches a stored type_tag label back to the full emoji-prefixed TypeTag union member. */
-function mapTypeTag(label: string | undefined): TypeTag | null {
-  if (!label) return null;
+/** Matches a stored type_tag label back to the full emoji-prefixed TypeTag
+ * union member. Exact matches first; otherwise keyword inference, because
+ * imported rows store dataset taxonomy ("Pharmaceutical drug", "Vitamin")
+ * that would otherwise map to nothing and leave the substance invisible to
+ * every type-filter chip. */
+function mapTypeTags(label: string | undefined): TypeTag[] {
+  if (!label) return [];
   const byFull = TYPE_TAGS.find((t) => t.full === label);
-  if (byFull) return byFull.full;
+  if (byFull) return [byFull.full];
   const byLabel = TYPE_TAGS.find((t) => t.label === label);
-  return byLabel ? byLabel.full : null;
+  if (byLabel) return [byLabel.full];
+  return inferTypeTags(label);
 }
 
 /** Matches a stored administration_method label back to the emoji-prefixed union member. */
@@ -79,9 +85,7 @@ function mapSubstances(rows: any[], brandIdToSlug: Map<string, string>, substanc
       .map((t: any) => t.type_tags?.label)
       .filter((l: unknown): l is string => typeof l === 'string');
 
-    const typeTags = rawTypeTagLabels
-      .map((label: string) => mapTypeTag(label))
-      .filter((t: TypeTag | null): t is TypeTag => t !== null);
+    const typeTags = [...new Set(rawTypeTagLabels.flatMap((label: string) => mapTypeTags(label)))] as TypeTag[];
 
     const administration = (row.substance_administration_methods ?? [])
       .map((a: any) => mapAdministration(a.administration_methods?.label))

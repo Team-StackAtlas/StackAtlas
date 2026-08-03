@@ -25,6 +25,7 @@ import {
 } from './types';
 import { slugify } from './validate';
 import { parseCsvRows } from './parse-csv';
+import { inferTypeTags } from '../../lib/typeTagInference';
 
 const GUARDRAIL_WORDS = /\b(recommended|proven|best|safe|effective)\b/gi;
 const strip = (t: string): string => t.replace(GUARDRAIL_WORDS, '').replace(/\s{2,}/g, ' ').trim();
@@ -126,8 +127,19 @@ function convertSubstances(rows: unknown[], issues: RowIssue[]): SubstancePackRo
     if (aliases.length) pack.aliases = aliases;
     const origin = asString(row.origin);
     if (origin) pack.origin = strip(origin);
-    const tags = [...new Set([category, parent, ...asStringArray(row.research_areas)].filter(Boolean))];
+    // Canonical tags first (what the Map's type-filter chips match), then the
+    // raw dataset taxonomy, which the catalog reader still mines for
+    // big-category inference.
+    const canonicalTags = [...new Set([category, parent].flatMap((value) => inferTypeTags(value)))];
+    const tags = [...new Set([...canonicalTags, category, parent, ...asStringArray(row.research_areas)].filter(Boolean))];
     if (tags.length) pack.type_tags = tags;
+    if (canonicalTags.length === 0 && (category || parent)) {
+      issues.push({
+        path: `substances[${i}]`,
+        message: `substance ${i}: category "${[category, parent].filter(Boolean).join(' / ')}" maps to no known type tag — "${name}" won't appear under any type filter`,
+        severity: 'warning',
+      });
+    }
     const formats = asStringArray(row.common_product_formats).concat(asStringArray(row.commercial_forms));
     if (formats.length) pack.administration = [...new Set(formats)];
     out.push(pack);
