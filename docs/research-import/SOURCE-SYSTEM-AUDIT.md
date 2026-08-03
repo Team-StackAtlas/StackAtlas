@@ -127,10 +127,12 @@ Findings currently span **40 substances**.
 
 ---
 
-## 4. Suggested follow-ups (not yet actioned)
+## 4. Suggested follow-ups
 
-- **Drop the dead `sources` table** via a migration — it's 0 rows and 0
-  references, and its name collides conceptually with the live system.
+- ~~**Drop the dead `sources` table**~~ — done in
+  `supabase/migrations/20260803160000_drop_dead_sources_table.sql` (the table
+  plus its two exclusive enums `source_section` / `source_type`; `object_type`
+  is shared and kept).
 - **Decide the intended gate for linked sources.** If "sources on file" should
   track finding approval, align `listSubstanceSources` et al. with the
   findings gate; if not, document that they're independent by design.
