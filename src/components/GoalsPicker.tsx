@@ -1,11 +1,7 @@
 import { Check } from 'lucide-react';
 import { BEARING_CATEGORIES } from '../lib/bearings';
 import { cn } from '../lib/utils';
-import { ACCENTS, type Accent } from './ui/accents';
-
-// Each goal category wears one of the accent kits, cycled in a stable order so
-// the grid reads as vibrantly as the Create / Glossary cards.
-const GOAL_ACCENTS: Accent[] = ['emerald', 'blue', 'purple', 'amber', 'rose', 'teal'];
+import { ACCENTS, ACCENT_CYCLE, type Accent } from './ui/accents';
 
 // Per-accent active-state treatment (border + tint + ring). Full literal
 // strings so Tailwind's purge keeps them.
@@ -27,7 +23,7 @@ export function GoalsPicker({ selected, onToggle }: { selected: string[]; onTogg
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {BEARING_CATEGORIES.map((category, index) => {
-        const accent = GOAL_ACCENTS[index % GOAL_ACCENTS.length];
+        const accent = ACCENT_CYCLE[index % ACCENT_CYCLE.length];
         const kit = ACCENTS[accent];
         const active = selected.includes(category.name);
         return (

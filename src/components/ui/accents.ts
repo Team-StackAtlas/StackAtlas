@@ -18,6 +18,11 @@ export interface AccentKit {
   cta: string;
 }
 
+// Stable accent order for surfaces that color the twelve goal categories by
+// canonical index (GoalsPicker, the Map category rail), so a category wears
+// the same accent everywhere regardless of per-surface reordering.
+export const ACCENT_CYCLE: Accent[] = ['emerald', 'blue', 'purple', 'amber', 'rose', 'teal'];
+
 export const ACCENTS: Record<Accent, AccentKit> = {
   emerald: {
     topBar: 'h-1.5 w-full bg-gradient-to-r from-emerald-500 to-teal-400',
