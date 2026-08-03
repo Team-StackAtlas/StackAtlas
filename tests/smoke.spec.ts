@@ -211,3 +211,12 @@ test('Compare suggestions rank same-purpose substances first', async ({ page }) 
   const firstSuggestion = page.locator('button .text-\\[15px\\]').first();
   await expect(firstSuggestion).toHaveText(/Caffeine|L-Theanine|Alpha-GPC|Creatine/);
 });
+
+test('Map search ranks literal name matches first', async ({ page }) => {
+  await page.goto('/map');
+  await page.locator('input[placeholder*="Search"]').first().fill('theanine');
+  // "theanine" appears in many descriptions and pairing lists; the literal
+  // name match must outrank all of them.
+  const firstResult = page.locator('a:below(:text("Search Results"))').first();
+  await expect(firstResult).toContainText('L-Theanine');
+});
