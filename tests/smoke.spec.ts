@@ -158,3 +158,65 @@ test('albums organize saved items end to end', async ({ page }) => {
   // The filed item renders inside the album, not the empty state.
   await expect(page.getByText('Nothing in this album yet')).toHaveCount(0);
 });
+
+test('Comms DM: open a thread, send a message, react to it', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('stackatlas_user_scope', JSON.stringify(user));
+  }, seedUser);
+  await page.goto('/comms');
+  // Open the first conversation and send a message.
+  await page.locator('button.w-full').first().click();
+  const composer = page.getByPlaceholder(/message/i).last();
+  await composer.fill('smoke dm message');
+  await composer.press('Enter');
+  await expect(page.getByText('smoke dm message').first()).toBeVisible();
+  // Hovering the bubble reveals the react action; reacting shows a count.
+  await page.getByText('smoke dm message').first().hover();
+  await page.getByRole('button', { name: /react with thumbs up/i }).first().click();
+  await expect(page.getByText('👍').first()).toBeVisible();
+});
+
+test('Comms Quarters: open a quarter and post to it', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('stackatlas_user_scope', JSON.stringify(user));
+  }, seedUser);
+  await page.goto('/comms');
+  await page.getByRole('button', { name: /Quarters/i }).first().click();
+  await page.locator('button.w-full').first().click();
+  const composer = page.getByPlaceholder(/message/i).last();
+  await composer.fill('smoke quarter message');
+  await composer.press('Enter');
+  await expect(page.getByText('smoke quarter message').first()).toBeVisible();
+});
+
+test('Glossary opens category-first and deep links still resolve', async ({ page }) => {
+  await page.goto('/glossary');
+  // Landing state: category cards, not the full term list.
+  const categoryCard = page.locator('button:has(svg.lucide-book-open)').first();
+  await expect(categoryCard).toBeVisible();
+  await categoryCard.click();
+  // A term card renders inside the opened category.
+  await expect(page.locator('[id^="term-"]').first()).toBeVisible();
+  // Back control returns to the overview.
+  await page.getByRole('button', { name: /All categories/i }).click();
+  await expect(page.locator('button:has(svg.lucide-book-open)').first()).toBeVisible();
+});
+
+test('Compare suggestions rank same-purpose substances first', async ({ page }) => {
+  await page.goto('/lab');
+  await page.getByText('Substance Compare').click();
+  await page.getByText('Modafinil', { exact: true }).first().click();
+  // The pick-second list is similarity-ranked: for Modafinil the top
+  // suggestion must be a Cognition/stimulant peer, not a relaxation herb.
+  const firstSuggestion = page.locator('button .text-\\[15px\\]').first();
+  await expect(firstSuggestion).toHaveText(/Caffeine|L-Theanine|Alpha-GPC|Creatine/);
+});
+
+test('Map search ranks literal name matches first', async ({ page }) => {
+  await page.goto('/map');
+  await page.locator('input[placeholder*="Search"]').first().fill('theanine');
+  // "theanine" appears in many descriptions and pairing lists; the literal
+  // name match must outrank all of them.
+  const firstResult = page.locator('a:below(:text("Search Results"))').first();
+  await expect(firstResult).toContainText('L-Theanine');
+});

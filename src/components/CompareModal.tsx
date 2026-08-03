@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { ChevronRight, Layers, Search, SearchX, Star, Truck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { SUPPLEMENTS, STACKS, BRANDS, Supplement, Brand, Stack, TYPE_TAGS } from '../data/mockData';
+import { type Supplement, type Brand, type Stack, TYPE_TAGS } from '../data/mockData';
+import { useCatalog } from '../context/CatalogContext';
 import { Modal } from './ui/Modal';
 import AccessBadge from './AccessBadge';
 import StarRating from './StarRating';
@@ -34,21 +35,61 @@ function overlapScore(a: string[], b: string[], weight: number) {
   return score;
 }
 
+/** Count of values present in both lists, compared as whole normalized phrases. */
+function phraseOverlap(a: string[], b: string[]) {
+  const bSet = new Set(b.map(normalize));
+  return a.map(normalize).filter(value => bSet.has(value)).length;
+}
+
+// Verbs and filler that appear in effect prose across wholly unrelated
+// substances. Left in, raw token overlap made Ashwagandha the top suggestion
+// for Modafinil because both "reduced" and "improved" things.
+const GENERIC_TOKENS = new Set([
+  'improved', 'improves', 'improve', 'improvement', 'increased', 'increases', 'increase',
+  'reduced', 'reduces', 'reduce', 'reduction', 'decreased', 'decreases', 'decrease',
+  'enhanced', 'enhances', 'enhance', 'supports', 'support', 'supported', 'boosted',
+  'boosts', 'boost', 'better', 'greater', 'higher', 'lower', 'mild', 'mildly',
+  'overall', 'general', 'levels', 'level', 'sense', 'feeling', 'feelings', 'more',
+  'less', 'during', 'from', 'with', 'without', 'and', 'the', 'for', 'may', 'can',
+]);
+
+function meaningfulTokens(values: string[]) {
+  const out = new Set<string>();
+  for (const value of values) {
+    for (const token of normalize(value).split(' ')) {
+      if (token.length > 2 && !GENERIC_TOKENS.has(token)) out.add(token);
+    }
+  }
+  return out;
+}
+
+/**
+ * Ranks compare suggestions by "same job" first: shared bearing categories,
+ * type tags, and classification dominate, so Modafinil surfaces other
+ * wakefulness pharmaceuticals before botanicals that merely share effect
+ * verbs. Free-text effect/marker tokens (generic verbs stripped) and pairing
+ * overlap only break ties.
+ */
 function substanceSimilarity(base: Supplement, candidate: Supplement) {
   let score = 0;
 
-  score += overlapScore(
-    [...base.subjectiveEffects, ...base.paths.map(path => path.category), ...(base.markers || []), ...base.possiblePairings],
-    [...candidate.subjectiveEffects, ...candidate.paths.map(path => path.category), ...(candidate.markers || []), ...candidate.possiblePairings],
-    8
-  );
+  score += 25 * phraseOverlap(base.paths.map(path => path.category), candidate.paths.map(path => path.category));
+  score += 12 * phraseOverlap(base.typeTags, candidate.typeTags);
+  if (base.classification === candidate.classification) score += 8;
+  score += 2 * phraseOverlap(base.administration, candidate.administration);
 
-  score += overlapScore(base.typeTags, candidate.typeTags, 3);
-  score += overlapScore(base.administration, candidate.administration, 2);
-  score += overlapScore([base.classification], [candidate.classification], 1);
+  // Substances that pair with the same partners tend to fill similar roles.
+  score += 6 * phraseOverlap(base.possiblePairings, candidate.possiblePairings);
+  if (base.possiblePairings.some(pairing => normalize(pairing) === normalize(candidate.name))) score += 6;
+  if (candidate.possiblePairings.some(pairing => normalize(pairing) === normalize(base.name))) score += 6;
 
-  if (base.possiblePairings.some(pairing => normalize(pairing) === normalize(candidate.name))) score += 10;
-  if (candidate.possiblePairings.some(pairing => normalize(pairing) === normalize(base.name))) score += 10;
+  const baseTokens = meaningfulTokens([...base.subjectiveEffects, ...(base.markers || [])]);
+  const candidateTokens = meaningfulTokens([...candidate.subjectiveEffects, ...(candidate.markers || [])]);
+  let shared = 0;
+  baseTokens.forEach(token => {
+    if (candidateTokens.has(token)) shared += 1;
+  });
+  score += 2 * Math.min(shared, 10);
 
   return score;
 }
@@ -135,6 +176,11 @@ function CompareRow({ item, type, onSelect }: { item: CompareItem; type: Compare
           {type === 'brand' && <BrandSubline item={item as Brand} />}
           {type === 'stack' && <StackSubline item={item as Stack} />}
         </span>
+        {'description' in item && item.description && (
+          <span className="mt-1 block text-xs leading-snug text-slate-500 line-clamp-2 dark:text-zinc-400">
+            {item.description}
+          </span>
+        )}
       </span>
 
       <ChevronRight
@@ -148,6 +194,9 @@ function CompareRow({ item, type, onSelect }: { item: CompareItem; type: Compare
 export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  // Live catalog, not the static mock module — in backed mode the imported
+  // substances only exist in CatalogContext.
+  const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS } = useCatalog();
 
   const items = type === 'substance' ? SUPPLEMENTS : type === 'stack' ? STACKS : BRANDS;
   const baseItem = items.find(item => item.id === baseItemId);
@@ -199,7 +248,7 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
     >
       {type === 'substance' && (
         <p className="border-b border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
-          Suggestions prioritize similar purpose/effects, then type and route.
+          Suggestions rank substances that do the same job first — shared categories and type, then effects.
         </p>
       )}
 

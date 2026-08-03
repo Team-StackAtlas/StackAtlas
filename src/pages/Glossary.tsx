@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Search } from 'lucide-react';
+import { ArrowLeft, BookOpen, ChevronRight, Search } from 'lucide-react';
 import { supabase } from '../services/supabase/client';
 import { listGlossaryTerms, type GlossaryTerm } from '../services/glossary';
 import { MOCK_GLOSSARY_TERMS } from '../data/mockGlossary';
@@ -16,8 +16,13 @@ export default function Glossary() {
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState('');
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const activeTerm = searchParams.get('term');
+  // Category-first browsing: the landing state is a card per category, and a
+  // category must be opened before its terms render, so the page never reads
+  // as one endless list. Deep links (?term=slug) open the owning category
+  // automatically via the fallback below.
+  const [chosenCategory, setChosenCategory] = useState<string | null>(null);
 
   useEffect(() => {
     if (!supabase) {
@@ -47,13 +52,22 @@ export default function Glossary() {
     };
   }, []);
 
+  // The category a ?term deep link lives in, so its section is open on arrival.
+  const activeTermCategory = useMemo(() => {
+    if (!activeTerm) return null;
+    const entry = terms.find((t) => t.slug === activeTerm);
+    return entry ? entry.category?.trim() || 'Other' : null;
+  }, [activeTerm, terms]);
+
+  const selectedCategory = chosenCategory ?? activeTermCategory;
+
   // When arriving via a "Full entry" link (?term=slug), scroll the entry into
-  // view once the list has rendered.
+  // view once its category section has rendered.
   useEffect(() => {
     if (!activeTerm || !loaded) return;
     const el = document.getElementById(`term-${activeTerm}`);
     if (el) el.scrollIntoView({ behavior: scrollBehavior(), block: 'center' });
-  }, [activeTerm, loaded]);
+  }, [activeTerm, loaded, selectedCategory]);
 
   // Relevance rank for search: exact term match, then term-starts-with, then
   // term-contains, then definition-only match — so "vitamin" surfaces the
@@ -158,21 +172,65 @@ export default function Glossary() {
                   ))}
                 </div>
               </div>
-            ) : (
-              // Browse: grouped by category.
-              <div className="space-y-8">
-                {groups.map((group) => (
-                  <section key={group.category}>
-                    <div className="mb-3 flex items-baseline gap-2 border-b border-slate-200 pb-2 dark:border-zinc-800">
+            ) : selectedCategory ? (
+              // One open category: its terms plus a way back to the overview.
+              (() => {
+                const group = groups.find((g) => g.category === selectedCategory);
+                if (!group) return null;
+                return (
+                  <div className="space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChosenCategory(null);
+                        if (activeTerm) {
+                          const next = new URLSearchParams(searchParams);
+                          next.delete('term');
+                          setSearchParams(next, { replace: true });
+                        }
+                      }}
+                      className="flex w-fit items-center gap-1 text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+                    >
+                      <ArrowLeft size={15} /> All categories
+                    </button>
+                    <div className="flex items-baseline gap-2 border-b border-slate-200 pb-2 dark:border-zinc-800">
                       <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-200">{group.category}</h2>
-                      <span className="text-xs text-slate-500 dark:text-zinc-400">{group.items.length}</span>
+                      <span className="text-xs text-slate-500 dark:text-zinc-400">{group.items.length} {group.items.length === 1 ? 'term' : 'terms'}</span>
                     </div>
                     <div className="space-y-3">
                       {group.items.map((entry) => (
                         <TermCard key={entry.id} entry={entry} active={activeTerm === entry.slug} />
                       ))}
                     </div>
-                  </section>
+                  </div>
+                );
+              })()
+            ) : (
+              // Landing: one card per category, so the glossary opens as a
+              // small map instead of a wall of every definition at once.
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {groups.map((group) => (
+                  <button
+                    key={group.category}
+                    type="button"
+                    onClick={() => setChosenCategory(group.category)}
+                    className="group flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-emerald-500/40"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 transition-colors group-hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:group-hover:bg-emerald-500/20">
+                      <BookOpen size={18} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-baseline gap-2">
+                        <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">{group.category}</span>
+                        <span className="text-xs text-slate-500 dark:text-zinc-400">{group.items.length}</span>
+                      </span>
+                      <span className="mt-1 block text-xs leading-snug text-slate-500 line-clamp-2 dark:text-zinc-400">
+                        {group.items.slice(0, 4).map((t) => t.term).join(' · ')}
+                        {group.items.length > 4 ? ' · …' : ''}
+                      </span>
+                    </span>
+                    <ChevronRight size={16} className="mt-0.5 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-zinc-600" />
+                  </button>
                 ))}
               </div>
             )

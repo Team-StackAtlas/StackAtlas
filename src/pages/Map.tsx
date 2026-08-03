@@ -19,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
 import { BEARING_CATEGORIES, getCanonicalCategories, getFilterBearings } from '../lib/bearings';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { searchRank, sortByRank } from '../lib/searchRank';
 
 type SearchableType = 'substance' | 'brand' | 'stack';
 type RecentSearch = { id: string; name: string; type: SearchableType; timestamp: string };
@@ -200,7 +201,17 @@ export default function Map() {
         tags: [...(stack.markers || []), ...stack.substances.map((substance) => substance.name)],
       }));
 
-    return [...substanceResults, ...brandResults, ...stackResults].slice(0, 12);
+    // Rank name/alias matches above entities that only matched in their
+    // description, pairings, or markers — otherwise "theanine" buries
+    // L-Theanine below everything that merely mentions it.
+    // (Plain record rather than a Map — this file's component shadows the
+    // global Map constructor.)
+    const aliasById: Record<string, string[]> = {};
+    for (const s of SUPPLEMENTS) aliasById[s.id] = s.aliases || [];
+    return sortByRank(
+      [...substanceResults, ...brandResults, ...stackResults],
+      (result) => searchRank(searchQuery, result.name, result.type === 'substance' ? aliasById[result.id] : undefined)
+    ).slice(0, 12);
   }, [searchQuery, SUPPLEMENTS, BRANDS, STACKS]);
 
   const visibleSearchResults = isAdminLike ? searchResults : searchResults.filter((result) => !isHidden(result.type, result.id) && !hasHiddenTag(result.tags));

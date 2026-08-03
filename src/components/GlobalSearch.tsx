@@ -6,6 +6,7 @@ import { useCatalog } from '../context/CatalogContext';
 import { usePosts } from '../context/PostsContext';
 import { useGlossary } from '../context/GlossaryContext';
 import { cn } from '../lib/utils';
+import { searchRank, sortByRank } from '../lib/searchRank';
 
 interface ResultItem {
   key: string;
@@ -72,40 +73,50 @@ export function GlobalSearch() {
       {
         title: 'Substances',
         icon: Beaker,
-        items: substances
-          .filter((s) => matches(trimmed, s.name, s.description, ...(s.aliases ?? [])))
+        items: sortByRank(
+          substances.filter((s) => matches(trimmed, s.name, s.description, ...(s.aliases ?? []))),
+          (s) => searchRank(trimmed, s.name, s.aliases)
+        )
           .slice(0, 5)
           .map((s) => ({ key: `sub-${s.id}`, label: s.name, sublabel: s.classification, href: `/substance/${s.id}` })),
       },
       {
         title: 'Brands',
         icon: Package,
-        items: brands
-          .filter((b) => matches(trimmed, b.name, b.description))
+        items: sortByRank(
+          brands.filter((b) => matches(trimmed, b.name, b.description)),
+          (b) => searchRank(trimmed, b.name)
+        )
           .slice(0, 5)
           .map((b) => ({ key: `brand-${b.id}`, label: b.name, href: `/brand/${b.id}` })),
       },
       {
         title: 'Stacks',
         icon: Layers,
-        items: stacks
-          .filter((s) => matches(trimmed, s.name, s.description))
+        items: sortByRank(
+          stacks.filter((s) => matches(trimmed, s.name, s.description)),
+          (s) => searchRank(trimmed, s.name)
+        )
           .slice(0, 5)
           .map((s) => ({ key: `stack-${s.id}`, label: s.name, href: `/stack/${s.id}` })),
       },
       {
         title: 'Dispatches & Signals',
         icon: FileText,
-        items: posts
-          .filter((p) => matches(trimmed, p.title, p.content, p.author.username))
+        items: sortByRank(
+          posts.filter((p) => matches(trimmed, p.title, p.content, p.author.username)),
+          (p) => searchRank(trimmed, p.title, [p.author.username])
+        )
           .slice(0, 5)
           .map((p) => ({ key: `post-${p.id}`, label: p.title, sublabel: `${p.type} · @${p.author.username}`, href: `/post/${p.id}` })),
       },
       {
         title: 'Glossary',
         icon: BookOpen,
-        items: glossaryTerms
-          .filter((t) => matches(trimmed, t.term, t.definition))
+        items: sortByRank(
+          glossaryTerms.filter((t) => matches(trimmed, t.term, t.definition)),
+          (t) => searchRank(trimmed, t.term)
+        )
           .slice(0, 5)
           .map((t) => ({ key: `term-${t.slug}`, label: t.term, sublabel: t.category ?? 'Term', href: `/glossary?term=${t.slug}` })),
       },

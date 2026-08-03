@@ -994,6 +994,7 @@ export default function Comms() {
                   <input
                     hidden
                     type="file"
+                    aria-label={attachSending ? 'Uploading…' : 'Attach a file'}
                     disabled={attachSending}
                     accept={PERSISTED_ATTACHMENT_TYPES.join(',')}
                     onChange={(e) => {
@@ -1011,6 +1012,7 @@ export default function Comms() {
                     <input
                       hidden
                       type="file"
+                      aria-label="Send an image or GIF"
                       accept="image/png,image/jpeg,image/webp,image/gif"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -1024,6 +1026,7 @@ export default function Comms() {
                     <input
                       hidden
                       type="file"
+                      aria-label="Send a file"
                       accept="application/pdf,text/plain,image/png,image/jpeg,image/webp,image/gif"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
