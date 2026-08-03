@@ -246,3 +246,17 @@ test('signal composer attaches a photo that renders on the published post', asyn
   const card = page.locator('article, div').filter({ hasText: 'Photo signal smoke test' }).first();
   await expect(card.locator('img[src^="data:image"]').first()).toBeVisible();
 });
+
+test('Ctrl+K opens exactly one global search dialog and navigates', async ({ page }) => {
+  await page.goto('/map');
+  // The hotkey listener attaches in an effect — wait for the header trigger
+  // to be mounted before pressing, or the keystroke can race hydration.
+  await expect(page.getByRole('button', { name: 'Search everything' }).last()).toBeAttached();
+  await page.keyboard.press('Control+k');
+  // Layout mounts a GlobalSearch per header (mobile + desktop); only one may
+  // own the hotkey or this opens two stacked dialogs.
+  await expect(page.locator('[role="dialog"][aria-label="Search everything"]')).toHaveCount(1);
+  await page.getByPlaceholder(/stacks, posts/i).fill('caffeine');
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/substance\/caffeine/);
+});

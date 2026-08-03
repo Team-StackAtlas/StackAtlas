@@ -30,8 +30,12 @@ function matches(query: string, ...fields: (string | undefined)[]) {
  * Unified search across substances, brands, stacks, and community posts.
  * Opens with Cmd/Ctrl+K or the header search button; everything is searched
  * client-side from the catalog and posts providers.
+ *
+ * Layout mounts one instance per header (mobile + desktop, CSS-swapped), so
+ * exactly one instance may own the global hotkey — otherwise Cmd/Ctrl+K opens
+ * two stacked dialogs. The trigger button always works on either instance.
  */
-export function GlobalSearch() {
+export function GlobalSearch({ enableHotkey = true }: { enableHotkey?: boolean }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -48,6 +52,7 @@ export function GlobalSearch() {
   };
 
   useEffect(() => {
+    if (!enableHotkey) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
@@ -59,7 +64,7 @@ export function GlobalSearch() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+  }, [open, enableHotkey]);
 
   // Focus the field once the overlay renders.
   useEffect(() => {
