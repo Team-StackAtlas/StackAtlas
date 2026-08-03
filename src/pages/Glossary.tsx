@@ -8,6 +8,11 @@ import { GlossaryText } from '../components/GlossaryText';
 import { EmptyState } from '../components/EmptyState';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { scrollBehavior } from '../lib/motion';
+import { cn } from '../lib/utils';
+import { ACCENTS, type Accent } from '../components/ui/accents';
+
+// Category cards cycle through the accent kits in a stable order.
+const CATEGORY_ACCENTS: Accent[] = ['emerald', 'blue', 'purple', 'amber', 'rose', 'teal'];
 
 export default function Glossary() {
   usePageMeta('Glossary', 'Plain-language definitions for supplement and research terms.');
@@ -208,30 +213,41 @@ export default function Glossary() {
             ) : (
               // Landing: one card per category, so the glossary opens as a
               // small map instead of a wall of every definition at once.
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {groups.map((group) => (
-                  <button
-                    key={group.category}
-                    type="button"
-                    onClick={() => setChosenCategory(group.category)}
-                    className="group flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-emerald-500/40"
-                  >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 transition-colors group-hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:group-hover:bg-emerald-500/20">
-                      <BookOpen size={18} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-baseline gap-2">
-                        <span className="text-sm font-bold text-slate-900 dark:text-zinc-100">{group.category}</span>
-                        <span className="text-xs text-slate-500 dark:text-zinc-400">{group.items.length}</span>
-                      </span>
-                      <span className="mt-1 block text-xs leading-snug text-slate-500 line-clamp-2 dark:text-zinc-400">
-                        {group.items.slice(0, 4).map((t) => t.term).join(' · ')}
-                        {group.items.length > 4 ? ' · …' : ''}
-                      </span>
-                    </span>
-                    <ChevronRight size={16} className="mt-0.5 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-emerald-500 dark:text-zinc-600" />
-                  </button>
-                ))}
+              // Cards wear the Create-page language — gradient strip, glowing
+              // icon tile — with accents cycled per category.
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {groups.map((group, index) => {
+                  const kit = ACCENTS[CATEGORY_ACCENTS[index % CATEGORY_ACCENTS.length]];
+                  return (
+                    <button
+                      key={group.category}
+                      type="button"
+                      onClick={() => setChosenCategory(group.category)}
+                      className={cn(
+                        'group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900',
+                        kit.cardInteractive,
+                      )}
+                    >
+                      <div className={kit.topBar} />
+                      <div className="flex items-start gap-3.5 p-5">
+                        <span className={cn(kit.iconTile, 'mb-0 h-11 w-11 shrink-0')}>
+                          <BookOpen size={20} className="text-white" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-baseline gap-2">
+                            <span className="text-[15px] font-bold text-slate-900 dark:text-zinc-100">{group.category}</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">{group.items.length} terms</span>
+                          </span>
+                          <span className="mt-1 block text-xs leading-snug text-slate-500 line-clamp-2 dark:text-zinc-400">
+                            {group.items.slice(0, 4).map((t) => t.term).join(' · ')}
+                            {group.items.length > 4 ? ' · …' : ''}
+                          </span>
+                        </span>
+                        <ChevronRight size={16} className={cn('mt-0.5 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 dark:text-zinc-600')} />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )
           )}
