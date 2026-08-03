@@ -220,3 +220,29 @@ test('Map search ranks literal name matches first', async ({ page }) => {
   const firstResult = page.locator('a:below(:text("Search Results"))').first();
   await expect(firstResult).toContainText('L-Theanine');
 });
+
+test('signal composer attaches a photo that renders on the published post', async ({ page }) => {
+  await page.addInitScript((user) => {
+    localStorage.setItem('stackatlas_user_scope', JSON.stringify(user));
+  }, seedUser);
+  await page.goto('/create');
+  await page.getByText('Start a Signal').click();
+  await page.locator('input:visible').nth(1).fill('Photo signal smoke test');
+  await page.getByPlaceholder("What's on your mind?").fill('Verifies the image attach + render path end to end.');
+  // Attach via the hidden file input behind the "Add photo" button.
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'pixel.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'),
+  });
+  // The picker shows the processed preview before publish.
+  await expect(page.locator('img[alt="Attached"]')).toBeVisible();
+  await page.getByText('Open Bearing picker').click();
+  await page.getByPlaceholder('Search Bearings...').fill('sleep');
+  await page.getByRole('button', { name: 'Sleep', exact: true }).click();
+  await page.getByRole('button', { name: 'Broadcast Signal' }).click();
+  await expect(page).toHaveURL(/\/square/);
+  // The published card renders the attached image (data-url src).
+  const card = page.locator('article, div').filter({ hasText: 'Photo signal smoke test' }).first();
+  await expect(card.locator('img[src^="data:image"]').first()).toBeVisible();
+});
