@@ -16,6 +16,7 @@ import {
   type HealthLabel,
 } from '../../data/mockData';
 import { inferCanonicalCategories } from '../../lib/categoryInference';
+import { CANONICAL_CATEGORY_DOMAIN } from '../../lib/bearings';
 import { inferTypeTags } from '../../lib/typeTagInference';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -113,11 +114,12 @@ function mapSubstances(rows: any[], brandIdToSlug: Map<string, string>, substanc
 
     // Fall back to inferred big categories when the importer gave a substance
     // no route paths, so it isn't stranded outside every category card. Real
-    // route paths always win.
+    // route paths always win. Each inferred category resolves to its home
+    // domain (Mind/Body/Vitality) rather than a blanket 'Body'.
     const resolvedPaths = paths.length > 0
       ? paths
       : inferCanonicalCategories([...rawTypeTagLabels, markers.join(' '), row.description, row.name])
-          .map((category) => ({ domain: 'Body' as Domain, category }));
+          .map((category) => ({ domain: (CANONICAL_CATEGORY_DOMAIN[category] ?? 'Body') as Domain, category }));
 
     return {
       id: row.slug,

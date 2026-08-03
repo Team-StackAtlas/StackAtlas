@@ -86,3 +86,21 @@ export function getCanonicalCategories(routeCategories: string[]): string[] {
   );
   return BEARING_CATEGORIES.map(category => category.name).filter(name => mapped.has(name));
 }
+
+// The home domain for each canonical goal category. Used to give inferred
+// route paths the correct domain instead of a blanket 'Body' — matches the
+// domains persisted by the taxonomy migrations (20260803120000/130000).
+export const CANONICAL_CATEGORY_DOMAIN: Record<string, 'Mind' | 'Body' | 'Vitality'> = {
+  Cognition: 'Mind',
+  Recovery: 'Mind',
+  'Mood & Stress': 'Mind',
+  Performance: 'Body',
+  'Pain & Injury': 'Body',
+  'Joint & Mobility': 'Body',
+  'Beauty & Skin': 'Body',
+  Longevity: 'Vitality',
+  'Metabolic Health': 'Vitality',
+  'Hormonal Health': 'Vitality',
+  'Digestive Health': 'Vitality',
+  'Heart Health': 'Vitality',
+};
