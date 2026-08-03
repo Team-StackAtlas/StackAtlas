@@ -17,6 +17,7 @@ import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/typ
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 import { downscaleImage } from '../lib/imageUtils';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { ACCENTS } from '../components/ui/accents';
 
 type ProfileTab = 'all' | 'dispatches' | 'signals' | 'stacks' | 'saved' | 'likes' | 'hidden' | 'following' | 'reports' | 'settings';
 
@@ -312,7 +313,9 @@ export default function Profile() {
       </div>
 
       {isEditing && isOwnProfile && isBackendConfigured && (
-        <form onSubmit={saveProfile} className="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+        <form onSubmit={saveProfile} className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className={ACCENTS.purple.topBar} />
+          <div className="space-y-4 p-5">
           <h2 className="flex items-center gap-2 text-lg font-bold"><Settings size={18} /> Profile details</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-medium">Username<input name="username" defaultValue={shownProfile.username} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
@@ -376,11 +379,14 @@ export default function Profile() {
             <p className="mt-3 text-xs text-slate-500 dark:text-zinc-400">Saved items, hidden items, drafts, private notes, email, internal IDs, and body fields with toggles off stay private.</p>
           </div>
           <button disabled={saving} className="rounded-xl bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>
+          </div>
         </form>
       )}
 
       {isOwnProfile && (
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className={ACCENTS.emerald.topBar} />
+          <div className="p-5">
           <div className="mb-1 flex items-center gap-2">
             <Target size={18} className="text-emerald-500" />
             <h2 className="text-lg font-bold">Your goals</h2>
@@ -399,6 +405,7 @@ export default function Profile() {
               setGoals(goals.includes(name) ? goals.filter((g) => g !== name) : [...goals, name])
             }
           />
+          </div>
         </div>
       )}
 
@@ -421,17 +428,20 @@ export default function Profile() {
         ) : activeTab === 'likes' && isOwnProfile ? (
           <EmptyState description="Liked posts are private. No liked posts found." />
         ) : activeTab === 'hidden' && isOwnProfile ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div className={ACCENTS.rose.topBar} />
+            <div className="p-5">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><EyeOff size={18} /> Hidden Items</h2>
             {hiddenItemsCount === 0 ? <EmptyState description="No hidden items yet. Hidden items are private." /> : hiddenGroups.map((group) => {
               const groupItems: HiddenItem[] = hiddenItems[group.key];
               return <section key={group.key} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{group.label}</h3>{groupItems.length ? groupItems.map((item) => <div key={`${item.type}-${item.id}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{item.name}</span><button onClick={() => unhideItem(item.type, item.id)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Unhide</button></div>) : <p className="text-sm text-slate-500">None hidden.</p>}</section>;
             })}
+            </div>
           </div>
         ) : activeTab === 'following' && isOwnProfile ? (
           <FollowingManagement followedItems={followedItems} followRequests={followRequests} incomingRequests={incomingRequests} onUnfollow={toggleFollow} onResolveRequest={resolveFollowRequest} />
         ) : activeTab === 'reports' && isOwnProfile ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">My reports</h2><p className="mb-4 text-sm text-slate-500">Private admin notes and punishment details are not shown.</p>{ownReports.length ? ownReports.map((report) => <div key={report.id} className="mb-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50"><strong>{report.targetType}</strong> {report.targetLabel}<span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs capitalize dark:bg-zinc-800">{report.status.replace('_', ' ')}</span><p className="text-xs text-slate-500">Submitted {new Date(report.createdAt).toLocaleString()}</p></div>) : <EmptyState description="No submitted reports." />}</div>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><div className={ACCENTS.amber.topBar} /><div className="p-5"><h2 className="mb-1 text-lg font-bold">My reports</h2><p className="mb-4 text-sm text-slate-500">Private admin notes and punishment details are not shown.</p>{ownReports.length ? ownReports.map((report) => <div key={report.id} className="mb-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50"><strong>{report.targetType}</strong> {report.targetLabel}<span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs capitalize dark:bg-zinc-800">{report.status.replace('_', ' ')}</span><p className="text-xs text-slate-500">Submitted {new Date(report.createdAt).toLocaleString()}</p></div>) : <EmptyState description="No submitted reports." />}</div></div>
         ) : filteredPosts.length ? (
           filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
         ) : (
@@ -451,5 +461,5 @@ function FollowingManagement({ followedItems, followRequests, incomingRequests, 
     ['Stacks', 'stack', (id: string) => STACKS.find((item) => item.id === id)?.name ?? id],
     ['Public Albums', 'album', (id: string) => id],
   ] as const;
-  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><h2 className="mb-1 text-lg font-bold">Following</h2><p className="mb-4 text-sm text-slate-500">Only you can see and manage these lists.</p>{incomingRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Follow requests</h3>{incomingRequests.map((request) => <div key={request.requesterId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{request.username ?? request.requesterId}</span><span className="flex gap-2"><button onClick={() => onResolveRequest(request.requesterId, true)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Approve</button><button onClick={() => onResolveRequest(request.requesterId, false)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Reject</button></span></div>)}</section>}{followRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Pending requests</h3>{followRequests.map((request) => <div key={request.targetId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{USERS.find((item) => item.id === request.targetId)?.username ?? request.targetId}</span><button onClick={() => onUnfollow('user', request.targetId)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Cancel request</button></div>)}</section>}{sections.map(([label, type, nameFor]) => { const items = followedItems.filter((item) => item.targetType === type); return <section key={type} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>{items.length ? items.map((item) => <div key={`${item.targetType}-${item.targetId}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{nameFor(item.targetId)}</span><button onClick={() => onUnfollow(item.targetType, item.targetId)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Unfollow</button></div>) : <p className="text-sm text-slate-500">None followed.</p>}</section>; })}</div>;
+  return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"><div className={ACCENTS.blue.topBar} /><div className="p-5"><h2 className="mb-1 text-lg font-bold">Following</h2><p className="mb-4 text-sm text-slate-500">Only you can see and manage these lists.</p>{incomingRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Follow requests</h3>{incomingRequests.map((request) => <div key={request.requesterId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{request.username ?? request.requesterId}</span><span className="flex gap-2"><button onClick={() => onResolveRequest(request.requesterId, true)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Approve</button><button onClick={() => onResolveRequest(request.requesterId, false)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Reject</button></span></div>)}</section>}{followRequests.length > 0 && <section className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Pending requests</h3>{followRequests.map((request) => <div key={request.targetId} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">@{USERS.find((item) => item.id === request.targetId)?.username ?? request.targetId}</span><button onClick={() => onUnfollow('user', request.targetId)} className="rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">Cancel request</button></div>)}</section>}{sections.map(([label, type, nameFor]) => { const items = followedItems.filter((item) => item.targetType === type); return <section key={type} className="mb-5"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">{label}</h3>{items.length ? items.map((item) => <div key={`${item.targetType}-${item.targetId}`} className="mb-2 flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-zinc-950/50"><span className="font-semibold">{nameFor(item.targetId)}</span><button onClick={() => onUnfollow(item.targetType, item.targetId)} className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white">Unfollow</button></div>) : <p className="text-sm text-slate-500">None followed.</p>}</section>; })}</div></div>;
 }

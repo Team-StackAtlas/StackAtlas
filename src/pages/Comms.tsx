@@ -3,6 +3,7 @@ import { ArrowLeft, Crown, Image, ImageOff, Info, MessageSquare, Mic, Paperclip,
 import { useComms, type CommsAttachment, type CommsMessage } from '../hooks/useComms';
 import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
+import { ACCENTS } from '../components/ui/accents';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -458,6 +459,13 @@ export default function Comms() {
     );
   };
 
+  // Quarters shown in the list pane, narrowed by the search box.
+  const visibleQuarters = comms.quarters.filter((quarter) => {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return quarter.title.toLowerCase().includes(q) || (quarter.description ?? '').toLowerCase().includes(q);
+  });
+
   const openConversation = (id: string) => {
     setActiveConversationId(id);
     setMobileThreadOpen(true);
@@ -546,6 +554,7 @@ export default function Comms() {
               {conversations.length === 0 && (
                 <EmptyState
                   icon={MessageSquare}
+                  accent="teal"
                   title="No conversations yet"
                   description="Search for someone above to start a private conversation."
                 />
@@ -624,7 +633,12 @@ export default function Comms() {
           {tab === 'requests' && (
             <div className="space-y-2">
               {requests.length === 0 && (
-                <p className="text-sm text-slate-500">No active message requests.</p>
+                <EmptyState
+                  icon={MessageSquare}
+                  accent="teal"
+                  title="No message requests"
+                  description="When someone new wants to chat, their request will show up here."
+                />
               )}
               {requests.map((request) => {
                 const other = comms.getUser(request.requestedBy || '');
@@ -657,7 +671,12 @@ export default function Comms() {
                   Quarter Invites
                 </p>
                 {comms.quarterInvites.length === 0 && (
-                  <p className="text-sm text-slate-500">No pending quarter invites.</p>
+                  <EmptyState
+                    icon={Users}
+                    accent="purple"
+                    title="No quarter invites"
+                    description="Invites to join a Quarter will show up here."
+                  />
                 )}
                 {comms.quarterInvites.map((invite) => (
                   <div
@@ -718,11 +737,19 @@ export default function Comms() {
                   <Plus size={14} /> Create Quarter
                 </button>
               </div>
-              {comms.quarters.filter((quarter) => {
-                if (!query) return true;
-                const q = query.toLowerCase();
-                return quarter.title.toLowerCase().includes(q) || (quarter.description ?? '').toLowerCase().includes(q);
-              }).map((quarter) => {
+              {visibleQuarters.length === 0 && (
+                <EmptyState
+                  icon={Users}
+                  accent="purple"
+                  title={query ? 'No matching Quarters' : 'No Quarters yet'}
+                  description={
+                    query
+                      ? 'No Quarters match your search.'
+                      : 'Create a Quarter above to start a group conversation.'
+                  }
+                />
+              )}
+              {visibleQuarters.map((quarter) => {
                 const last = comms.messages.filter((m) => m.quarterId === quarter.id).at(-1);
                 const unread = comms.unreadQuarterCount(quarter.id);
                 const active = tab === 'quarters' && activeQuarter?.id === quarter.id;
@@ -765,15 +792,24 @@ export default function Comms() {
         <div className={`${mobileThreadOpen ? 'flex' : 'hidden'} min-w-0 flex-1 flex-col md:flex`}>
           {!hasActiveThread && (
             <div className="flex flex-1 items-center justify-center p-6">
-              <EmptyState
-                icon={tab === 'quarters' ? Users : MessageSquare}
-                title={tab === 'quarters' ? 'Select a Quarter' : 'Select a conversation'}
-                description={
-                  tab === 'quarters'
+              {/* Full-pane placeholder: gradient icon tile without EmptyState's card frame. */}
+              <div className="max-w-sm text-center">
+                <div className={`${tab === 'quarters' ? ACCENTS.purple.iconTile : ACCENTS.teal.iconTile} mx-auto`}>
+                  {tab === 'quarters' ? (
+                    <Users size={22} className="text-white" />
+                  ) : (
+                    <MessageSquare size={22} className="text-white" />
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">
+                  {tab === 'quarters' ? 'Select a Quarter' : 'Select a conversation'}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-zinc-400">
+                  {tab === 'quarters'
                     ? 'Choose a Quarter from the list on the left, or create one to get started.'
-                    : 'Choose a conversation from the list on the left, or search above to start a new one.'
-                }
-              />
+                    : 'Choose a conversation from the list on the left, or search above to start a new one.'}
+                </p>
+              </div>
             </div>
           )}
           {tab !== 'quarters' && activeConversation && (() => {
