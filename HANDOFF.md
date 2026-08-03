@@ -11,7 +11,62 @@ with per-PR detail. This file is the *audit*; that file is the *changelog*.
 
 ---
 
-## ⚠️ WHAT I COULD NOT CHECK (read first)
+## ✅ AUGUST 3 ADDENDUM — the caveat table below is now resolved
+
+Database access was restored on August 3 and every "NOT RUN / NOT CHECKED"
+item in the table below was completed against the live project. Read this
+addendum as superseding stale claims in §3, §4, §6, and §8; the body of the
+document is otherwise left as written on July 27.
+
+**Caveats resolved:**
+- **Live schema + drift (§3, §4):** queried directly. Drift map matched the
+  repo exactly; the six then-pending `20260723*` migrations were applied via
+  the migration API (history entries recorded) and verified by schema
+  spot-checks. Migration history and `supabase/migrations/` are in lockstep
+  through `20260803110000`.
+- **Advisors (§4):** run and remediated. `auth_rls_initplan` (59 findings) is
+  at zero — 49 policies rewritten to `(select auth.uid())`, 10 eliminated by
+  dropping orphaned tables. `unindexed_foreign_keys`, the public-bucket
+  listing warning, and all `anon_security_definer_function_executable`
+  warnings are cleared. Remaining, intentionally: the `profile_stats`
+  SECURITY DEFINER view, self-guarding `admin_*`/comms RPC grants, and the
+  HaveIBeenPwned toggle (dashboard-only, still off).
+- **Generated types (§4):** `src/services/supabase/types.ts` is now committed
+  (generated from the live post-cleanup schema) and the client is
+  `createClient<Database>`-typed. Regenerate after any migration.
+- **RLS verification (§3):** exercised with simulated `authenticated`/`anon`
+  sessions in rolled-back transactions — reactions visibility/forge/delete,
+  goals owner-write, post-image create, anon public reads all verified.
+- **Vercel runtime errors (§6):** checked — none in 7 days.
+
+**Live changes made August 3 (PRs #178–#181, all merged):**
+- Migration `20260803080000`: initplan rewrite; **bug fix** —
+  `quarters_invitee_read` compared `qi.quarter_id = qi.id` (never true), so
+  invitees could never see quarters they were invited to; orphan cleanup
+  (the reverted community_* posting system: 4 tables + 3 anon-executable
+  RPCs, and both `post-images` storage policies); four FK covering indexes.
+- Migration `20260803110000`: revoked anon EXECUTE on
+  `approve_follow_request` / `is_site_admin` / `is_site_owner`.
+- Search ranking fixed (`src/lib/searchRank.ts`): name matches now outrank
+  description/pairing mentions in the Map dropdown and all five Cmd+K
+  groups. Cmd/Ctrl+K also opened **two stacked dialogs** (GlobalSearch is
+  mounted per header); hotkey now lives on one instance.
+- **Research corpus is public:** all 173 findings bulk-approved via
+  `admin_review_finding` on the owner's instruction (audit-logged,
+  per-finding reversible) — 173 findings + 419 sources now render for
+  signed-out visitors across 40 substances. Content QA: no mojibake, no
+  broken links, no true duplicates, doses/years sane.
+- §0-quibs now stale: reactions persistence, goals sync, and the prod
+  catalog cleanup (probiotics/electrolyte-blends) are all applied and live.
+
+**Still open:** the E/S-ID dataset import awaits the data file (schema +
+engine ready); `multiple_permissive_policies` consolidation was assessed and
+deliberately parked (post-initplan value is marginal against authz risk);
+leaked-password protection needs the dashboard toggle.
+
+---
+
+## ⚠️ WHAT I COULD NOT CHECK (read first — superseded by the August 3 addendum above)
 
 Supabase MCP access was **denied for every call this session** (including
 read-only `execute_sql`). Vercel dashboards were not reachable from this
