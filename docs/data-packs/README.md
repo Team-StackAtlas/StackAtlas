@@ -46,7 +46,12 @@ prose would violate the golden rule in §4.
 
 For building a corpus ZIP with an external model, hand the model
 [`CHATGPT_ZIP_INSTRUCTIONS.md`](CHATGPT_ZIP_INSTRUCTIONS.md) — it contains a
-paste-ready prompt with this whole contract inlined.
+paste-ready prompt with this whole contract inlined. For a Claude
+deep-research run (browsing on, verified identifiers, dossier-first
+workflow), use
+[`CLAUDE_DEEP_RESEARCH_INSTRUCTIONS.md`](CLAUDE_DEEP_RESEARCH_INSTRUCTIONS.md)
+as the attached spec plus [`DEEP_RESEARCH_PROMPT.md`](DEEP_RESEARCH_PROMPT.md)
+as the mission-briefing message (fill in its assignment bracket).
 
 Rows inside a pack reference each other by **natural keys** — a substance
 slug, a source's PMID/DOI/URL — never by database UUIDs. That's what makes
