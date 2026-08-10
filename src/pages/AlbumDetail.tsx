@@ -159,7 +159,7 @@ export default function AlbumDetail() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">
             {isPublic ? <Globe size={12} /> : <Lock size={12} />}
             {isPublic ? 'Public' : 'Private'}
-            <span className="hidden font-medium normal-case tracking-normal text-slate-400 dark:text-zinc-500 sm:inline">— {isPublic ? 'anyone can view' : 'only you can see this'}</span>
+            <span className="hidden font-medium normal-case tracking-normal text-slate-500 dark:text-zinc-400 sm:inline">— {isPublic ? 'anyone can view' : 'only you can see this'}</span>
           </span>
           <div className="flex items-center gap-2">
             {(isPublic || isOwner) && (

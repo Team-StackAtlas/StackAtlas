@@ -15,10 +15,18 @@ const CATEGORY_BADGES: Record<NotificationCategory, { Icon: LucideIcon; classNam
   albums: { Icon: BookMarked, className: 'bg-amber-500' },
 };
 
-// Deterministic vibrant avatar color per actor (full literals so Tailwind keeps them).
+// Deterministic vibrant avatar tint per actor — tinted chip + dark letter keeps
+// WCAG AA contrast in both themes (full literals so Tailwind keeps them).
 const AVATAR_COLORS = [
-  'bg-rose-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-600',
-  'bg-teal-500', 'bg-sky-500', 'bg-indigo-500', 'bg-violet-500', 'bg-fuchsia-500',
+  'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+  'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+  'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300',
+  'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
+  'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
+  'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300',
+  'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/20 dark:text-fuchsia-300',
 ];
 
 function avatarColor(username: string): string {
@@ -107,7 +115,7 @@ export default function Notifications() {
             <button onClick={() => openNotification(n)} className={`relative flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-950 ${!n.readAt ? 'bg-emerald-50/40 dark:bg-emerald-500/[0.04]' : ''}`}>
               {!n.readAt && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-emerald-500" />}
               <span className="relative shrink-0">
-                <span className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-bold text-white ${actor ? avatarColor(actor) : 'bg-slate-400 dark:bg-zinc-700'}`}>{actor[0]?.toUpperCase() ?? '@'}</span>
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-bold ${actor ? avatarColor(actor) : 'bg-slate-200 text-slate-700 dark:bg-zinc-700 dark:text-zinc-200'}`}>{actor[0]?.toUpperCase() ?? '@'}</span>
                 {badge && (
                   <span className={`absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-white dark:border-zinc-900 ${badge.className}`}>
                     <badge.Icon size={10} strokeWidth={2.75} />
@@ -120,7 +128,7 @@ export default function Notifications() {
                     {handle ? <><span className="font-bold">{handle}</span> <span className={!n.readAt ? 'font-medium' : ''}>{rest}</span></> : <span className={!n.readAt ? 'font-semibold' : ''}>{rest}</span>}
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <time title={exactTime(n.createdAt)} className="text-xs tabular-nums text-slate-500 dark:text-zinc-500">{relativeTime(n.createdAt)}</time>
+                    <time title={exactTime(n.createdAt)} className="text-xs tabular-nums text-slate-500 dark:text-zinc-400">{relativeTime(n.createdAt)}</time>
                     {!n.readAt && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
                   </span>
                 </span>
