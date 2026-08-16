@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bookmark, ExternalLink, Folder, Plus, Search, Trash2, X } from 'lucide-react';
+import { Bookmark, Check, ExternalLink, Folder, FolderPlus, Globe, Lock, Plus, Search, Trash2, X } from 'lucide-react';
 import { SOURCES } from '../data/mockData';
 import { usePosts } from '../context/PostsContext';
 import { useAuth } from '../context/AuthContext';
@@ -114,7 +114,7 @@ export default function Library() {
           <form onSubmit={submitAlbum} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><h2 className="mb-3 flex items-center gap-2 font-bold"><Folder size={16}/> Create album</h2><input name="title" required placeholder="Album title" className="mb-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"/><textarea name="description" placeholder="Optional description" className="mb-2 h-20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"/><select name="privacy" defaultValue="private" className="mb-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"><option value="private">Private</option><option value="public">Public</option></select><button className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Create album</button></form>
         </div>
       )}
-      <div className="space-y-3">{rows.map((item) => 'ownerId' in item ? <div key={`album-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="flex justify-between gap-3"><div><span className={`mb-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${typeBadgeClass('album')}`}>Album</span><Link to={`/library/albums/${item.id}`} className="block font-bold hover:underline">{item.title}</Link><p className="text-sm text-slate-500">{item.privacy} · {item.description}</p></div><button onClick={() => deleteAlbum(item.id)}><Trash2 size={16}/></button></div></div> : <SavedRow key={`${item.type}-${item.id}`} item={item} albums={albums} albumItems={albumItems} onUnsave={() => unsaveItem(item.id, item.type)} onAdd={addToAlbum} onRemove={removeFromAlbum} />)}{rows.length === 0 && (
+      <div className="space-y-3">{rows.map((item) => 'ownerId' in item ? <div key={`album-${item.id}`} className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="flex justify-between gap-3"><div className="min-w-0"><span className="mb-2 flex flex-wrap items-center gap-2"><span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${typeBadgeClass('album')}`}>Album</span><AlbumPrivacyBadge privacy={item.privacy} /></span><Link to={`/library/albums/${item.id}`} className="block font-bold hover:underline">{item.title}</Link>{item.description && <p className="mt-0.5 line-clamp-2 text-sm text-slate-500 dark:text-zinc-400">{item.description}</p>}</div><button onClick={() => deleteAlbum(item.id)} title="Delete album" className="self-start text-slate-400 transition-colors hover:text-red-500"><Trash2 size={16}/></button></div></div> : <SavedRow key={`${item.type}-${item.id}`} item={item} albums={albums} albumItems={albumItems} onUnsave={() => unsaveItem(item.id, item.type)} onAdd={addToAlbum} onRemove={removeFromAlbum} />)}{rows.length === 0 && (
         <EmptyState
           icon={Bookmark}
           title={query || filter !== 'all' ? 'Nothing matches' : 'Nothing saved yet'}
@@ -126,11 +126,69 @@ export default function Library() {
   );
 }
 
+function AlbumPrivacyBadge({ privacy }: { privacy: 'private' | 'public' }) {
+  const isPrivate = privacy !== 'public';
+  return (
+    <span
+      title={isPrivate ? 'Only you can see this album.' : 'Anyone can view this album.'}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${isPrivate ? 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'}`}
+    >
+      {isPrivate ? <Lock size={11} strokeWidth={2.5} /> : <Globe size={11} strokeWidth={2.5} />}
+      {isPrivate ? 'Private' : 'Public'}
+      <span className="hidden font-medium text-slate-500 dark:text-zinc-400 sm:inline">· {isPrivate ? 'only you' : 'anyone can view'}</span>
+    </span>
+  );
+}
+
 function SavedRow({ item, albums, albumItems, onUnsave, onAdd, onRemove }: { item: HookSavedItem & { unavailable?: boolean }; albums: { id: string; title: string }[]; albumItems: { id: string; albumId: string; savedItemType: SavedItemType; savedItemId: string }[]; onUnsave: () => void; onAdd: (albumId: string, item: SavedItem) => void | Promise<void>; onRemove: (albumItemId: string) => void }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
   const type = item.type.toLowerCase() as SavedItemType;
   const linked = type === 'dispatch' || type === 'signal' ? `/post/${item.id}` : item.url;
   const current = albumItems.filter((albumItem) => albumItem.savedItemType === type && albumItem.savedItemId === item.id);
   const content = <><span className={`mb-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${typeBadgeClass(type)}`}>{label(type)}</span><h3 className="font-bold">{item.unavailable ? 'Post unavailable' : item.title ?? item.id}</h3>{item.description && <p className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-zinc-400">{item.description}</p>}<p className="mt-1.5 text-xs text-slate-500 dark:text-zinc-400">{[!item.unavailable && item.relatedName ? item.relatedName : null, !item.unavailable && item.siteName ? item.siteName : null, `Saved ${new Date(item.savedAt).toLocaleDateString()}`].filter(Boolean).join(' · ')}</p></>;
   const body = linked && !item.unavailable && (type === 'dispatch' || type === 'signal') ? <Link to={linked} className="block flex-1 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40">{content}</Link> : <div className="flex-1">{content}{linked && !item.unavailable && <a href={linked} className="mt-2 inline-flex items-center gap-1 text-sm text-emerald-700 hover:underline"><ExternalLink size={14}/> Source</a>}</div>;
-  return <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"><div className="flex justify-between gap-3">{body}<button onClick={onUnsave} title="Unsave"><Bookmark className="fill-current text-emerald-500" size={18}/></button></div><div className="mt-3 flex flex-wrap items-center gap-2"><select onChange={(e) => e.target.value && onAdd(e.target.value, { itemId: item.id, itemType: type, title: item.title, url: item.url, description: item.description })} defaultValue="" className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs dark:border-zinc-800 dark:bg-zinc-950"><option value="">Add to album…</option>{albums.map((album) => <option key={album.id} value={album.id}>{album.title}</option>)}</select>{current.map((albumItem) => <button key={albumItem.id} onClick={() => onRemove(albumItem.id)} className="rounded-full bg-slate-100 px-2 py-1 text-xs dark:bg-zinc-800">Remove from {albums.find((a) => a.id === albumItem.albumId)?.title ?? 'album'}</button>)}</div></div>;
+  return <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="flex justify-between gap-3">{body}<button onClick={onUnsave} title="Unsave"><Bookmark className="fill-current text-emerald-500" size={18}/></button></div>
+    <div className="relative mt-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setPickerOpen((v) => !v)}
+          aria-expanded={pickerOpen}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${pickerOpen ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800'}`}
+        >
+          <FolderPlus size={13} />
+          Albums{current.length > 0 && <span className="rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">{current.length}</span>}
+        </button>
+        {current.map((albumItem) => (
+          <span key={albumItem.id} className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
+            <Folder size={11} />
+            {albums.find((a) => a.id === albumItem.albumId)?.title ?? 'Album'}
+          </span>
+        ))}
+      </div>
+      {pickerOpen && (
+        <div className="absolute left-0 top-full z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+          <p className="px-2 pb-2 pt-1 text-xs text-slate-500 dark:text-zinc-400">Save to as many albums as you like.</p>
+          {albums.length === 0 && <p className="px-2 pb-2 text-xs text-slate-500 dark:text-zinc-400">No albums yet — create one with “New album” above.</p>}
+          <div className="max-h-56 space-y-0.5 overflow-y-auto">
+            {albums.map((album) => {
+              const membership = current.find((albumItem) => albumItem.albumId === album.id);
+              return (
+                <button
+                  key={album.id}
+                  onClick={() => membership ? onRemove(membership.id) : onAdd(album.id, { itemId: item.id, itemType: type, title: item.title, url: item.url, description: item.description })}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50 dark:hover:bg-zinc-800"
+                >
+                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${membership ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 dark:border-zinc-600'}`}>
+                    {membership && <Check size={11} strokeWidth={3} />}
+                  </span>
+                  <span className="truncate">{album.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>;
 }

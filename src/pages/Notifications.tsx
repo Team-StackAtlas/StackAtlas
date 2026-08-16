@@ -15,9 +15,59 @@ const CATEGORY_BADGES: Record<NotificationCategory, { Icon: LucideIcon; classNam
   albums: { Icon: BookMarked, className: 'bg-amber-500' },
 };
 
-function timestampLabel(iso: string): string {
+// Deterministic vibrant avatar tint per actor — tinted chip + dark letter keeps
+// WCAG AA contrast in both themes (full literals so Tailwind keeps them).
+const AVATAR_COLORS = [
+  'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+  'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+  'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300',
+  'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
+  'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
+  'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300',
+  'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/20 dark:text-fuchsia-300',
+];
+
+function avatarColor(username: string): string {
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) hash = (hash * 31 + username.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function relativeTime(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return 'now';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function exactTime(iso: string): string {
   const date = new Date(iso);
   return `${date.toLocaleDateString()} · ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+}
+
+/** Reddit-style day buckets; rows arrive sorted newest-first. */
+function bucketLabel(iso: string): string {
+  const now = new Date();
+  const date = new Date(iso);
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const dayDiff = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
+  if (dayDiff <= 0) return 'Today';
+  if (dayDiff === 1) return 'Yesterday';
+  if (dayDiff < 7) return 'This week';
+  return 'Earlier';
+}
+
+/** Splits "@handle did a thing" so the actor renders bold like x.com. */
+function splitTitle(title: string): { handle: string | null; rest: string } {
+  const match = title.match(/^(@\S+)\s+(.*)$/);
+  return match ? { handle: match[1], rest: match[2] } : { handle: null, rest: title };
 }
 
 export default function Notifications() {
@@ -27,6 +77,7 @@ export default function Notifications() {
   const [showSettings, setShowSettings] = useState(false);
   const rows = tab === 'unread' ? notifications.filter((n) => !n.readAt) : notifications;
   const labels = { likes: 'Likes', comments: 'Comments and replies', follows: 'Follows and follow requests', mentions: 'Mentions', albums: 'Public album updates' } as const;
+  let lastBucket = '';
   return <div className="mx-auto max-w-3xl space-y-4 p-4">
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -49,23 +100,44 @@ export default function Notifications() {
     {rows.length ? <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
       {rows.map((n) => {
         const badge = CATEGORY_BADGES[n.category as NotificationCategory];
+        const actor = (n.metadata?.actorUsername as string | undefined) ?? '';
+        const { handle, rest } = splitTitle(n.title);
+        const bucket = bucketLabel(n.createdAt);
+        const header = bucket !== lastBucket ? bucket : null;
+        lastBucket = bucket;
         return (
-          <button key={n.id} onClick={() => openNotification(n)} className={`flex w-full items-center gap-3 border-b border-slate-100 p-4 text-left transition-colors last:border-b-0 hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-950 ${!n.readAt ? 'bg-emerald-50/40 dark:bg-emerald-500/[0.04]' : ''}`}>
-            <span className="relative shrink-0">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600 dark:bg-zinc-800 dark:text-zinc-300">{(n.metadata?.actorUsername as string | undefined)?.[0]?.toUpperCase() ?? '@'}</span>
-              {badge && (
-                <span className={`absolute -bottom-1 -right-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-white text-white dark:border-zinc-900 ${badge.className}`}>
-                  <badge.Icon size={9} strokeWidth={2.75} />
+          <div key={n.id}>
+            {header && (
+              <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-400">
+                {header}
+              </div>
+            )}
+            <button onClick={() => openNotification(n)} className={`relative flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3.5 text-left transition-colors last:border-b-0 hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-950 ${!n.readAt ? 'bg-emerald-50/40 dark:bg-emerald-500/[0.04]' : ''}`}>
+              {!n.readAt && <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-emerald-500" />}
+              <span className="relative shrink-0">
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-bold ${actor ? avatarColor(actor) : 'bg-slate-200 text-slate-700 dark:bg-zinc-700 dark:text-zinc-200'}`}>{actor[0]?.toUpperCase() ?? '@'}</span>
+                {badge && (
+                  <span className={`absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white text-white dark:border-zinc-900 ${badge.className}`}>
+                    <badge.Icon size={10} strokeWidth={2.75} />
+                  </span>
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className={`min-w-0 text-[15px] ${!n.readAt ? 'text-slate-900 dark:text-zinc-50' : 'text-slate-700 dark:text-zinc-300'}`}>
+                    {handle ? <><span className="font-bold">{handle}</span> <span className={!n.readAt ? 'font-medium' : ''}>{rest}</span></> : <span className={!n.readAt ? 'font-semibold' : ''}>{rest}</span>}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <time title={exactTime(n.createdAt)} className="text-xs tabular-nums text-slate-500 dark:text-zinc-400">{relativeTime(n.createdAt)}</time>
+                    {!n.readAt && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
+                  </span>
                 </span>
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className={`block ${!n.readAt ? 'font-bold' : 'font-medium'}`}>{n.title}</span>
-              {n.body && <span className="block truncate text-sm text-slate-500 dark:text-zinc-400">{n.body}</span>}
-              <span className="text-xs text-slate-500 dark:text-zinc-400">{timestampLabel(n.createdAt)}</span>
-            </span>
-            {!n.readAt && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" />}
-          </button>
+                {n.body && (
+                  <span className="mt-1.5 block truncate rounded-lg bg-slate-50 px-2.5 py-1.5 text-sm text-slate-500 dark:bg-zinc-950/60 dark:text-zinc-400">{n.body}</span>
+                )}
+              </span>
+            </button>
+          </div>
         );
       })}
     </section> : (

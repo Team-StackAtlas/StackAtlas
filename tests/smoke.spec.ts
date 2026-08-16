@@ -132,9 +132,9 @@ test('saving a post from the Square surfaces it in the Library', async ({ page }
   await page.locator('button:has(svg.lucide-bookmark)').first().click();
   await page.goto('/library');
   // The empty state must be gone and a saved row present with album controls
-  // (the per-row select whose placeholder option is "Add to album…").
+  // (the per-row "Albums" popover trigger).
   await expect(page.getByText('Nothing saved yet')).toHaveCount(0);
-  await expect(page.locator('select', { hasText: 'Add to album…' }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Albums/ }).first()).toBeVisible();
 });
 
 test('albums organize saved items end to end', async ({ page }) => {
@@ -149,10 +149,9 @@ test('albums organize saved items end to end', async ({ page }) => {
   await page.getByRole('button', { name: /New album/i }).click();
   await page.locator('input:visible').last().fill('Smoke album');
   await page.getByRole('button', { name: 'Create album' }).click();
-  await page
-    .locator('select', { hasText: 'Add to album…' })
-    .first()
-    .selectOption({ label: 'Smoke album' });
+  // File the saved item via the Albums popover: open it, tick the album row.
+  await page.getByRole('button', { name: /^Albums/ }).first().click();
+  await page.getByRole('button', { name: 'Smoke album' }).click();
   await page.locator('a[href^="/library/albums/"]').first().click();
   await expect(page.getByRole('heading', { name: 'Smoke album' })).toBeVisible();
   // The filed item renders inside the album, not the empty state.

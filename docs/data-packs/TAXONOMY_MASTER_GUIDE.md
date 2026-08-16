@@ -22,7 +22,7 @@ Every substance in StackAtlas is described on **five independent axes**:
 
 | Axis | Question it answers | Allowed values |
 |---|---|---|
-| **Categories** (goal routing) | *What is it used FOR?* | 0–3 of the 12 canonical categories below |
+| **Categories** (goal routing) | *What is it used FOR?* | 0–3 of the 13 canonical categories below |
 | **Type tags** | *What IS it?* | `supplement`, `botanical`, `food-drink`, `pharmaceutical`, `peptide`, `research-compound` |
 | **Classification** | *How established is it?* | `Everyday`, `Clinical`, `Frontier`, `Unknown` |
 | **Risk level** | *How careful should a reader be?* | `Low`, `Moderate`, `High` |
@@ -40,7 +40,7 @@ Every finding needs: substance + source + `endpoint` + `direction` +
 
 ### 1.1 Domains → Categories (the goal taxonomy)
 
-Three domains, twelve categories. These are fixed — **never invent a new
+Three domains, thirteen categories. These are fixed — **never invent a new
 category or domain**. A substance is *routed* to the categories that describe
 what people actually take it for.
 
@@ -58,6 +58,7 @@ what people actually take it for.
 | HH | Vitality | **Hormonal Health** | Testosterone, estrogen, thyroid, libido, fertility |
 | DH | Vitality | **Digestive Health** | Digestion, gut health, bloating, microbiome |
 | HT | Vitality | **Heart Health** | Blood pressure, cholesterol, circulation, heart rate |
+| IM | Vitality | **Immune Health** | Immune support, infection resistance, immune modulation |
 
 **Routing rules:**
 
@@ -65,11 +66,13 @@ what people actually take it for.
    substance with one clear purpose gets one category (tretinoin → Beauty &
    Skin). Berberine legitimately gets Metabolic Health + Digestive Health +
    Heart Health.
-2. **Do not force a route.** Plain electrolytes (sodium, potassium salts),
-   structural amino acids (l-alanine, l-serine), and psychedelics/research
-   chemicals with no honest single goal stay **unrouted** — a wrong category is
-   worse than none. Unrouted substances remain findable via search and type
-   filters.
+2. **Do not force a route.** Plain electrolytes (sodium, potassium salts) and
+   structural amino acids (l-alanine, l-serine) stay **unrouted** — a wrong
+   category is worse than none. Unrouted substances remain findable via search
+   and type filters. Gray-market and psychoactive compounds are NOT a special
+   case: route them like any other substance, by honest predominant use
+   (testosterone cypionate → Hormonal Health; they stay unrouted only when no
+   honest goal exists).
 3. Route by **evidence-backed or predominant real-world use**, not marketing
    claims. A mushroom sold as "immune support" with its actual literature on
    gut/microbiome effects routes to Digestive Health.
@@ -252,7 +255,7 @@ honestly central; leave unrouted rather than force a bad fit. Each route is a
 
 - Mind: Cognition | Recovery | Mood & Stress
 - Body: Performance | Pain & Injury | Joint & Mobility | Beauty & Skin
-- Vitality: Longevity | Metabolic Health | Hormonal Health | Digestive Health | Heart Health
+- Vitality: Longevity | Metabolic Health | Hormonal Health | Digestive Health | Heart Health | Immune Health
 
 TYPE TAGS — one primary, max two total, from exactly:
 supplement, botanical, food-drink, pharmaceutical, peptide, research-compound
