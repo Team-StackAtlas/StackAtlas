@@ -1,0 +1,281 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Immune Health evidence base — batch 3: newly routed substances (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Echinacea for preventing and treating the common cold",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "24554461",
+      "doi": "10.1002/14651858.CD000530.pub3",
+      "year": 2014,
+      "journal_or_site": "Cochrane Database of Systematic Reviews",
+      "substances": ["echinacea"]
+    },
+    {
+      "title": "Efficacy and safety of Echinacea purpurea in treating upper respiratory infections and complications of otitis media in children: Systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "40311928",
+      "substances": ["echinacea"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Echinacea reduces antibiotic usage in children through respiratory tract infection prevention: a randomized, blinded, controlled clinical trial",
+      "source_type": "human_study",
+      "pmid": "33832544",
+      "substances": ["echinacea"]
+    },
+    {
+      "title": "Safety and Efficacy Profile of Echinacea purpurea to Prevent Common Cold Episodes: A Randomized, Double-Blind, Placebo-Controlled Trial",
+      "source_type": "human_study",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3457740/",
+      "substances": ["echinacea"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    },
+    {
+      "title": "Black elderberry (Sambucus nigra) supplementation effectively treats upper respiratory symptoms: A meta-analysis of randomized, controlled clinical trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "30670267",
+      "substances": ["elderberry"]
+    },
+    {
+      "title": "Elderberry Supplementation Reduces Cold Duration and Symptoms in Air-Travellers: A Randomized, Double-Blind Placebo-Controlled Clinical Trial",
+      "source_type": "human_study",
+      "pmid": "27023596",
+      "substances": ["elderberry"]
+    },
+    {
+      "title": "Zinc lozenges may shorten the duration of colds: a systematic review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "21769305",
+      "substances": ["zinc"]
+    },
+    {
+      "title": "Zinc for prevention and treatment of the common cold",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "38719213",
+      "substances": ["zinc"],
+      "notes": "The 2024 Cochrane review. Source-only in this batch: its own conclusions were not retrieved verbatim this session; see the companion commentary source."
+    },
+    {
+      "title": "Shortcomings in the Cochrane review on zinc for the common cold (2024)",
+      "source_type": "other",
+      "pmid": "39478818",
+      "year": 2024,
+      "substances": ["zinc"],
+      "notes": "Commentary/reanalysis of the 2024 Cochrane review data, not an independent evidence synthesis."
+    },
+    {
+      "title": "Zinc gluconate lozenges for treating the common cold. A randomized, double-blind, placebo-controlled study",
+      "source_type": "human_study",
+      "pmid": "8678384",
+      "year": 1996,
+      "journal_or_site": "Annals of Internal Medicine",
+      "substances": ["zinc-gluconate"]
+    },
+    {
+      "title": "Oral Astragalus (Huang qi) for preventing frequent episodes of acute respiratory tract infection in children",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "27905672",
+      "substances": ["astragalus"],
+      "notes": "Source-only in this batch: no numeric results were retrieved. The astragalus human evidence base retrieved this session is thin; see dossier."
+    },
+    {
+      "title": "Soluble and Insoluble Yeast β-Glucan Differentially Affect Upper Respiratory Tract Infection in Marathon Runners: A Double-Blind, Randomized Placebo-Controlled Trial",
+      "source_type": "human_study",
+      "pmid": "31573387",
+      "substances": ["beta-glucans"]
+    },
+    {
+      "title": "Beverage Containing Dispersible Yeast β-Glucan Decreases Cold/Flu Symptomatic Days After Intense Exercise: A Randomized Controlled Trial",
+      "source_type": "human_study",
+      "pmid": "30380356",
+      "substances": ["beta-glucans"]
+    },
+    {
+      "title": "Yeast (1,3)-(1,6)-beta-glucan helps to maintain the body's defence against pathogens: a double-blind, randomized, placebo-controlled, multicentric study in healthy subjects",
+      "source_type": "human_study",
+      "pmid": "23340963",
+      "substances": ["beta-glucans"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Efficacy of adjuvant immunochemotherapy with polysaccharide K for patients with curative resections of gastric cancer",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "17106715",
+      "substances": ["turkey-tail"]
+    },
+    {
+      "title": "Can polysaccharide K improve therapeutic efficacy and safety in gastrointestinal cancer? a systematic review and network meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5687673/",
+      "substances": ["turkey-tail"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "24554461",
+      "substance_slug": "echinacea",
+      "endpoint": "common cold treatment benefit",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "finding_summary": "This Cochrane review of 24 double-blind trials reported that echinacea products have not been shown to provide benefits for treating colds, while noting a possible weak benefit from some products.",
+      "limitations": "24 trials, 4,631 participants; authors note significant differences between the preparations tested make strong conclusions difficult"
+    },
+    {
+      "source_pmid": "24554461",
+      "substance_slug": "echinacea",
+      "endpoint": "common cold prevention (risk of at least one cold)",
+      "direction": "mixed",
+      "study_type": "review",
+      "finding_summary": "The same Cochrane review reported that none of the 12 prevention comparisons found a statistically significant difference, while post hoc pooling suggested a 10% to 20% relative risk reduction of questionable clinical relevance.",
+      "limitations": "post hoc pooling of individually non-significant trials; preparation heterogeneity"
+    },
+    {
+      "source_pmid": "33832544",
+      "substance_slug": "echinacea",
+      "endpoint": "antibiotic usage in children",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "children",
+      "finding_summary": "In this randomized, blinded, controlled trial, Echinacea purpurea was reported to reduce antibiotic usage in children through prevention of respiratory tract infections.",
+      "limitations": "result recorded at title level this session; effect sizes pending verification"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3457740/",
+      "substance_slug": "echinacea",
+      "endpoint": "common cold episodes (prevention)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "healthy adults",
+      "finding_summary": "In this randomized double-blind placebo-controlled prevention trial, Echinacea purpurea was reported to reduce the total number of cold episodes, cumulated episode days, and pain-killer medicated episodes versus placebo.",
+      "limitations": "attribution of the retrieved result sentence to this trial requires confirmation during verification"
+    },
+    {
+      "source_pmid": "30670267",
+      "substance_slug": "elderberry",
+      "endpoint": "upper respiratory symptoms",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "finding_summary": "This meta-analysis of randomized controlled trials reported that black elderberry supplementation substantially reduced upper respiratory symptoms, with a large mean effect size.",
+      "limitations": "180 total participants across the included trials"
+    },
+    {
+      "source_pmid": "27023596",
+      "substance_slug": "elderberry",
+      "endpoint": "cold episode duration in air travelers",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "economy-class air travelers",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of 312 travelers, the placebo group had a significantly longer duration of cold episode days than the elderberry extract group.",
+      "limitations": "n=312; travel-stress context"
+    },
+    {
+      "source_pmid": "21769305",
+      "substance_slug": "zinc",
+      "endpoint": "common cold duration (high-dose zinc acetate lozenges)",
+      "direction": "decreased",
+      "study_type": "review",
+      "dose_amount": 75,
+      "dose_unit": "mg",
+      "frequency": "total daily dose threshold (reported)",
+      "finding_summary": "This systematic review reported that three trials using zinc acetate lozenges at daily doses over 75 mg showed a pooled 42% reduction in the duration of colds (95% CI 35% to 48%).",
+      "limitations": "three trials in the high-dose acetate pool; lozenge composition varies widely across trials"
+    },
+    {
+      "source_pmid": "21769305",
+      "substance_slug": "zinc",
+      "endpoint": "common cold duration (low-dose zinc lozenges)",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "finding_summary": "The same review reported that five trials using total daily zinc doses below 75 mg uniformly found no effect on cold duration.",
+      "limitations": "five trials in the low-dose pool"
+    },
+    {
+      "source_pmid": "39478818",
+      "substance_slug": "zinc",
+      "endpoint": "common cold duration in adults (reanalysis)",
+      "direction": "decreased",
+      "study_type": "other",
+      "population": "adults",
+      "finding_summary": "This commentary's reanalysis of the 2024 Cochrane review data reported that zinc lozenges shortened colds in adults by 37% (95% CI 27% to 46%), while noting a child trial was inconsistent with the adult trials.",
+      "limitations": "commentary reanalysis, not an independent review; the underlying Cochrane review's own certainty ratings were not retrieved this session"
+    },
+    {
+      "source_pmid": "8678384",
+      "substance_slug": "zinc-gluconate",
+      "endpoint": "common cold duration",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with cold symptoms of less than 24 hours",
+      "dose_amount": 13.3,
+      "dose_unit": "mg",
+      "frequency": "one lozenge every 2 hours while awake",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of 100 adults, zinc gluconate lozenges shortened cold duration by a reported 4.0 days on average (95% CI 2.3 to 5.7 days), with cough, nasal drainage, and congestion most affected.",
+      "limitations": "n=100, single workplace cohort (Cleveland Clinic employees); later reanalysis reported the effect concentrated in longer colds"
+    },
+    {
+      "source_pmid": "31573387",
+      "substance_slug": "beta-glucans",
+      "endpoint": "upper respiratory tract infection severity (insoluble yeast beta-glucan)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adult marathon runners",
+      "dose_amount": 250,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "91 days spanning the marathon",
+      "finding_summary": "In this randomized double-blind placebo-controlled marathon trial, total URTI severity and symptomatic days were reported as lower with insoluble baker's yeast beta-glucan than placebo.",
+      "limitations": "athletic-stress population; effect differed by beta-glucan form within the same trial"
+    },
+    {
+      "source_pmid": "31573387",
+      "substance_slug": "beta-glucans",
+      "endpoint": "upper respiratory tract infection severity (soluble yeast beta-glucan)",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "adult marathon runners",
+      "dose_amount": 250,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "91 days spanning the marathon",
+      "finding_summary": "In the same trial, total URTI severity with the soluble beta-glucan form was not different from placebo, though nasal discharge severity was reported as lower with both forms.",
+      "limitations": "athletic-stress population; form-dependent result within one trial"
+    },
+    {
+      "source_pmid": "30380356",
+      "substance_slug": "beta-glucans",
+      "endpoint": "cold and flu symptomatic days after intense exercise",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults after intense exercise",
+      "dose_amount": 250,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "finding_summary": "This randomized controlled trial reported fewer cold and flu symptomatic days after intense exercise with a beverage containing dispersible yeast beta-glucan, while average URTI episode duration and count were reported as not significantly different.",
+      "limitations": "symptomatic-days benefit alongside null episode-count and duration results in the retrieved summary; confirm during verification"
+    },
+    {
+      "source_pmid": "17106715",
+      "substance_slug": "turkey-tail",
+      "endpoint": "overall survival after curative gastric cancer resection (PSK adjuvant)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with curatively resected gastric cancer",
+      "finding_summary": "This meta-analysis of eight randomized controlled trials reported improved overall survival with adjuvant polysaccharide K immunochemotherapy after curative gastric cancer resection (hazard ratio 0.88, 95% CI 0.79 to 0.98).",
+      "limitations": "8,009 patients; PSK is a pharmaceutical-grade protein-bound extract of turkey tail used alongside chemotherapy — results do not describe consumer mushroom supplements"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5687673/",
+      "substance_slug": "turkey-tail",
+      "endpoint": "1-5 year overall survival in gastrointestinal cancer (PSK adjuvant)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "gastrointestinal cancer patients",
+      "finding_summary": "This systematic review and network meta-analysis of 23 trials reported significantly increased 1-5 year overall survival and 1-7 year disease-free survival with polysaccharide K treatment, with no increase in side effects observed.",
+      "limitations": "10,684 patients; PSK is a pharmaceutical-grade protein-bound extract used adjuvant to chemotherapy — results do not describe consumer mushroom supplements"
+    }
+  ]
+}
