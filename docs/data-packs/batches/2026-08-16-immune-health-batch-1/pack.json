@@ -93,15 +93,20 @@
       "title": "Six Weeks of Supplementation with Bovine Colostrum Effectively Reduces URTIs Symptoms Frequency and Gravity for Up to 20 Weeks in Pre-School Children",
       "source_type": "human_study",
       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10459079/",
+      "pmid": "37630816",
+      "doi": "10.3390/nu15163626",
+      "year": 2023,
       "substances": ["bovine-colostrum"],
-      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+      "notes": "PMID/DOI backfilled from a later search pass (batch 2); confirm during verification. Analyzed 57 children (35 colostrum, 22 placebo)."
     },
     {
       "title": "Moderate Dose Bovine Colostrum Supplementation in Prevention of Upper Respiratory Tract Infections in Medical University Students: A Randomized, Triple Blind, Placebo-Controlled Trial",
       "source_type": "human_study",
       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10146600/",
+      "doi": "10.3390/nu15081925",
+      "year": 2023,
       "substances": ["bovine-colostrum"],
-      "notes": "Source-only in this batch: retrieved result statement was too vague to structure. PMID not retrieved; PMC URL used as fallback identifier."
+      "notes": "Source-only in this batch: retrieved result statement was too vague to structure. DOI/year backfilled from a later search pass (batch 2); PMID still unresolved — confirm during verification."
     },
     {
       "title": "The efficacy and safety of thymosin α1 for sepsis (TESTS): multicentre, double blinded, randomised, placebo controlled, phase 3 trial",

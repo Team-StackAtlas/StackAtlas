@@ -1,0 +1,102 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Immune Health evidence base — batch 2 (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "The efficacy of thymosin in the treatment of chronic hepatitis B virus infection: a meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "11736720",
+      "substances": ["thymosin-alpha-1"]
+    },
+    {
+      "title": "Treatment with lamivudine versus lamivudine and thymosin alpha-1 for e antigen-positive chronic hepatitis B patients: a meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2693103/",
+      "substances": ["thymosin-alpha-1"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    },
+    {
+      "title": "Thymosin alpha1 treatment of chronic hepatitis B: results of a phase III multicentre, randomized, double-blind and placebo-controlled study",
+      "source_type": "human_study",
+      "pmid": "10607256",
+      "substances": ["thymosin-alpha-1"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Safety and efficacy of Thymosin α1 in the treatment of hepatitis B virus-related acute-on-chronic liver failure: a randomized controlled trial",
+      "source_type": "human_study",
+      "pmid": "35616850",
+      "substances": ["thymosin-alpha-1"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Efficacy of thymosin α1 for sepsis: a systematic review and meta-analysis of randomized controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "40969554",
+      "year": 2025,
+      "substances": ["thymosin-alpha-1"],
+      "notes": "Also listed source-only in batch 1; this batch adds its pooled finding. Importer upserts by identifier, so re-inclusion does not duplicate."
+    },
+    {
+      "title": "[Therapeutic value of flavonoids in Rhinovirus infections]",
+      "source_type": "human_study",
+      "pmid": "2695883",
+      "substances": ["bee-propolis"],
+      "notes": "Non-English publication; propolis flavonoid preparation studied in an ENT clinic cohort treated during 1987."
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "11736720",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "virological response in chronic hepatitis B (12 months post-treatment)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "adults with chronic hepatitis B",
+      "finding_summary": "This meta-analysis of five trials reported higher odds of virological response with thymosin at 12 months post-treatment versus placebo (odds ratio 2.67, 95% CI 1.25 to 5.68).",
+      "limitations": "5 trials totalling 353 patients"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2693103/",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "HBeAg seroconversion (combination with lamivudine)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "e antigen-positive chronic hepatitis B patients",
+      "finding_summary": "This meta-analysis reported higher HBeAg seroconversion with lamivudine plus thymosin alpha-1 than with lamivudine alone (45.1% versus 15.2%).",
+      "limitations": "8 trials totalling 583 patients; measures the combination against lamivudine alone, not thymosin alpha-1 by itself"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2693103/",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "virological response (combination with lamivudine)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "e antigen-positive chronic hepatitis B patients",
+      "finding_summary": "The same meta-analysis reported a higher virological response rate with the combination than with lamivudine alone (84.7% versus 74.9%).",
+      "limitations": "8 trials totalling 583 patients; measures the combination against lamivudine alone, not thymosin alpha-1 by itself"
+    },
+    {
+      "source_pmid": "40969554",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "28-day mortality in sepsis (pooled)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with sepsis",
+      "finding_summary": "This systematic review and meta-analysis of 11 randomized controlled trials reported lower pooled 28-day mortality with thymosin α1 (odds ratio 0.73, 95% CI 0.59 to 0.90, p=0.003).",
+      "limitations": "967 thymosin and 960 control patients; the authors report that high-quality and multi-center trial subgroups did not show a mortality benefit"
+    },
+    {
+      "source_pmid": "2695883",
+      "substance_slug": "bee-propolis",
+      "endpoint": "time to recovery from common cold",
+      "direction": "decreased",
+      "study_type": "other",
+      "population": "ENT clinic patients with common cold",
+      "finding_summary": "In this early clinic study of a propolis flavonoid preparation, reported recovery was faster than placebo, with placebo recovery averaging 4.80 days and treated symptoms lasting 2.5 times shorter.",
+      "limitations": "n=50; single ENT clinic, patients treated during 1987; non-English publication; randomization and blinding details not retrievable this session"
+    }
+  ]
+}
