@@ -1,0 +1,417 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Immune Health evidence base — batch 1 (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Andrographis paniculata (Chuān Xīn Lián) for symptomatic relief of acute respiratory tract infections in adults and children: A systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "28783743",
+      "year": 2017,
+      "substances": ["andrographis"],
+      "notes": "A published correction exists (PMID 30427943); findings unaffected per correction title."
+    },
+    {
+      "title": "Use of visual analogue scale measurements (VAS) to asses the effectiveness of standardized Andrographis paniculata extract SHA-10 in reducing the symptoms of common cold. A randomized double blind-placebo study",
+      "source_type": "human_study",
+      "pmid": "10589439",
+      "substances": ["andrographis"]
+    },
+    {
+      "title": "A randomized double blind placebo controlled clinical evaluation of extract of Andrographis paniculata (KalmCold) in patients with uncomplicated upper respiratory tract infection",
+      "source_type": "human_study",
+      "pmid": "20092985",
+      "substances": ["andrographis"]
+    },
+    {
+      "title": "Andrographis paniculata extract versus placebo in the treatment of COVID-19: a double-blinded randomized control trial",
+      "source_type": "human_study",
+      "pmid": "39005565",
+      "year": 2023,
+      "journal_or_site": "Research in Pharmaceutical Sciences",
+      "substances": ["andrographis"]
+    },
+    {
+      "title": "Pelargonium sidoides extract for treating acute respiratory tract infections",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "24146345",
+      "doi": "10.1002/14651858.CD006323.pub3",
+      "year": 2013,
+      "journal_or_site": "Cochrane Database of Systematic Reviews",
+      "substances": ["pelargonium-sidoides"]
+    },
+    {
+      "title": "Effects of Pelargonium sidoides extract EPs 7630 on acute cough and quality of life - a meta-analysis of randomized, placebo-controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "36051888",
+      "substances": ["pelargonium-sidoides"]
+    },
+    {
+      "title": "Treatment with EPs 7630, a Pelargonium Sidoides Root Extract, Is Effective and Safe in Patients with the Common Cold: Results From a Randomized, Double Blind, Placebo-Controlled Clinical Trial",
+      "source_type": "human_study",
+      "pmid": "31341433",
+      "substances": ["pelargonium-sidoides"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Treatment of acute bronchitis with EPs 7630: randomized, controlled trial in children and adolescents",
+      "source_type": "human_study",
+      "pmid": "22360575",
+      "substances": ["pelargonium-sidoides"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Standardized Brazilian green propolis extract (EPP-AF®) in COVID-19 outcomes: a randomized double-blind placebo-controlled trial",
+      "source_type": "human_study",
+      "pmid": "37891178",
+      "doi": "10.1038/s41598-023-43764-w",
+      "year": 2023,
+      "substances": ["bee-propolis"]
+    },
+    {
+      "title": "Efficacy of Brazilian green propolis (EPP-AF®) as an adjunct treatment for hospitalized COVID-19 patients: A randomized, controlled clinical trial",
+      "source_type": "human_study",
+      "pmid": "34311528",
+      "substances": ["bee-propolis"],
+      "notes": "Source-only in this batch: this earlier trial's own numbers were not retrieved this session."
+    },
+    {
+      "title": "The Effectiveness of a Dietary Supplement with Honey, Propolis, Pelargonium sidoides Extract, and Zinc in Children Affected by Acute Tonsillopharyngitis: An Open, Randomized, and Controlled Trial",
+      "source_type": "human_study",
+      "pmid": "38931472",
+      "substances": ["bee-propolis", "pelargonium-sidoides"],
+      "notes": "Multi-component supplement (honey, propolis, Pelargonium sidoides, zinc) and open-label design: the propolis-specific effect is not isolable, so no findings are attached."
+    },
+    {
+      "title": "Bovine colostrum supplementation and upper respiratory symptoms during exercise training: a systematic review and meta-analysis of randomised controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "27462401",
+      "substances": ["bovine-colostrum"]
+    },
+    {
+      "title": "Six Weeks of Supplementation with Bovine Colostrum Effectively Reduces URTIs Symptoms Frequency and Gravity for Up to 20 Weeks in Pre-School Children",
+      "source_type": "human_study",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10459079/",
+      "substances": ["bovine-colostrum"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    },
+    {
+      "title": "Moderate Dose Bovine Colostrum Supplementation in Prevention of Upper Respiratory Tract Infections in Medical University Students: A Randomized, Triple Blind, Placebo-Controlled Trial",
+      "source_type": "human_study",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10146600/",
+      "substances": ["bovine-colostrum"],
+      "notes": "Source-only in this batch: retrieved result statement was too vague to structure. PMID not retrieved; PMC URL used as fallback identifier."
+    },
+    {
+      "title": "The efficacy and safety of thymosin α1 for sepsis (TESTS): multicentre, double blinded, randomised, placebo controlled, phase 3 trial",
+      "source_type": "human_study",
+      "pmid": "39814420",
+      "year": 2025,
+      "journal_or_site": "BMJ",
+      "substances": ["thymosin-alpha-1"]
+    },
+    {
+      "title": "The efficacy of thymosin alpha 1 for severe sepsis (ETASS): a multicenter, single-blind, randomized and controlled trial",
+      "source_type": "human_study",
+      "pmid": "23327199",
+      "substances": ["thymosin-alpha-1"]
+    },
+    {
+      "title": "The efficacy of thymosin alpha-1 therapy in moderate to critical COVID-19 patients: a systematic review, meta-analysis, and meta-regression",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "37845598",
+      "substances": ["thymosin-alpha-1"]
+    },
+    {
+      "title": "Efficacy of thymosin α1 for sepsis: a systematic review and meta-analysis of randomized controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "40969554",
+      "year": 2025,
+      "substances": ["thymosin-alpha-1"],
+      "notes": "Source-only in this batch: pooled estimate not retrieved this session. Important because it post-dates the TESTS trial."
+    },
+    {
+      "title": "Treatment with LL-37 is safe and effective in enhancing healing of hard-to-heal venous leg ulcers: a randomized, placebo-controlled clinical trial",
+      "source_type": "human_study",
+      "pmid": "25041740",
+      "year": 2014,
+      "substances": ["ll-37"]
+    },
+    {
+      "title": "The cathelicidin anti-microbial peptide LL-37 is involved in re-epithelialization of human skin wounds and is lacking in chronic ulcer epithelium",
+      "source_type": "in_vitro_or_mechanistic",
+      "pmid": "12603850",
+      "substances": ["ll-37"]
+    },
+    {
+      "title": "The Human Cathelicidin Antimicrobial Peptide LL-37 as a Potential Treatment for Polymicrobial Infected Wounds",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "23840194",
+      "substances": ["ll-37"],
+      "notes": "Source-only in this batch: review; animal wound-model data lives here and is not summarized as human findings."
+    },
+    {
+      "title": "Efficacy of Tinospora cordifolia in allergic rhinitis",
+      "source_type": "human_study",
+      "pmid": "15619563",
+      "substances": ["guduchi"]
+    },
+    {
+      "title": "Tinospora Cordifolia (Giloy)-Induced Liver Injury During the COVID-19 Pandemic-Multicenter Nationwide Study From India",
+      "source_type": "human_study",
+      "pmid": "35037744",
+      "substances": ["guduchi"],
+      "notes": "Retrospective multicenter case series (observational safety data, not a trial)."
+    },
+    {
+      "title": "Tinospora cordifolia (Guduchi/Giloy)-Induced Liver Injury: A Case Review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "37273324",
+      "substances": ["guduchi"],
+      "notes": "Source-only in this batch: companion case review of the liver-injury signal."
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "28783743",
+      "substance_slug": "andrographis",
+      "endpoint": "acute respiratory tract infection symptom severity",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "finding_summary": "This systematic review and meta-analysis reported that Andrographis paniculata was associated with relief of acute respiratory tract infection symptoms compared with controls.",
+      "limitations": "authors state findings should be interpreted cautiously owing to poor study quality and heterogeneity"
+    },
+    {
+      "source_pmid": "28783743",
+      "substance_slug": "andrographis",
+      "endpoint": "time to symptom resolution",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "finding_summary": "The same meta-analysis reported shortened time to symptom resolution in acute respiratory tract infections with Andrographis paniculata.",
+      "limitations": "authors state findings should be interpreted cautiously owing to poor study quality and heterogeneity"
+    },
+    {
+      "source_pmid": "10589439",
+      "substance_slug": "andrographis",
+      "endpoint": "common cold symptom intensity (visual analogue scale, day 2)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with common cold",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of standardized extract SHA-10, symptom intensity including tiredness, sleeplessness, sore throat, and nasal secretion was reported as decreased versus placebo at day 2 of treatment."
+    },
+    {
+      "source_pmid": "20092985",
+      "substance_slug": "andrographis",
+      "endpoint": "upper respiratory tract infection symptom severity score",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "patients with uncomplicated upper respiratory tract infection",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of the KalmCold extract, the reported difference in symptom severity score was 10.85 points in favor of Andrographis paniculata over placebo."
+    },
+    {
+      "source_pmid": "39005565",
+      "substance_slug": "andrographis",
+      "endpoint": "pneumonia occurrence during COVID-19 illness",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with asymptomatic or mild COVID-19",
+      "dose_amount": 60,
+      "dose_unit": "mg",
+      "frequency": "three times daily (as andrographolide)",
+      "duration": "5 days",
+      "finding_summary": "In this double-blinded randomized controlled trial, pneumonia occurred in 0 of 29 participants receiving the extract versus 3 of 28 receiving placebo (p=0.039).",
+      "limitations": "pneumonia analysis covered a 57-participant subset of the 165 who completed the trial"
+    },
+    {
+      "source_pmid": "39005565",
+      "substance_slug": "andrographis",
+      "endpoint": "COVID-19 symptom relief versus placebo",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "adults with asymptomatic or mild COVID-19",
+      "dose_amount": 60,
+      "dose_unit": "mg",
+      "frequency": "three times daily (as andrographolide)",
+      "duration": "5 days",
+      "finding_summary": "In the same trial, COVID-19 symptoms were relieved by the last day of intervention in both groups with no significant between-group difference reported.",
+      "limitations": "n=165 completed (83 extract, 82 placebo)"
+    },
+    {
+      "source_pmid": "24146345",
+      "substance_slug": "pelargonium-sidoides",
+      "endpoint": "acute bronchitis symptoms",
+      "direction": "decreased",
+      "study_type": "review",
+      "finding_summary": "This Cochrane review reported that Pelargonium sidoides may relieve symptoms in acute bronchitis in adults and children and the common cold in adults, while noting that doubt exists.",
+      "limitations": "authors report substantial heterogeneity across the three adult trials (746 patients) and three child trials (819 children); preparation type was a potential cause, with tablet form not showing an effect"
+    },
+    {
+      "source_pmid": "24146345",
+      "substance_slug": "pelargonium-sidoides",
+      "endpoint": "adverse events",
+      "direction": "increased",
+      "study_type": "review",
+      "finding_summary": "The same Cochrane review reported adverse events were more common with Pelargonium sidoides than comparators, with none classified as serious."
+    },
+    {
+      "source_pmid": "36051888",
+      "substance_slug": "pelargonium-sidoides",
+      "endpoint": "acute cough symptoms",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "finding_summary": "This meta-analysis of randomized placebo-controlled trials of extract EPs 7630, reported as covering 2,195 participants across 11 trials in acute bronchitis and common cold, was associated with reduced acute cough symptoms.",
+      "limitations": "trials studied the manufacturer's standardized extract EPs 7630"
+    },
+    {
+      "source_pmid": "37891178",
+      "substance_slug": "bee-propolis",
+      "endpoint": "length of hospital stay in COVID-19",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "hospitalized adults with COVID-19",
+      "dose_amount": 900,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "10 days",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of standardized Brazilian green propolis extract, post-intervention hospital stay was 6.5 ± 6.0 days with propolis versus 7.7 ± 7.1 days with placebo (p=0.22).",
+      "limitations": "n=188 (98 propolis, 90 placebo); hospital adjunct-treatment context"
+    },
+    {
+      "source_pmid": "37891178",
+      "substance_slug": "bee-propolis",
+      "endpoint": "secondary infection incidence in COVID-19",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "hospitalized adults with COVID-19",
+      "dose_amount": 900,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "10 days",
+      "finding_summary": "In the same trial, secondary infection was reported in 6.1% of the propolis group versus 18.9% of the control group.",
+      "limitations": "secondary endpoint; n=188"
+    },
+    {
+      "source_pmid": "27462401",
+      "substance_slug": "bovine-colostrum",
+      "endpoint": "upper respiratory symptom days",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults in exercise training",
+      "duration": "8-12 weeks",
+      "finding_summary": "This systematic review and meta-analysis of five randomised controlled trials reported that bovine colostrum supplementation was associated with a 44% lower incidence rate of upper respiratory symptom days versus placebo over 8-12 weeks.",
+      "limitations": "5 RCTs totalling 152 participants, all in exercise-training populations; authors note the low precision of individual study estimates"
+    },
+    {
+      "source_pmid": "27462401",
+      "substance_slug": "bovine-colostrum",
+      "endpoint": "upper respiratory symptom episodes",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults in exercise training",
+      "duration": "8-12 weeks",
+      "finding_summary": "The same meta-analysis reported a 38% lower incidence rate of upper respiratory symptom episodes with bovine colostrum versus placebo.",
+      "limitations": "5 RCTs totalling 152 participants, all in exercise-training populations; authors note the low precision of individual study estimates"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10459079/",
+      "substance_slug": "bovine-colostrum",
+      "endpoint": "upper respiratory tract infection symptom frequency",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "pre-school children",
+      "duration": "6 weeks supplementation, effects reported up to 20 weeks",
+      "finding_summary": "In this randomized controlled trial in pre-school children, six weeks of bovine colostrum supplementation was associated with a 31% reduction in frequency of upper respiratory tract infection symptoms."
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10459079/",
+      "substance_slug": "bovine-colostrum",
+      "endpoint": "upper respiratory tract infection symptom severity",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "pre-school children",
+      "duration": "6 weeks supplementation, effects reported up to 20 weeks",
+      "finding_summary": "The same trial reported a 37% reduction in severity of upper respiratory tract infection symptoms with bovine colostrum versus control."
+    },
+    {
+      "source_pmid": "39814420",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "28-day all-cause mortality in sepsis",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "adults aged 18-85 with sepsis",
+      "finding_summary": "In this multicentre double-blinded placebo-controlled phase 3 trial (TESTS), 28-day all-cause mortality was 23.4% with thymosin α1 versus 24.1% with placebo (hazard ratio 0.99, 95% CI 0.77 to 1.27; p=0.93).",
+      "limitations": "n=1106; authors report prespecified subgroup interactions by age (p=0.01) and diabetes status (p=0.04) that warrant further study"
+    },
+    {
+      "source_pmid": "23327199",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "28-day mortality in severe sepsis",
+      "direction": "mixed",
+      "study_type": "human_rct",
+      "population": "ICU adults with severe sepsis",
+      "finding_summary": "In this multicenter randomized trial (ETASS), 28-day mortality was 26.0% with thymosin α1 versus 35.0% in controls (relative risk 0.74, 95% CI 0.54 to 1.02), with significance depending on the analysis (nonstratified p=0.062; log-rank p=0.049).",
+      "limitations": "n=361; single-blind design"
+    },
+    {
+      "source_pmid": "37845598",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "mortality in moderate to critical COVID-19",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "moderate to critical COVID-19 patients",
+      "finding_summary": "This systematic review and meta-analysis reported that thymosin alpha-1 therapy may be associated with reduced mortality in moderate to critical COVID-19.",
+      "limitations": "authors state randomized clinical trials are still required to verify the findings"
+    },
+    {
+      "source_pmid": "25041740",
+      "substance_slug": "ll-37",
+      "endpoint": "healing of hard-to-heal venous leg ulcers",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with hard-to-heal venous leg ulcers",
+      "finding_summary": "In this randomized placebo-controlled trial, topical LL-37 treatment was associated with enhanced healing of hard-to-heal venous leg ulcers.",
+      "limitations": "topical administration in a wound-care context; effect sizes not captured in this batch and pending verification"
+    },
+    {
+      "source_pmid": "12603850",
+      "substance_slug": "ll-37",
+      "endpoint": "LL-37 expression in chronic ulcer epithelium",
+      "direction": "decreased",
+      "study_type": "mechanistic",
+      "finding_summary": "This mechanistic study of human skin wounds reported that LL-37 is involved in re-epithelialization and is lacking in chronic ulcer epithelium."
+    },
+    {
+      "source_pmid": "15619563",
+      "substance_slug": "guduchi",
+      "endpoint": "sneezing relief in allergic rhinitis",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with allergic rhinitis",
+      "duration": "8 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, complete relief from sneezing was reported by 83% of patients on Tinospora cordifolia, while 79% of the placebo group reported no relief.",
+      "limitations": "n=75"
+    },
+    {
+      "source_pmid": "15619563",
+      "substance_slug": "guduchi",
+      "endpoint": "nasal discharge relief in allergic rhinitis",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with allergic rhinitis",
+      "duration": "8 weeks",
+      "finding_summary": "In the same trial, complete relief from nasal discharge was reported by 69% of patients on Tinospora cordifolia, while 84.8% of the placebo group reported no relief.",
+      "limitations": "n=75"
+    },
+    {
+      "source_pmid": "35037744",
+      "substance_slug": "guduchi",
+      "endpoint": "reports of liver injury with autoimmune features",
+      "direction": "increased",
+      "study_type": "human_observational",
+      "population": "patients at 13 Indian centers using Giloy during the COVID-19 pandemic",
+      "finding_summary": "This multicenter retrospective case series reported that Tinospora cordifolia (Giloy) use was temporally associated with acute hepatitis with autoimmune features and with unmasking of autoimmune hepatitis in people with silent chronic liver disease.",
+      "limitations": "retrospective case series, not a controlled trial; causality assessed as probable in 67.4% of cases"
+    }
+  ]
+}

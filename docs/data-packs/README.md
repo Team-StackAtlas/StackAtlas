@@ -53,6 +53,13 @@ workflow), use
 as the attached spec plus [`DEEP_RESEARCH_PROMPT.md`](DEEP_RESEARCH_PROMPT.md)
 as the mission-briefing message (fill in its assignment bracket).
 
+Staged batches awaiting or past verification live in
+[`batches/`](batches/) — each batch directory holds its `pack.json`, a
+`DOSSIER.md` tracing every finding to a quoted source sentence, and a
+`verify-pack.mjs` that must pass (it checks PMIDs against NCBI, flags
+retractions, and backfills year/journal) before the pack is uploaded in
+Admin → Research.
+
 Rows inside a pack reference each other by **natural keys** — a substance
 slug, a source's PMID/DOI/URL — never by database UUIDs. That's what makes
 packs safe to hand-author, regenerate, and re-import: the server resolves
