@@ -146,3 +146,24 @@ Findings currently span **40 substances**.
 
 _This audit made no code or data changes. Row counts are a point-in-time
 snapshot of production._
+
+## 5. Addendum (2026-08-17) — the "251 link-less sources" triage is resolved
+
+Queried live: 244 sources currently have no substance link, and the
+breakdown shows this is by-and-large **intentional shape, not rot**:
+
+| source_type | orphans | already brand-linked |
+|---|---|---|
+| brand_or_vendor_document | 187 | 185 |
+| official_label_or_document | 39 | 8 |
+| community_or_influencer_mention | 15 | 10 |
+| other | 2 | 1 |
+| human_study | 1 | 1 |
+
+The 187 vendor documents are product/brand pages correctly linked via
+`research_source_brands`; attaching them to substances would flood substance
+pages with vendor content. The 39 official documents are general
+regulator/reference material (DEA scheduling, FDA guidance portals, NCCIH
+indexes, certification directories) that genuinely concern no single
+substance. No mass-linking action is warranted; treat the remaining handful
+(1 human_study, 2 other) as individual review items.
