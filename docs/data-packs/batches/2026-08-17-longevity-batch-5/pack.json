@@ -1,0 +1,282 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Longevity evidence base — batch 5: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Lack of efficacy of resveratrol on C-reactive protein and selected cardiovascular risk factors--Results from a systematic review and meta-analysis of randomized controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "25885871",
+      "substances": ["resveratrol"]
+    },
+    {
+      "title": "The Effects of Resveratrol Supplementation on Endothelial Function and Blood Pressures Among Patients with Metabolic Syndrome and Related Disorders: A Systematic Review and Meta-Analysis of Randomized Controlled Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "31264084",
+      "substances": ["resveratrol"]
+    },
+    {
+      "title": "A Systematic Review and Meta-Analysis of Randomized Controlled Trials on the Impact of Resveratrol Supplementation on Anthropometric Indices in Patients With Type 2 Diabetes",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "40842160",
+      "substances": ["resveratrol"]
+    },
+    {
+      "title": "Improved Physical Performance Parameters in Patients Taking Nicotinamide Mononucleotide (NMN): A Systematic Review of Randomized Control Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "39221308",
+      "substances": ["nicotinamide-mononucleotide"]
+    },
+    {
+      "title": "Efficacy of oral nicotinamide mononucleotide supplementation on glucose and lipid metabolism for adults: a systematic review with meta-analysis on randomized controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "39116016",
+      "substances": ["nicotinamide-mononucleotide"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Safety and Metabolism of Long-term Administration of NIAGEN (Nicotinamide Riboside Chloride) in a Randomized, Double-Blind, Placebo-controlled Clinical Trial of Healthy Overweight Adults",
+      "source_type": "human_study",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611812/",
+      "substances": ["nicotinamide-riboside"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    },
+    {
+      "title": "A randomized placebo-controlled clinical trial of nicotinamide riboside in obese men: safety, insulin-sensitivity, and lipid-mobilizing effects",
+      "source_type": "human_study",
+      "pmid": "29992272",
+      "substances": ["nicotinamide-riboside"],
+      "notes": "Source-only in this batch: no numeric results were retrieved; findings deferred to a verified pass."
+    },
+    {
+      "title": "Efficacy of coenzyme Q10 in patients with cardiac failure: a meta-analysis of clinical trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "28738783",
+      "substances": ["coenzyme-q10"]
+    },
+    {
+      "title": "Effect of intensive blood-glucose control with metformin on complications in overweight patients with type 2 diabetes (UKPDS 34). UK Prospective Diabetes Study (UKPDS) Group",
+      "source_type": "human_study",
+      "pmid": "9742977",
+      "year": 1998,
+      "substances": ["metformin"]
+    },
+    {
+      "title": "Post-trial monitoring of a randomised controlled trial of intensive glycaemic control in type 2 diabetes extended from 10 years to 24 years (UKPDS 91)",
+      "source_type": "human_study",
+      "pmid": "38772405",
+      "year": 2024,
+      "substances": ["metformin"]
+    },
+    {
+      "title": "Influence of rapamycin on safety and healthspan metrics after one year: PEARL trial results",
+      "source_type": "human_study",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12074816/",
+      "substances": ["rapamycin"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    },
+    {
+      "title": "Effect of quercetin supplementation on plasma lipid profiles, blood pressure, and glucose levels: a systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "31940027",
+      "substances": ["quercetin"]
+    },
+    {
+      "title": "Effects of Quercetin on Blood Pressure: A Systematic Review and Meta-Analysis of Randomized Controlled Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "27405810",
+      "substances": ["quercetin"]
+    },
+    {
+      "title": "Effect of broccoli sprout extract and baseline gut microbiota on fasting blood glucose in prediabetes: a randomized, placebo-controlled trial",
+      "source_type": "human_study",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11879859/",
+      "substances": ["sulforaphane"],
+      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+    },
+    {
+      "title": "Randomized controlled trial of sulforaphane and metabolite discovery in children with Autism Spectrum Disorder",
+      "source_type": "human_study",
+      "pmid": "34034808",
+      "substances": ["sulforaphane"]
+    },
+    {
+      "title": "Sulforaphane treatment of autism spectrum disorder (ASD)",
+      "source_type": "human_study",
+      "pmid": "25313065",
+      "year": 2014,
+      "substances": ["sulforaphane"],
+      "notes": "Source-only in this batch: the earlier young-men ASD trial; numeric results not retrieved this session."
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "25885871",
+      "substance_slug": "resveratrol",
+      "endpoint": "cardiovascular risk markers (CRP, lipids, glucose)",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "finding_summary": "This systematic review and meta-analysis of randomized controlled trials reported no benefit of resveratrol supplementation on C-reactive protein, total cholesterol, LDL cholesterol, triglycerides, or glucose."
+    },
+    {
+      "source_pmid": "31264084",
+      "substance_slug": "resveratrol",
+      "endpoint": "endothelial function (flow-mediated dilation)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with metabolic syndrome and related disorders",
+      "finding_summary": "This meta-analysis reported significantly increased flow-mediated dilation with resveratrol supplementation in patients with metabolic syndrome and related disorders."
+    },
+    {
+      "source_pmid": "31264084",
+      "substance_slug": "resveratrol",
+      "endpoint": "blood pressure",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "patients with metabolic syndrome and related disorders",
+      "finding_summary": "The same meta-analysis reported no effect of resveratrol on systolic or diastolic blood pressure."
+    },
+    {
+      "source_pmid": "40842160",
+      "substance_slug": "resveratrol",
+      "endpoint": "body weight, BMI, and waist circumference in type 2 diabetes",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "patients with type 2 diabetes",
+      "finding_summary": "This meta-analysis reported significant reductions in body weight, BMI, and waist circumference with resveratrol in type 2 diabetes, with no significant effect on hip circumference or waist-to-hip ratio."
+    },
+    {
+      "source_pmid": "39221308",
+      "substance_slug": "nicotinamide-mononucleotide",
+      "endpoint": "blood NAD levels",
+      "direction": "increased",
+      "study_type": "review",
+      "population": "adults (mean age 58) across ten randomized trials",
+      "finding_summary": "This systematic review of ten randomized controlled trials (437 participants, 150-1200 mg/day, mean follow-up 9.6 weeks) reported an overall significant elevation of blood NAD levels with NMN supplementation, with no serious adverse effects observed.",
+      "limitations": "437 participants across 10 trials; mean follow-up only 9.6 weeks"
+    },
+    {
+      "source_pmid": "39221308",
+      "substance_slug": "nicotinamide-mononucleotide",
+      "endpoint": "physical performance",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "population": "adults (mean age 58) across ten randomized trials",
+      "finding_summary": "The same review reported that improvements in physical performance parameters with NMN were non-significant, and most clinically relevant outcomes did not differ from control despite the NAD elevation.",
+      "limitations": "437 participants across 10 trials; grip strength moved only 29.9 to 30.5 kg"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6611812/",
+      "substance_slug": "nicotinamide-riboside",
+      "endpoint": "whole-blood NAD+ concentration",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "healthy overweight adults",
+      "duration": "8 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, nicotinamide riboside at 100, 300, and 1000 mg daily dose-dependently increased whole-blood NAD+ by a reported 22%, 51%, and 142%, with no flushing and adverse-event rates similar to placebo.",
+      "limitations": "8-week surrogate-endpoint trial in healthy overweight adults; no clinical outcomes measured"
+    },
+    {
+      "source_pmid": "28738783",
+      "substance_slug": "coenzyme-q10",
+      "endpoint": "mortality in heart failure",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "patients with cardiac failure",
+      "finding_summary": "This meta-analysis of 14 randomized controlled trials (2,149 patients) reported lower mortality with coenzyme Q10 versus placebo in heart failure (relative risk 0.69, 95% CI 0.50 to 0.95).",
+      "limitations": "heart-failure treatment context, adjunct to standard therapy — not a general-population longevity result"
+    },
+    {
+      "source_pmid": "28738783",
+      "substance_slug": "coenzyme-q10",
+      "endpoint": "exercise capacity in heart failure",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with cardiac failure",
+      "finding_summary": "The same meta-analysis reported greater improvement in exercise capacity with coenzyme Q10 than placebo, while left-ventricular ejection fraction showed no significant difference."
+    },
+    {
+      "source_pmid": "9742977",
+      "substance_slug": "metformin",
+      "endpoint": "all-cause mortality (UKPDS 34)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "overweight adults with newly diagnosed type 2 diabetes",
+      "finding_summary": "In this randomized trial of 753 overweight patients with newly diagnosed type 2 diabetes followed a median 10.7 years, intensive glucose control with metformin was associated with a 36% relative risk reduction in all-cause mortality and 42% in diabetes-related death versus conventional therapy.",
+      "limitations": "n=753; diabetes-treatment context — evidence does not establish longevity benefits in people without diabetes"
+    },
+    {
+      "source_pmid": "38772405",
+      "substance_slug": "metformin",
+      "endpoint": "long-term mortality and myocardial infarction (24-year post-trial follow-up)",
+      "direction": "decreased",
+      "study_type": "human_observational",
+      "population": "UKPDS participants followed up to 24 years",
+      "finding_summary": "This extended post-trial monitoring of the UKPDS reported that early intensive glycaemic control including metformin conferred a near-lifelong reduced risk of death and myocardial infarction compared with conventional control.",
+      "limitations": "post-trial observational follow-up of a diabetes trial; treatment allocation ended years earlier"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12074816/",
+      "substance_slug": "rapamycin",
+      "endpoint": "visceral adiposity (primary outcome) and safety over 48 weeks",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "healthy normative-aging adults",
+      "duration": "48 weeks",
+      "finding_summary": "In the PEARL randomized placebo-controlled trial of weekly low-dose compounded rapamycin (5 or 10 mg), visceral adiposity did not change significantly, and adverse and serious adverse events were similar across groups.",
+      "limitations": "compounded rapamycin (bioavailability differs from branded sirolimus); decentralized trial design"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12074816/",
+      "substance_slug": "rapamycin",
+      "endpoint": "lean tissue mass in women (10 mg weekly)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "women in a healthy normative-aging cohort",
+      "duration": "48 weeks",
+      "finding_summary": "In the same trial, lean tissue mass and self-reported pain improved significantly for women taking 10 mg weekly rapamycin, and self-reported well-being improved at 5 mg.",
+      "limitations": "secondary outcomes in a sex-and-dose subgroup; primary outcome was null"
+    },
+    {
+      "source_pmid": "31940027",
+      "substance_slug": "quercetin",
+      "endpoint": "blood pressure",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "finding_summary": "This meta-analysis of 17 randomized trials (896 participants) reported that quercetin lowered systolic blood pressure by a weighted mean 3.09 mmHg and diastolic by 2.86 mmHg versus control.",
+      "limitations": "896 participants; effect sizes are small in absolute terms"
+    },
+    {
+      "source_pmid": "27405810",
+      "substance_slug": "quercetin",
+      "endpoint": "blood pressure (dose-stratified)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "finding_summary": "This earlier meta-analysis of 7 trials (587 participants) reported systolic and diastolic reductions with quercetin that were significant at doses of 500 mg/day and above, with no significant effect below 500 mg/day.",
+      "limitations": "the dose split is the load-bearing result: below 500 mg/day no significant effect was found"
+    },
+    {
+      "source_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11879859/",
+      "substance_slug": "sulforaphane",
+      "endpoint": "fasting blood glucose in prediabetes (primary outcome)",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "drug-naive adults with prediabetes",
+      "duration": "12 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial (35 broccoli sprout extract, 39 placebo), the prespecified primary outcome was not met, with an overall 0.2 mmol/L fasting-glucose reduction; an exploratory subgroup with mild obesity and low insulin resistance showed a larger 0.4 mmol/L response.",
+      "limitations": "n=74; subgroup response is exploratory, not confirmatory"
+    },
+    {
+      "source_pmid": "34034808",
+      "substance_slug": "sulforaphane",
+      "endpoint": "autism clinical impression scores in children (primary outcome)",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "children aged 3-12 with autism spectrum disorder",
+      "duration": "15 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of 57 children, treatment effects of sulforaphane on the primary outcome (Ohio Autism Clinical Impressions Scale) were not significant versus placebo.",
+      "limitations": "n=57 (28 sulforaphane, 29 placebo)"
+    }
+  ]
+}
