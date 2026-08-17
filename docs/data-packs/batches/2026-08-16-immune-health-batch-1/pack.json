@@ -22,6 +22,8 @@
       "title": "A randomized double blind placebo controlled clinical evaluation of extract of Andrographis paniculata (KalmCold) in patients with uncomplicated upper respiratory tract infection",
       "source_type": "human_study",
       "pmid": "20092985",
+      "year": 2010,
+      "journal_or_site": "Phytomedicine",
       "substances": ["andrographis"]
     },
     {
@@ -45,6 +47,8 @@
       "title": "Effects of Pelargonium sidoides extract EPs 7630 on acute cough and quality of life - a meta-analysis of randomized, placebo-controlled trials",
       "source_type": "review_or_meta_analysis",
       "pmid": "36051888",
+      "year": 2022,
+      "journal_or_site": "Multidisciplinary Respiratory Medicine",
       "substances": ["pelargonium-sidoides"]
     },
     {
@@ -212,7 +216,11 @@
       "direction": "decreased",
       "study_type": "human_rct",
       "population": "patients with uncomplicated upper respiratory tract infection",
-      "finding_summary": "In this randomized double-blind placebo-controlled trial of the KalmCold extract, the reported difference in symptom severity score was 10.85 points in favor of Andrographis paniculata over placebo."
+      "dose_amount": 200,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial of the KalmCold extract in 223 patients, overall visual-analogue symptom scores across nine cold symptoms were reported as significantly reduced versus placebo, with overall efficacy reported as 2.1 times that of placebo.",
+      "limitations": "n=223; manufacturer's branded extract"
     },
     {
       "source_pmid": "39005565",
@@ -265,8 +273,8 @@
       "endpoint": "acute cough symptoms",
       "direction": "decreased",
       "study_type": "meta_analysis",
-      "finding_summary": "This meta-analysis of randomized placebo-controlled trials of extract EPs 7630, reported as covering 2,195 participants across 11 trials in acute bronchitis and common cold, was associated with reduced acute cough symptoms.",
-      "limitations": "trials studied the manufacturer's standardized extract EPs 7630"
+      "finding_summary": "This meta-analysis of 11 randomized placebo-controlled trials (2,195 participants) reported earlier remission of acute cough with extract EPs 7630: at day 5, 56.8% of treated common-cold participants versus 38.8% on placebo showed at least a 50% reduction in cough intensity.",
+      "limitations": "trials studied the manufacturer's standardized extract EPs 7630; participant counts and day-5 figures confirmed in a follow-up search pass"
     },
     {
       "source_pmid": "37891178",
