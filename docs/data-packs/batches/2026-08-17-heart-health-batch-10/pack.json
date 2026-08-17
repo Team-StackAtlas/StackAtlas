@@ -1,0 +1,181 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Heart Health evidence base — batch 10: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Red Yeast Rice for Hyperlipidemia: A Meta-Analysis of 15 High-Quality Randomized Controlled Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "35111069",
+      "year": 2022,
+      "substances": ["red-yeast-rice"]
+    },
+    {
+      "title": "Garlic Lowers Blood Pressure in Hypertensive Individuals, Regulates Serum Cholesterol, and Stimulates Immunity: An Updated Meta-analysis and Review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "26764326",
+      "year": 2016,
+      "substances": ["garlic"]
+    },
+    {
+      "title": "Cardiovascular Risk Reduction with Icosapent Ethyl for Hypertriglyceridemia",
+      "source_type": "human_study",
+      "pmid": "30415628",
+      "doi": "10.1056/NEJMoa1812792",
+      "year": 2019,
+      "substances": ["omega-3-fatty-acids"]
+    },
+    {
+      "title": "Omega-3 fatty acids for the primary and secondary prevention of cardiovascular disease",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "30019766",
+      "year": 2018,
+      "substances": ["omega-3-fatty-acids"]
+    },
+    {
+      "title": "The Effect of Coenzyme Q10 on Morbidity and Mortality in Chronic Heart Failure: Results From Q-SYMBIO: A Randomized Double-Blind Trial",
+      "source_type": "human_study",
+      "pmid": "25282031",
+      "doi": "10.1016/j.jchf.2014.06.008",
+      "year": 2014,
+      "substances": ["coenzyme-q10"]
+    },
+    {
+      "title": "Hawthorn extract for treating chronic heart failure: meta-analysis of randomized trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12798455",
+      "year": 2003,
+      "substances": ["hawthorn"]
+    },
+    {
+      "title": "A comparison of the LDL-cholesterol lowering efficacy of plant stanols and plant sterols over a continuous dose range: results of a meta-analysis of randomized, placebo-controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "21345662",
+      "year": 2011,
+      "substances": ["plant-sterol-esters"]
+    },
+    {
+      "title": "Effects of Magnesium Supplementation on Blood Pressure: A Meta-Analysis of Randomized Double-Blind Placebo-Controlled Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "27402922",
+      "doi": "10.1161/HYPERTENSIONAHA.116.07664",
+      "year": 2016,
+      "substances": ["magnesium"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "35111069",
+      "substance_slug": "red-yeast-rice",
+      "endpoint": "LDL cholesterol",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with hyperlipidemia (15 high-quality RCTs)",
+      "finding_summary": "This meta-analysis of 15 high-quality randomized controlled trials reported that red yeast rice lowered LDL cholesterol by 1.02 mmol/L versus placebo — a 15-25% reduction within 6-8 weeks — with LDL-lowering not different from statin therapy in comparative trials.",
+      "limitations": "red yeast rice's active monacolin K is chemically identical to lovastatin; commercial products vary widely in monacolin content"
+    },
+    {
+      "source_pmid": "35111069",
+      "substance_slug": "red-yeast-rice",
+      "endpoint": "liver and kidney injury incidence",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "adults with hyperlipidemia (15 high-quality RCTs)",
+      "finding_summary": "Across the included trials, the incidence of liver and kidney injury was 0-5% and not different between red yeast rice and control groups.",
+      "limitations": "the authors note adverse-event design and reporting were insufficient in most studies to make a firm safety judgment"
+    },
+    {
+      "source_pmid": "26764326",
+      "substance_slug": "garlic",
+      "endpoint": "blood pressure in hypertensive individuals",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "hypertensive adults (20 trials, 970 participants)",
+      "finding_summary": "This updated meta-analysis of 20 trials (970 participants) reported mean reductions of 5.1 mmHg systolic and 2.5 mmHg diastolic blood pressure versus placebo, with garlic supplements highly tolerated.",
+      "limitations": "modest absolute effect; other systematic reviews judge the overall evidence not strong and call for a longer, well-powered trial"
+    },
+    {
+      "source_pmid": "30415628",
+      "substance_slug": "omega-3-fatty-acids",
+      "endpoint": "major cardiovascular events in statin-treated patients with elevated triglycerides (REDUCE-IT)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "statin-treated adults with triglycerides 135-500 mg/dL and cardiovascular disease or diabetes (n=8,179)",
+      "dose_amount": 4,
+      "dose_unit": "g",
+      "frequency": "daily",
+      "duration": "median 4.9 years",
+      "finding_summary": "In the REDUCE-IT trial, 4 g/day icosapent ethyl (purified EPA) reduced the primary composite endpoint (cardiovascular death, MI, stroke, revascularization, unstable angina) to 17.2% versus 22.0% with placebo (hazard ratio 0.75, 95% CI 0.68 to 0.83).",
+      "limitations": "a prescription-grade purified EPA ester at 4 g/day in a high-risk statin-treated population — results do not generalize to over-the-counter fish-oil supplements"
+    },
+    {
+      "source_pmid": "30019766",
+      "substance_slug": "omega-3-fatty-acids",
+      "endpoint": "all-cause mortality and cardiovascular events (supplemental EPA+DHA)",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "population": "adults with and without cardiovascular disease (86 trials, 162,796 participants)",
+      "finding_summary": "This Cochrane review (86 trials, 162,796 participants) found high-certainty evidence that increasing EPA and DHA has little or no effect on deaths and cardiovascular events, and moderate-certainty evidence of little or no difference in cardiovascular death, stroke, or arrhythmia.",
+      "limitations": "low-certainty evidence suggested a possible slight reduction in coronary death and coronary events; triglyceride lowering is established"
+    },
+    {
+      "source_pmid": "25282031",
+      "substance_slug": "coenzyme-q10",
+      "endpoint": "major adverse cardiovascular events in chronic heart failure (Q-SYMBIO)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with moderate-to-severe chronic heart failure (n=420, 17 centers)",
+      "dose_amount": 300,
+      "dose_unit": "mg",
+      "frequency": "daily (100 mg three times daily)",
+      "duration": "2 years",
+      "finding_summary": "In the Q-SYMBIO randomized double-blind trial, CoQ10 added to standard therapy halved major adverse cardiovascular events at week 106 (15% versus 26%, hazard ratio 0.50, p=0.003).",
+      "limitations": "420 patients is small for a mortality-bearing endpoint; a confirmatory large trial has not been completed"
+    },
+    {
+      "source_pmid": "25282031",
+      "substance_slug": "coenzyme-q10",
+      "endpoint": "cardiovascular and all-cause mortality in chronic heart failure",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with moderate-to-severe chronic heart failure (n=420)",
+      "finding_summary": "The same trial reported reduced cardiovascular mortality (18 versus 34 deaths, hazard ratio 0.51, 95% CI 0.28 to 0.92) and all-cause mortality (21 versus 39, hazard ratio 0.51, 95% CI 0.30 to 0.89) with CoQ10 versus placebo.",
+      "limitations": "same small-trial caveat as the MACE row; mortality was a secondary endpoint"
+    },
+    {
+      "source_pmid": "12798455",
+      "substance_slug": "hawthorn",
+      "endpoint": "maximal workload and symptoms in chronic heart failure",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with NYHA class I-III chronic heart failure (8 trials, 632 patients)",
+      "finding_summary": "This meta-analysis of eight randomized trials (632 patients) found hawthorn extract as an adjunct to standard therapy improved maximal workload versus placebo (weighted mean difference 7 W, 95% CI 3 to 11 W), with significant improvement in dyspnea and fatigue.",
+      "limitations": "adjunctive use in older trials with standardized extracts; no mortality or event outcomes"
+    },
+    {
+      "source_pmid": "21345662",
+      "substance_slug": "plant-sterol-esters",
+      "endpoint": "LDL cholesterol (dose-response)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults in randomized placebo-controlled trials across a continuous dose range",
+      "finding_summary": "This meta-analysis found clear, comparable dose-response LDL-cholesterol reductions for plant sterols and stanols at intakes up to 3 g/day, with maximal reductions of about 8.4% for plant sterol esters versus 17.1% for plant stanol esters.",
+      "limitations": "LDL is a surrogate endpoint — no cardiovascular outcome trials exist for plant sterol/stanol esters"
+    },
+    {
+      "source_pmid": "27402922",
+      "substance_slug": "magnesium",
+      "endpoint": "blood pressure",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults in randomized double-blind placebo-controlled trials (34 trials, 2,028 participants)",
+      "dose_amount": 368,
+      "dose_unit": "mg",
+      "frequency": "daily (median dose)",
+      "duration": "median 3 months",
+      "finding_summary": "This meta-analysis of 34 randomized double-blind placebo-controlled trials (2,028 participants) found magnesium supplementation at a median 368 mg/day for a median 3 months reduced systolic blood pressure by 2.00 mmHg and diastolic by 1.78 mmHg.",
+      "limitations": "small average effect at the population level; relevance greatest where baseline magnesium status is low"
+    }
+  ]
+}
