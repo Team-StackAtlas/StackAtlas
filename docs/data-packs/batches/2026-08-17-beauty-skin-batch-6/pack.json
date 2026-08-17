@@ -1,0 +1,202 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Beauty & Skin evidence base — batch 6: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Exploring the Impact of Hydrolyzed Collagen Oral Supplementation on Skin Rejuvenation: A Systematic Review and Meta-Analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "38192916",
+      "substances": ["collagen-peptides"]
+    },
+    {
+      "title": "Oral Supplementation of Collagen Peptides Improves Skin Hydration by Increasing the Natural Moisturizing Factor Content in the Stratum Corneum: A Randomized, Double-Blind, Placebo-Controlled Clinical Trial",
+      "source_type": "human_study",
+      "pmid": "33774639",
+      "substances": ["collagen-peptides"]
+    },
+    {
+      "title": "Oral sodium hyaluronate improves skin hydration, barrier function and signs of aging: a randomized, double-blind, placebo-controlled trial in 150 healthy adults",
+      "source_type": "human_study",
+      "pmid": "41422283",
+      "substances": ["hyaluronic-acid"]
+    },
+    {
+      "title": "Oral Hyaluronan Relieves Wrinkles and Improves Dry Skin: A 12-Week Double-Blinded, Placebo-Controlled Study",
+      "source_type": "human_study",
+      "pmid": "34203487",
+      "year": 2021,
+      "substances": ["hyaluronic-acid"]
+    },
+    {
+      "title": "Topical tretinoin for treatment of photodamaged skin. A multicenter study",
+      "source_type": "human_study",
+      "pmid": "2024983",
+      "substances": ["tretinoin"]
+    },
+    {
+      "title": "Two concentrations of topical tretinoin (retinoic acid) cause similar improvement of photoaging but different degrees of irritation. A double-blind, vehicle-controlled comparison of 0.1% and 0.025% tretinoin creams",
+      "source_type": "human_study",
+      "pmid": "7544967",
+      "substances": ["tretinoin"]
+    },
+    {
+      "title": "Biotin for Hair Loss: Teasing Out the Evidence",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "39148962",
+      "year": 2024,
+      "substances": ["biotin"]
+    },
+    {
+      "title": "Vitamins and minerals: their role in nail health and disease",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "17763607",
+      "substances": ["biotin"]
+    },
+    {
+      "title": "The efficacy and safety of minocycline, metronidazole, ivermectin, and azelaic acid in moderate-to-severe papulopustular rosacea: A systematic review and network meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "40213532",
+      "year": 2025,
+      "substances": ["azelaic-acid"]
+    },
+    {
+      "title": "Double-blind comparison of azelaic acid 20% cream and its vehicle in treatment of papulo-pustular rosacea",
+      "source_type": "human_study",
+      "pmid": "10598760",
+      "substances": ["azelaic-acid"]
+    },
+    {
+      "title": "Improvement of naturally aged skin with vitamin A (retinol)",
+      "source_type": "human_study",
+      "pmid": "17515510",
+      "year": 2007,
+      "substances": ["retinol"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "38192916",
+      "substance_slug": "collagen-peptides",
+      "endpoint": "skin hydration",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "finding_summary": "This systematic review and meta-analysis of 26 randomized controlled trials (1,721 participants) reported significantly improved skin hydration with hydrolyzed collagen supplementation versus placebo.",
+      "limitations": "many included trials are manufacturer-sponsored and use proprietary peptide blends"
+    },
+    {
+      "source_pmid": "38192916",
+      "substance_slug": "collagen-peptides",
+      "endpoint": "skin elasticity",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "finding_summary": "The same meta-analysis reported significantly improved skin elasticity with hydrolyzed collagen versus placebo.",
+      "limitations": "many included trials are manufacturer-sponsored and use proprietary peptide blends"
+    },
+    {
+      "source_pmid": "33774639",
+      "substance_slug": "collagen-peptides",
+      "endpoint": "stratum corneum water content",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, oral collagen peptides increased water content in the stratum corneum and epidermis, attributed to increased natural moisturizing factor.",
+      "limitations": "skin elasticity and skin thickness were reported as unchanged in the same trial"
+    },
+    {
+      "source_pmid": "41422283",
+      "substance_slug": "hyaluronic-acid",
+      "endpoint": "skin hydration and periorbital wrinkle depth (oral, 120 mg/day)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "150 healthy adults",
+      "dose_amount": 120,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "12 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial in 150 healthy adults, 120 mg/day oral sodium hyaluronate was reported to improve skin hydration and elasticity and reduce transepidermal water loss and periorbital wrinkle depth versus placebo.",
+      "limitations": "the 60 mg/day arm showed weaker effects; endpoint direction here summarizes the hydration/elasticity improvement"
+    },
+    {
+      "source_pmid": "34203487",
+      "substance_slug": "hyaluronic-acid",
+      "endpoint": "wrinkles and skin dryness (oral, 120 mg/day)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "healthy adults aged 35-64",
+      "dose_amount": 120,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "12 weeks",
+      "finding_summary": "In this 12-week double-blinded placebo-controlled study of 40 adults, daily oral hyaluronan was associated with improved wrinkle assessment, stratum corneum water content, transepidermal water loss, and elasticity versus placebo.",
+      "limitations": "n=40"
+    },
+    {
+      "source_pmid": "2024983",
+      "substance_slug": "tretinoin",
+      "endpoint": "overall improvement of photodamaged skin (topical 0.05%)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "duration": "24 weeks",
+      "finding_summary": "In this multicenter vehicle-controlled trial, 79% of participants using topical 0.05% tretinoin for 24 weeks showed overall improvement in photodamaged skin versus 48% with vehicle.",
+      "limitations": "topical prescription use; skin irritation is the characteristic adverse effect of tretinoin therapy"
+    },
+    {
+      "source_pmid": "7544967",
+      "substance_slug": "tretinoin",
+      "endpoint": "photoaging improvement, 0.1% versus 0.025% concentration",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "finding_summary": "In this double-blind vehicle-controlled comparison, 0.1% and 0.025% tretinoin creams produced statistically similar overall photoaging improvement, while the higher concentration caused more irritation.",
+      "limitations": "the between-concentration comparison is the endpoint here; both concentrations improved photoaging versus vehicle"
+    },
+    {
+      "source_pmid": "39148962",
+      "substance_slug": "biotin",
+      "endpoint": "hair growth in healthy individuals",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "finding_summary": "This review reported limited evidence for biotin's efficacy on hair growth in healthy individuals, with the highest-quality double-blind placebo-controlled trial finding no difference between biotin and placebo; reported benefits concentrate in deficiency-related hair loss.",
+      "limitations": "evidence for benefit exists mainly in biotin-deficiency states, which are rare in well-nourished adults"
+    },
+    {
+      "source_pmid": "17763607",
+      "substance_slug": "biotin",
+      "endpoint": "brittle nail syndrome",
+      "direction": "increased",
+      "study_type": "review",
+      "finding_summary": "This review of nail-health literature reported that brittle nail syndrome appears to abate with 2.5 mg/day biotin supplementation.",
+      "limitations": "applies to brittle-nail conditions specifically, not general nail health; older uncontrolled studies underlie the claim"
+    },
+    {
+      "source_pmid": "40213532",
+      "substance_slug": "azelaic-acid",
+      "endpoint": "investigator global assessment in papulopustular rosacea",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "moderate-to-severe papulopustular rosacea patients",
+      "finding_summary": "This network meta-analysis of 19 randomized controlled trials (8,208 participants) reported azelaic acid 20% with the largest odds of investigator-assessed improvement among compared topical and oral agents (odds ratio 8.54, 95% CI 2.48 to 29.45).",
+      "limitations": "network meta-analysis (indirect comparisons contribute); azelaic acid 15% showed significantly higher adverse-event odds than comparators"
+    },
+    {
+      "source_pmid": "10598760",
+      "substance_slug": "azelaic-acid",
+      "endpoint": "inflammatory lesion count in papulopustular rosacea (topical 20%)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "finding_summary": "In this double-blind vehicle-controlled trial, azelaic acid 20% cream reduced total inflammatory lesions by a reported 73.4% versus 50.6% with vehicle, with greater erythema reduction as well.",
+      "limitations": "topical dermatology-treatment context"
+    },
+    {
+      "source_pmid": "17515510",
+      "substance_slug": "retinol",
+      "endpoint": "fine wrinkling in naturally aged skin (topical 0.4%)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "elderly adults (mean age 87)",
+      "duration": "24 weeks",
+      "finding_summary": "In this randomized double-blind vehicle-controlled trial of 36 elderly participants, topical 0.4% retinol lotion applied up to three times weekly significantly improved fine-wrinkling scores versus vehicle after 24 weeks.",
+      "limitations": "n=36; very elderly cohort; cosmetic topical use"
+    }
+  ]
+}
