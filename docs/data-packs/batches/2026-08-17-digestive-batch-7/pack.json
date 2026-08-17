@@ -1,0 +1,233 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Digestive Health evidence base — batch 7: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "The impact of peppermint oil on the irritable bowel syndrome: a meta-analysis of the pooled clinical data",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "30654773",
+      "substances": ["peppermint-oil"]
+    },
+    {
+      "title": "Meta-analysis: non-pathogenic yeast Saccharomyces boulardii in the prevention of antibiotic-associated diarrhoea",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "16128673",
+      "substances": ["saccharomyces-boulardii"]
+    },
+    {
+      "title": "Saccharomyces boulardii for the prevention of antibiotic-associated diarrhea in adult hospitalized patients: a single-center, randomized, double-blind, placebo-controlled trial",
+      "source_type": "human_study",
+      "pmid": "22472744",
+      "substances": ["saccharomyces-boulardii"]
+    },
+    {
+      "title": "Probiotics and antibiotic-associated diarrhea in children: A review and new evidence on Lactobacillus rhamnosus GG during and after antibiotic treatment",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "28827186",
+      "substances": ["lacticaseibacillus-rhamnosus-gg"]
+    },
+    {
+      "title": "A systematic review and meta-analysis of the effect and safety of ginger in the treatment of pregnancy-associated nausea and vomiting",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "24642205",
+      "year": 2014,
+      "substances": ["ginger"]
+    },
+    {
+      "title": "Effects of Ginger Intake on Chemotherapy-Induced Nausea and Vomiting: A Systematic Review of Randomized Clinical Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "36501010",
+      "year": 2022,
+      "substances": ["ginger"]
+    },
+    {
+      "title": "Randomised placebo-controlled trial of dietary glutamine supplements for postinfectious irritable bowel syndrome",
+      "source_type": "human_study",
+      "pmid": "30108163",
+      "substances": ["l-glutamine"]
+    },
+    {
+      "title": "A systematic review and meta-analysis of clinical trials on the effects of glutamine supplementation on gut permeability in adults",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "39397201",
+      "substances": ["l-glutamine"]
+    },
+    {
+      "title": "Effectiveness of inulin intake on indicators of chronic constipation; a meta-analysis of controlled randomized clinical trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "25208775",
+      "year": 2014,
+      "substances": ["inulin"]
+    },
+    {
+      "title": "Inulin-induced improvements on bowel habit and gut microbiota in adults with functional constipation: findings of a randomized, double-blind, placebo-controlled study",
+      "source_type": "human_study",
+      "pmid": "41233756",
+      "substances": ["inulin"]
+    },
+    {
+      "title": "The Efficacy and Safety of the Probiotic Bacterium Lactobacillus reuteri DSM 17938 for Infantile Colic: A Meta-Analysis of Randomized Controlled Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "26509502",
+      "year": 2015,
+      "substances": ["limosilactobacillus-reuteri"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "30654773",
+      "substance_slug": "peppermint-oil",
+      "endpoint": "global IBS symptoms",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "adults with irritable bowel syndrome",
+      "finding_summary": "This meta-analysis of 12 randomized trials (835 patients) reported greater global symptom improvement with peppermint oil versus placebo (risk ratio 2.39, 95% CI 1.93 to 2.97), with a number needed to treat of three.",
+      "limitations": "835 patients across 12 trials; enteric-coated formulations dominate the evidence"
+    },
+    {
+      "source_pmid": "30654773",
+      "substance_slug": "peppermint-oil",
+      "endpoint": "abdominal pain in IBS",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with irritable bowel syndrome",
+      "finding_summary": "The same meta-analysis reported improved abdominal pain versus placebo (risk ratio 1.78, 95% CI 1.43 to 2.20), number needed to treat of four.",
+      "limitations": "835 patients across 12 trials"
+    },
+    {
+      "source_pmid": "30654773",
+      "substance_slug": "peppermint-oil",
+      "endpoint": "adverse effects versus placebo",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "finding_summary": "Across eight randomized trials in the same meta-analysis, reported adverse effects did not differ significantly between peppermint oil and placebo."
+    },
+    {
+      "source_pmid": "16128673",
+      "substance_slug": "saccharomyces-boulardii",
+      "endpoint": "antibiotic-associated diarrhea incidence",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "children and adults receiving antibiotics",
+      "finding_summary": "This meta-analysis of five randomized controlled trials reported that Saccharomyces boulardii reduced the risk of antibiotic-associated diarrhoea from 17.2% to 6.7%, roughly one case prevented per ten treated.",
+      "limitations": "five trials; effect sizes vary by population and antibiotic"
+    },
+    {
+      "source_pmid": "22472744",
+      "substance_slug": "saccharomyces-boulardii",
+      "endpoint": "antibiotic-associated diarrhea in hospitalized elderly patients",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "elderly hospitalized adults on antibiotics",
+      "finding_summary": "In this single-center randomized double-blind placebo-controlled trial, Saccharomyces boulardii was reported as not effective in preventing antibiotic-associated diarrhea in hospitalized elderly patients.",
+      "limitations": "population-attribution of the null to this specific trial should be confirmed during verification"
+    },
+    {
+      "source_pmid": "28827186",
+      "substance_slug": "lacticaseibacillus-rhamnosus-gg",
+      "endpoint": "antibiotic-associated diarrhea incidence",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "patients on antibiotics (12 randomized trials)",
+      "finding_summary": "This review reported meta-analytic evidence that Lactobacillus rhamnosus GG reduced antibiotic-associated diarrhea risk from 22.4% to 12.3% versus placebo or no treatment.",
+      "limitations": "when children and adults were analyzed separately, the difference was significant only in children"
+    },
+    {
+      "source_pmid": "24642205",
+      "substance_slug": "ginger",
+      "endpoint": "nausea in pregnancy",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "pregnant women (12 RCTs, 1,278 participants)",
+      "finding_summary": "This systematic review and meta-analysis of 12 randomized trials (1,278 pregnant women) reported significantly improved nausea symptoms with ginger versus placebo, with no significant increase in spontaneous-abortion risk.",
+      "limitations": "subgroup analyses favored daily doses below 1,500 mg for nausea relief"
+    },
+    {
+      "source_pmid": "24642205",
+      "substance_slug": "ginger",
+      "endpoint": "vomiting episodes in pregnancy",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "pregnant women (12 RCTs, 1,278 participants)",
+      "finding_summary": "The same meta-analysis reported that ginger did not significantly reduce the number of vomiting episodes versus placebo, with a non-significant trend toward improvement."
+    },
+    {
+      "source_pmid": "36501010",
+      "substance_slug": "ginger",
+      "endpoint": "chemotherapy-induced nausea and vomiting",
+      "direction": "mixed",
+      "study_type": "review",
+      "population": "chemotherapy patients (23 RCTs)",
+      "finding_summary": "This systematic review of 23 randomized trials reported no overall significant differences in acute or delayed nausea and vomiting with ginger, while the subgroup taking up to 1 g/day for more than four days had significantly less acute vomiting.",
+      "limitations": "the positive result is a dose-and-duration subgroup, not the overall comparison"
+    },
+    {
+      "source_pmid": "30108163",
+      "substance_slug": "l-glutamine",
+      "endpoint": "symptom response in postinfectious IBS-D with intestinal hyperpermeability",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with postinfectious diarrhea-predominant IBS and increased intestinal permeability",
+      "dose_amount": 5,
+      "dose_unit": "g",
+      "frequency": "three times daily",
+      "duration": "8 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, the primary symptom-response endpoint was reached by 79.6% on glutamine versus 5.8% on placebo in this narrowly defined post-infectious population.",
+      "limitations": "highly selected population (post-enteric-infection IBS-D with documented hyperpermeability); the unusually large effect awaits independent replication"
+    },
+    {
+      "source_pmid": "39397201",
+      "substance_slug": "l-glutamine",
+      "endpoint": "intestinal permeability (pooled)",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "adults across clinical trial populations",
+      "finding_summary": "This systematic review and meta-analysis reported that glutamine supplementation did not significantly affect intestinal permeability overall.",
+      "limitations": "contrasts with positive results in selected subpopulations such as the postinfectious IBS-D trial"
+    },
+    {
+      "source_pmid": "25208775",
+      "substance_slug": "inulin",
+      "endpoint": "stool frequency in chronic constipation",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "adults with chronic constipation",
+      "finding_summary": "This meta-analysis of randomized controlled trials reported significant improvements with inulin in stool frequency, stool consistency, and transit time in chronic constipation.",
+      "limitations": "pooled standardized effects with wide confidence intervals (stool frequency effect 0.69, 95% CI 0.04 to 1.34)"
+    },
+    {
+      "source_pmid": "41233756",
+      "substance_slug": "inulin",
+      "endpoint": "bowel habit in functional constipation (12 g/day)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with functional constipation",
+      "dose_amount": 12,
+      "dose_unit": "g",
+      "frequency": "daily",
+      "finding_summary": "In this randomized double-blind placebo-controlled study, 12 g daily inulin improved stool frequency and abdominal well-being and shifted gut microbiota toward butyrate-producing genera.",
+      "limitations": "pain and bloating were reported as not improving with inulin intake"
+    },
+    {
+      "source_pmid": "26509502",
+      "substance_slug": "limosilactobacillus-reuteri",
+      "endpoint": "daily crying time in infantile colic (weeks 2-3)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "infants with colic (6 RCTs, 423 infants)",
+      "finding_summary": "This meta-analysis of six randomized trials (423 infants) reported reduced crying time with L. reuteri DSM 17938 at two weeks (about 43 fewer minutes/day) and three weeks (about 46 fewer minutes/day), with no serious adverse events.",
+      "limitations": "trial heterogeneity noted by the authors; effect not maintained at four weeks"
+    },
+    {
+      "source_pmid": "26509502",
+      "substance_slug": "limosilactobacillus-reuteri",
+      "endpoint": "colic treatment effectiveness at four weeks",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "infants with colic (6 RCTs, 423 infants)",
+      "finding_summary": "The same meta-analysis reported that the increased treatment effectiveness seen at two and three weeks was no longer significant at four weeks, consistent with gradual physiological improvement of colic."
+    }
+  ]
+}
