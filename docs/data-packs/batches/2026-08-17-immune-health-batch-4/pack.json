@@ -1,0 +1,99 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Immune Health evidence base — batch 4: deferred results and nulls (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Oral Astragalus (Huang qi) for preventing frequent episodes of acute respiratory tract infection in children",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "27905672",
+      "journal_or_site": "Cochrane Database of Systematic Reviews",
+      "substances": ["astragalus"],
+      "notes": "Also listed source-only in batch 3; this batch adds its finding. Importer upserts, so re-inclusion does not duplicate."
+    },
+    {
+      "title": "Zinc gluconate lozenges for treating the common cold in children: a randomized controlled trial",
+      "source_type": "human_study",
+      "pmid": "9643859",
+      "year": 1998,
+      "journal_or_site": "JAMA",
+      "substances": ["zinc-gluconate"]
+    },
+    {
+      "title": "Treatment with EPs 7630, a Pelargonium Sidoides Root Extract, Is Effective and Safe in Patients with the Common Cold: Results From a Randomized, Double Blind, Placebo-Controlled Clinical Trial",
+      "source_type": "human_study",
+      "pmid": "31341433",
+      "year": 2019,
+      "substances": ["pelargonium-sidoides"],
+      "notes": "Also listed source-only in batch 1; this batch adds its findings. Importer upserts, so re-inclusion does not duplicate."
+    },
+    {
+      "title": "A Double-blind Multicenter Two-arm Randomized Placebo-controlled Phase-III Clinical Study to Evaluate the Effectiveness and Safety of Thymosin α1 as an Add-on Treatment to Existing Standard of Care Treatment in Moderate-to-severe COVID-19 Patients",
+      "source_type": "human_study",
+      "pmid": "36042753",
+      "substances": ["thymosin-alpha-1"],
+      "notes": "Also noted in batch 1's withheld list; results retrieved this pass."
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "27905672",
+      "substance_slug": "astragalus",
+      "endpoint": "prevention of frequent acute respiratory tract infections in children",
+      "direction": "unclear",
+      "study_type": "review",
+      "population": "children up to 14 years",
+      "finding_summary": "This Cochrane review found no randomized controlled trials meeting its inclusion criteria and concluded there is insufficient evidence to assess the benefits or harms of oral Astragalus as a sole intervention for preventing frequent respiratory infections in children.",
+      "limitations": "empty review: zero eligible trials through the December 2015 search date"
+    },
+    {
+      "source_pmid": "9643859",
+      "substance_slug": "zinc-gluconate",
+      "endpoint": "common cold symptom duration in children and adolescents",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "students in grades 1 through 12",
+      "finding_summary": "In this randomized double-masked placebo-controlled trial of 249 school-age participants, zinc gluconate glycine lozenges were reported as not effective in treating cold symptoms, in contrast to adult trials of similar lozenges.",
+      "limitations": "n=249; zinc gluconate glycine lozenge formulation; authors call for virologic-testing studies"
+    },
+    {
+      "source_pmid": "31341433",
+      "substance_slug": "pelargonium-sidoides",
+      "endpoint": "common cold symptom intensity improvement (day 5)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with common cold",
+      "dose_amount": 40,
+      "dose_unit": "mg",
+      "frequency": "three times daily",
+      "duration": "10 days",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, the day-5 sum of symptom intensity differences was reported as 12.5 ± 4.4 points with EPs 7630 versus 8.8 ± 6.8 with placebo, indicating greater symptom improvement.",
+      "limitations": "105 adults; manufacturer's standardized extract EPs 7630"
+    },
+    {
+      "source_pmid": "31341433",
+      "substance_slug": "pelargonium-sidoides",
+      "endpoint": "clinical cure at day 10",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults with common cold",
+      "dose_amount": 40,
+      "dose_unit": "mg",
+      "frequency": "three times daily",
+      "duration": "10 days",
+      "finding_summary": "The same trial reported 90.4% of EPs 7630 participants clinically cured after 10 days versus 21.2% with placebo.",
+      "limitations": "105 adults; the very large between-group difference warrants confirmation against the full paper during verification"
+    },
+    {
+      "source_pmid": "36042753",
+      "substance_slug": "thymosin-alpha-1",
+      "endpoint": "death rate in moderate-to-severe COVID-19 (add-on to standard of care)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "hospitalized moderate-to-severe COVID-19 patients",
+      "finding_summary": "In this double-blind multicenter placebo-controlled phase III trial, the thymosin α1 arm was reported with a lower death rate (11.1%) than the placebo arm (38.5%), alongside shortened hospitalization and oxygen-support duration.",
+      "limitations": "n=105 (40 severe, 65 moderate); single-country trial; read alongside the 2025 TESTS sepsis null for the broader mortality picture"
+    }
+  ]
+}
