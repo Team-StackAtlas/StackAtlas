@@ -30,8 +30,12 @@
       "title": "Safety and Efficacy Profile of Echinacea purpurea to Prevent Common Cold Episodes: A Randomized, Double-Blind, Placebo-Controlled Trial",
       "source_type": "human_study",
       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3457740/",
+      "pmid": "23024696",
+      "doi": "10.1155/2012/841315",
+      "year": 2012,
+      "journal_or_site": "Evidence-Based Complementary and Alternative Medicine",
       "substances": ["echinacea"],
-      "notes": "PMID not retrieved this session; PMC URL used as fallback identifier. Resolve PMID during verification."
+      "notes": "Identifiers and result attribution confirmed in a follow-up search pass; n=755 (alcohol extract of fresh E. purpurea, 4 months)."
     },
     {
       "title": "Black elderberry (Sambucus nigra) supplementation effectively treats upper respiratory symptoms: A meta-analysis of randomized, controlled clinical trials",
@@ -150,8 +154,8 @@
       "direction": "decreased",
       "study_type": "human_rct",
       "population": "healthy adults",
-      "finding_summary": "In this randomized double-blind placebo-controlled prevention trial, Echinacea purpurea was reported to reduce the total number of cold episodes, cumulated episode days, and pain-killer medicated episodes versus placebo.",
-      "limitations": "attribution of the retrieved result sentence to this trial requires confirmation during verification"
+      "finding_summary": "In this randomized double-blind placebo-controlled prevention trial of 755 healthy adults, Echinacea purpurea was reported to reduce the total number of cold episodes, cumulated episode days, and pain-killer medicated episodes versus placebo.",
+      "limitations": "n=755; adverse-event rates were similar between groups (9-10% possibly drug-related in each)"
     },
     {
       "source_pmid": "30670267",
