@@ -1,0 +1,116 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Interaction & risk evidence — batch 11: the risk pass queued by batches 9-10 (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "St John's wort (Hypericum perforatum): drug interactions and clinical outcomes",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12392581",
+      "year": 2002,
+      "substances": ["st-john-s-wort"]
+    },
+    {
+      "title": "Clinical relevance of St. John's wort drug interactions revisited",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "31742659",
+      "substances": ["st-john-s-wort"]
+    },
+    {
+      "title": "Serotonin a la carte: supplementation with the serotonin precursor 5-hydroxytryptophan",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "16023217",
+      "year": 2006,
+      "substances": ["5-hydroxy-l-tryptophan"]
+    },
+    {
+      "title": "Variability in strength of red yeast rice supplements purchased from mainstream retailers",
+      "source_type": "other",
+      "pmid": "28622038",
+      "year": 2017,
+      "substances": ["red-yeast-rice"]
+    },
+    {
+      "title": "Interaction study between digoxin and a preparation of hawthorn (Crataegus oxyacantha)",
+      "source_type": "human_study",
+      "pmid": "12817526",
+      "year": 2003,
+      "substances": ["hawthorn"]
+    },
+    {
+      "title": "Effects of Randomized Treatment With Icosapent Ethyl and a Mineral Oil Comparator on Interleukin-1beta, Interleukin-6, C-Reactive Protein, Oxidized Low-Density Lipoprotein Cholesterol, Homocysteine, Lipoprotein(a), and Lipoprotein-Associated Phospholipase A2: A REDUCE-IT Biomarker Substudy",
+      "source_type": "human_study",
+      "pmid": "35762321",
+      "doi": "10.1161/CIRCULATIONAHA.122.059410",
+      "year": 2022,
+      "substances": ["omega-3-fatty-acids"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "12392581",
+      "substance_slug": "st-john-s-wort",
+      "endpoint": "plasma concentrations and effectiveness of co-administered drugs",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "patients taking St John's wort with prescription drugs",
+      "finding_summary": "This review documents clinically significant interactions via induction of CYP3A4 (and CYP2C9, CYP1A2) and P-glycoprotein, reducing concentrations or effect of warfarin, phenprocoumon, cyclosporine, HIV protease inhibitors, theophylline, digoxin, and oral contraceptives — with documented consequences including acute transplant rejection on cyclosporine and breakthrough bleeding and unplanned pregnancies on oral contraceptives.",
+      "limitations": "the degree of induction is unpredictable across preparations due to variable constituent content"
+    },
+    {
+      "source_pmid": "31742659",
+      "substance_slug": "st-john-s-wort",
+      "endpoint": "interaction potential by preparation (hyperforin content)",
+      "direction": "mixed",
+      "study_type": "review",
+      "population": "pharmacokinetic interaction studies across St John's wort preparations",
+      "finding_summary": "This review reports that St John's wort preparations activate PXR and induce CYP3A4 and P-glycoprotein, with the degree of CYP3A4 induction correlating significantly with the preparation's hyperforin content — low-hyperforin preparations carry lower interaction potential.",
+      "limitations": "hyperforin content is rarely declared on consumer product labels, so users typically cannot apply this distinction"
+    },
+    {
+      "source_pmid": "16023217",
+      "substance_slug": "5-hydroxy-l-tryptophan",
+      "endpoint": "serotonin syndrome reports in combination with serotonergic drugs",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "population": "clinical literature on 5-HTP alone and combined with antidepressants",
+      "finding_summary": "Review-level assessment finds the clinical literature has not documented human serotonin syndrome cases attributed to 5-HTP alone or combined with antidepressants, despite the mechanistic expectation from precursor loading; clinical studies of such combinations generally reported tolerability.",
+      "limitations": "absence of published case reports is not evidence of safety — the mechanistic risk is real, toxicology guidance advises against combining 5-HTP with SSRIs/MAOIs, and no safe combined dose is established"
+    },
+    {
+      "source_pmid": "28622038",
+      "substance_slug": "red-yeast-rice",
+      "endpoint": "monacolin K content consistency across commercial products",
+      "direction": "mixed",
+      "study_type": "other",
+      "population": "28 red yeast rice supplement brands from mainstream US retailers",
+      "finding_summary": "Chemical analysis of 28 brands found monacolin K undetectable in two, and among the 26 containing it the content ranged more than 60-fold (0.09 to 5.48 mg per 1,200 mg); following label serving directions, daily monacolin K intake would range more than 120-fold (0.09 to 10.94 mg).",
+      "limitations": "monacolin K is chemically identical to lovastatin, so this variability means users cannot predict their effective statin dose from the label"
+    },
+    {
+      "source_pmid": "12817526",
+      "substance_slug": "hawthorn",
+      "endpoint": "digoxin pharmacokinetics with co-administration",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "healthy volunteers (n=8, randomized crossover)",
+      "dose_amount": 900,
+      "dose_unit": "mg",
+      "frequency": "daily (WS 1442 extract, 450 mg twice daily)",
+      "duration": "21 days",
+      "finding_summary": "In this randomized crossover study, three weeks of hawthorn extract WS 1442 (450 mg twice daily) alongside digoxin 0.25 mg produced no statistically significant changes in any measured digoxin pharmacokinetic parameter, suggesting the combination was safe at these doses.",
+      "limitations": "eight healthy volunteers and one extract at one dose — a reassuring but narrow negative; clinician oversight is still prudent for heart-failure patients on digoxin"
+    },
+    {
+      "source_pmid": "35762321",
+      "substance_slug": "omega-3-fatty-acids",
+      "endpoint": "biomarker changes in the REDUCE-IT mineral-oil comparator arm",
+      "direction": "mixed",
+      "study_type": "human_rct",
+      "population": "REDUCE-IT biomarker substudy participants",
+      "finding_summary": "In this REDUCE-IT biomarker substudy, the mineral-oil comparator arm showed 12-month median increases of 21.9% in high-sensitivity C-reactive protein, 10.9% in oxidized LDL cholesterol, and 28.9% in interleukin-1beta, reviving debate over whether part of icosapent ethyl's apparent benefit reflects comparator harm; regulatory assessments estimated roughly 3% of the net clinical benefit might be attributable to mineral oil's biomarker effects.",
+      "limitations": "tempers but does not overturn the primary trial result — the regulatory estimate attributes only a small fraction of the observed benefit to the comparator"
+    }
+  ]
+}
