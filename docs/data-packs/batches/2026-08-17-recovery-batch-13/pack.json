@@ -1,0 +1,156 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Recovery evidence base — batch 13: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Valerian for sleep: a systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "17145239",
+      "year": 2006,
+      "substances": ["valerian"]
+    },
+    {
+      "title": "Lavender Oil Preparation (Silexan) for Treating Anxiety: An Updated Meta-Analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "27861196",
+      "year": 2016,
+      "substances": ["lavender"]
+    },
+    {
+      "title": "Lavender oil preparation Silexan is effective in generalized anxiety disorder - a randomized, double-blind comparison to placebo and paroxetine",
+      "source_type": "human_study",
+      "pmid": "24456909",
+      "year": 2014,
+      "substances": ["lavender"]
+    },
+    {
+      "title": "A randomized, double-blind, placebo-controlled trial of oral Matricaria recutita (chamomile) extract therapy for generalized anxiety disorder",
+      "source_type": "human_study",
+      "pmid": "19593179",
+      "year": 2009,
+      "substances": ["chamomile"]
+    },
+    {
+      "title": "A double-blind, placebo-controlled investigation of the effects of Passiflora incarnata (passionflower) herbal tea on subjective sleep quality",
+      "source_type": "human_study",
+      "pmid": "21294203",
+      "year": 2011,
+      "substances": ["passionflower"]
+    },
+    {
+      "title": "The impact of tryptophan supplementation on sleep quality: a systematic review, meta-analysis, and meta-regression",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "33942088",
+      "year": 2022,
+      "substances": ["l-tryptophan"]
+    },
+    {
+      "title": "Effects of beta-alanine supplementation on exercise performance: a meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "22270875",
+      "doi": "10.1007/s00726-011-1200-z",
+      "year": 2012,
+      "substances": ["beta-alanine"]
+    },
+    {
+      "title": "Effects of Oral Gamma-Aminobutyric Acid (GABA) Administration on Stress and Sleep in Humans: A Systematic Review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "33041752",
+      "year": 2020,
+      "substances": ["gamma-aminobutyric-acid"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "17145239",
+      "substance_slug": "valerian",
+      "endpoint": "subjective sleep quality",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "adults with sleep complaints (16 studies, 1,093 patients)",
+      "finding_summary": "This systematic review and meta-analysis (16 studies, 1,093 patients) concluded valerian might improve subjective sleep quality without notable side effects — yet 9 of the 16 studies had no positive sleep-quality outcome, doses ranged from 225 to 1,215 mg, and only one study used a standardized extract.",
+      "limitations": "the authors state the small, varied, often poor-quality studies mean the finding may not be reliable"
+    },
+    {
+      "source_pmid": "27861196",
+      "substance_slug": "lavender",
+      "endpoint": "anxiety symptoms (oral Silexan preparation)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with anxiety disorders and subthreshold anxiety",
+      "finding_summary": "This updated meta-analysis of the oral lavender-oil preparation Silexan found it effective for treating anxiety across the included randomized trials.",
+      "limitations": "evidence is specific to the standardized oral Silexan capsule — it does not transfer to aromatherapy or unstandardized lavender products"
+    },
+    {
+      "source_pmid": "24456909",
+      "substance_slug": "lavender",
+      "endpoint": "generalized anxiety disorder severity (HAMA)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with generalized anxiety disorder (n=539, four-arm trial)",
+      "dose_amount": 160,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "10 weeks",
+      "finding_summary": "In this randomized double-blind four-arm trial, Silexan 160 mg/day reduced the Hamilton Anxiety total score by 14.1 points versus 11.3 with paroxetine 20 mg and 9.5 with placebo, with the 80 mg dose (12.8 points) also outperforming placebo.",
+      "limitations": "single manufacturer-supported trial of a proprietary preparation; paroxetine comparison was not powered as formal non-inferiority"
+    },
+    {
+      "source_pmid": "19593179",
+      "substance_slug": "chamomile",
+      "endpoint": "generalized anxiety disorder symptoms",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "outpatients with mild-to-moderate generalized anxiety disorder (n=57 randomized)",
+      "duration": "8 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, oral chamomile extract produced a significantly greater reduction in mean anxiety symptom scores than placebo over 8 weeks.",
+      "limitations": "small single trial in mild-to-moderate anxiety"
+    },
+    {
+      "source_pmid": "21294203",
+      "substance_slug": "passionflower",
+      "endpoint": "subjective sleep quality (herbal tea)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "healthy young adults with mild sleep fluctuations (n=41, ages 18-35)",
+      "duration": "7 days",
+      "finding_summary": "In this double-blind placebo-controlled crossover investigation, one week of low-dose passionflower herbal tea produced significantly better subjective sleep-quality ratings than placebo.",
+      "limitations": "short-term tea-form study in healthy adults; direction of the endpoint is improved quality (insomnia-severity framing), not clinical insomnia treatment"
+    },
+    {
+      "source_pmid": "33942088",
+      "substance_slug": "l-tryptophan",
+      "endpoint": "sleep architecture (wake after sleep onset vs other components)",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "adults in randomized supplementation trials",
+      "dose_amount": 1,
+      "dose_unit": "g",
+      "frequency": "daily (threshold dose from meta-regression)",
+      "finding_summary": "This systematic review and meta-analysis found tryptophan supplementation shortened wake after sleep onset (about 81 minutes less per gram; supplementation at or above 1 g clearly better than below), while other sleep components — including sleep-onset latency — were unaffected.",
+      "limitations": "only 4 of 18 identified articles were meta-analyzable; the benefit is specific to sleep maintenance, not falling asleep"
+    },
+    {
+      "source_pmid": "22270875",
+      "substance_slug": "beta-alanine",
+      "endpoint": "exercise capacity versus performance outcomes",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "exercisers in randomized supplementation trials",
+      "finding_summary": "This meta-analysis found beta-alanine supplementation significantly improved exercise capacity — with about a 2.85% improvement concentrated in efforts lasting 60 to 240 seconds — but did not improve performance-based outcome measures overall.",
+      "limitations": "benefit window is specific to 1-4-minute high-intensity efforts where muscle acidosis limits work; paresthesia at bolus doses is the familiar tolerability note"
+    },
+    {
+      "source_pmid": "33041752",
+      "substance_slug": "gamma-aminobutyric-acid",
+      "endpoint": "stress and sleep outcomes with oral GABA",
+      "direction": "unclear",
+      "study_type": "review",
+      "population": "human clinical trials of oral GABA (14 studies)",
+      "finding_summary": "This systematic review of 14 human studies found mixed results: limited (low-to-moderate) evidence for stress reduction and very limited (low) evidence for sleep benefit from oral GABA, with the authors concluding more studies are needed before inferences can be made.",
+      "limitations": "oral GABA's ability to cross the blood-brain barrier remains contested, which is part of why the evidence base is graded so cautiously"
+    }
+  ]
+}
