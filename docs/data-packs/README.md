@@ -54,11 +54,21 @@ as the attached spec plus [`DEEP_RESEARCH_PROMPT.md`](DEEP_RESEARCH_PROMPT.md)
 as the mission-briefing message (fill in its assignment bracket).
 
 Staged batches awaiting or past verification live in
-[`batches/`](batches/) — each batch directory holds its `pack.json`, a
-`DOSSIER.md` tracing every finding to a quoted source sentence, and a
-`verify-pack.mjs` that must pass (it checks PMIDs against NCBI, flags
-retractions, and backfills year/journal) before the pack is uploaded in
-Admin → Research.
+[`batches/`](batches/) — each batch directory holds its `pack.json` and a
+`DOSSIER.md` tracing every finding to a quoted source sentence. Before a
+pack is uploaded in Admin → Research, the shared
+[`verify-pack.mjs`](verify-pack.mjs) must pass — it checks PMIDs against
+NCBI, flags retractions, backfills year/journal (`--write`), and warns on
+cross-pack PMID reuse. Run it from a network-enabled environment:
+
+```sh
+node docs/data-packs/verify-pack.mjs --all            # every pack
+node docs/data-packs/verify-pack.mjs batches/<name>   # one pack
+```
+
+(Batches 1-17 originally each carried an identical copy of this script;
+the copies were replaced by the single parameterized one in August 2026.
+Dossier references to a per-batch `verify-pack.mjs` mean this script.)
 
 Rows inside a pack reference each other by **natural keys** — a substance
 slug, a source's PMID/DOI/URL — never by database UUIDs. That's what makes
