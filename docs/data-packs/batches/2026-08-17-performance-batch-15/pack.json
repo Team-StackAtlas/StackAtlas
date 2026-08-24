@@ -1,0 +1,114 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Performance evidence base — batch 15: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "The effects of dietary nitrate supplementation on endurance exercise performance and cardiorespiratory measures in healthy adults: a systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "34243756",
+      "year": 2021,
+      "substances": ["nitrate"]
+    },
+    {
+      "title": "A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "28698222",
+      "substances": ["whey-protein"]
+    },
+    {
+      "title": "Acute Effect of Citrulline Malate on Repetition Performance During Strength Training: A Systematic Review and Meta-Analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "33714183",
+      "doi": "10.1123/ijsnem.2020-0295",
+      "year": 2021,
+      "substances": ["citrulline-malate"]
+    },
+    {
+      "title": "Effect of branched-Chain Amino Acid Supplementation on Muscle Soreness following Exercise: A Meta-Analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "30938579",
+      "substances": ["branched-chain-amino-acids"]
+    },
+    {
+      "title": "The use of BCAA to decrease delayed-onset muscle soreness after a single bout of exercise: a systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "34669012",
+      "substances": ["branched-chain-amino-acids"]
+    },
+    {
+      "title": "Effects of an oral ghrelin mimetic on body composition and clinical outcomes in healthy older adults: a randomized trial",
+      "source_type": "human_study",
+      "pmid": "18981485",
+      "year": 2008,
+      "substances": ["ibutamoren"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "34243756",
+      "substance_slug": "nitrate",
+      "endpoint": "endurance exercise performance (time to exhaustion)",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "healthy adults in randomized supplementation trials",
+      "finding_summary": "This systematic review and meta-analysis found dietary nitrate supplementation improved time-to-exhaustion performance, with more pronounced effects at doses of at least 6 mmol/day (about 372 mg) taken for more than 3 days; nitrate reduced the oxygen cost of submaximal exercise without changing VO2max.",
+      "limitations": "beetroot juice is the dominant vehicle in the trials; benefits are clearest in recreationally active subjects and time-to-exhaustion tasks rather than elite time-trial performance"
+    },
+    {
+      "source_pmid": "28698222",
+      "substance_slug": "whey-protein",
+      "endpoint": "resistance-training gains in strength and fat-free mass",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "healthy adults in prolonged resistance training (49 studies, 1,863 participants)",
+      "finding_summary": "This systematic review, meta-analysis, and meta-regression (49 studies, 1,863 participants) found protein supplementation significantly augmented resistance-training gains: one-repetition-maximum strength +2.49 kg, fat-free mass +0.30 kg, and muscle fibre cross-sectional area +310 square micrometers versus control.",
+      "limitations": "the meta covers protein supplementation broadly (whey is the most common supplement in the trials); the fat-free-mass benefit shrinks with increasing age and is larger in resistance-trained individuals"
+    },
+    {
+      "source_pmid": "33714183",
+      "substance_slug": "citrulline-malate",
+      "endpoint": "repetitions to failure in strength training",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "strength-trained men and women plus untrained men (8 studies, 137 participants)",
+      "finding_summary": "This systematic review and meta-analysis (8 double-blind placebo-controlled studies, 137 participants) found acute citrulline malate increased total repetitions to failure by about 3 weighted repetitions (6.4%) versus placebo, a small standardized effect (Hedges g 0.196, 95% CI 0.029 to 0.364).",
+      "limitations": "small pooled effect on the edge of practical relevance; small evidence base"
+    },
+    {
+      "source_pmid": "30938579",
+      "substance_slug": "branched-chain-amino-acids",
+      "endpoint": "muscle soreness following exercise (training context)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults in supplementation trials (8 studies, 37 effects, 2007-2017)",
+      "finding_summary": "This meta-analysis of 8 studies found BCAA supplementation reduced delayed-onset muscle soreness following exercise training (effect size 0.73, 95% CI 0.50 to 0.96).",
+      "limitations": "soreness is a recovery-comfort outcome — this does not establish BCAA benefits for muscle growth, where adequate total protein appears to matter more"
+    },
+    {
+      "source_pmid": "34669012",
+      "substance_slug": "branched-chain-amino-acids",
+      "endpoint": "delayed-onset muscle soreness after a single exercise bout",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "adults after a single bout of damaging exercise",
+      "finding_summary": "This systematic review and meta-analysis of the single-bout context found BCAA reduced creatine kinase for up to 24 hours but showed no beneficial effect on muscle soreness or lactate dehydrogenase at follow-up.",
+      "limitations": "paired with the training-context meta so the chronic-versus-acute split is visible; attribution of the soreness null to this review should be confirmed against its abstract at verification"
+    },
+    {
+      "source_pmid": "18981485",
+      "substance_slug": "ibutamoren",
+      "endpoint": "growth hormone axis and body composition in healthy older adults (MK-677)",
+      "direction": "mixed",
+      "study_type": "human_rct",
+      "population": "healthy adults aged 60-81 (n=65, 2-year randomized modified-crossover trial)",
+      "dose_amount": 25,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "12 months (within a 2-year design)",
+      "finding_summary": "In this randomized placebo-controlled trial, oral MK-677 25 mg/day restored GH and IGF-1 levels of older adults to young-adult ranges and increased fat-free mass by 1.6 kg versus placebo — but the added fat-free mass produced no improvement in strength or function.",
+      "limitations": "investigational compound, never approved for human use; 65 participants; the fat-free-mass-without-function result is the honest headline, and long-term safety is unestablished"
+    }
+  ]
+}

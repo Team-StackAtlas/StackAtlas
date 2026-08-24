@@ -1,0 +1,129 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Hormonal Health evidence base — batch 16: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Maca (L. meyenii) for improving sexual function: a systematic review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "20691074",
+      "year": 2010,
+      "substances": ["maca"]
+    },
+    {
+      "title": "Effects of Tribulus (Tribulus terrestris L.) Supplementation on Erectile Dysfunction and Testosterone Levels in Men-A Systematic Review of Clinical Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "40219032",
+      "substances": ["tribulus"]
+    },
+    {
+      "title": "Effect of fenugreek extract supplement on testosterone levels in male: A meta-analysis of clinical trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "32048383",
+      "year": 2020,
+      "substances": ["fenugreek"]
+    },
+    {
+      "title": "Vitex agnus castus for premenstrual syndrome and premenstrual dysphoric disorder: a systematic review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "29063202",
+      "year": 2017,
+      "substances": ["chasteberry"]
+    },
+    {
+      "title": "Black cohosh (Cimicifuga spp.) for menopausal symptoms",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "22972105",
+      "year": 2012,
+      "substances": ["black-cohosh"]
+    },
+    {
+      "title": "Three and six grams supplementation of d-aspartic acid in resistance trained men",
+      "source_type": "human_study",
+      "pmid": "25844073",
+      "year": 2015,
+      "substances": ["d-aspartic-acid"]
+    },
+    {
+      "title": "Extracted or synthesized soybean isoflavones reduce menopausal hot flash frequency and severity: systematic review and meta-analysis of randomized controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "22433977",
+      "year": 2012,
+      "substances": ["soy-isoflavones"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "20691074",
+      "substance_slug": "maca",
+      "endpoint": "sexual function and desire",
+      "direction": "mixed",
+      "study_type": "review",
+      "population": "healthy adults and patients with sexual dysfunction (4 RCTs)",
+      "finding_summary": "This systematic review found four eligible RCTs: two suggested positive effects on sexual desire or dysfunction (healthy menopausal women; healthy adult men) and one showed benefit in erectile dysfunction, while one trial in healthy cyclists found no effect; the authors conclude the evidence is limited.",
+      "limitations": "the authors state the number of trials, total sample size, and methodological quality are too limited to draw firm conclusions"
+    },
+    {
+      "source_pmid": "40219032",
+      "substance_slug": "tribulus",
+      "endpoint": "testosterone levels in men",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "population": "men in clinical trials of Tribulus terrestris supplementation",
+      "finding_summary": "This systematic review of clinical trials found no robust evidence that Tribulus terrestris increases testosterone levels in men, with only low-level evidence for improving erectile function.",
+      "limitations": "a strong honest null for the most common marketing claim; isolated positive signals exist in other populations (e.g., premenopausal women) with very low certainty"
+    },
+    {
+      "source_pmid": "32048383",
+      "substance_slug": "fenugreek",
+      "endpoint": "total serum testosterone in men",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "men in randomized clinical trials of fenugreek extract (4 trials)",
+      "finding_summary": "This meta-analysis of four randomized clinical trials found fenugreek extract supplementation had a significant effect on total serum testosterone in men.",
+      "limitations": "only four trials, largely of proprietary extracts; magnitude and clinical meaning of the change remain modest"
+    },
+    {
+      "source_pmid": "29063202",
+      "substance_slug": "chasteberry",
+      "endpoint": "premenstrual syndrome symptoms",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "women with PMS or PMDD in randomized trials",
+      "finding_summary": "This systematic review found seven of eight PMS trials reported Vitex agnus-castus superior to placebo (and to pyridoxine and magnesium oxide comparators); in PMDD, one trial found Vitex equivalent to fluoxetine while another favored fluoxetine.",
+      "limitations": "the wider meta-analytic literature flags high risk of bias, high heterogeneity, and possible publication bias — the large pooled effect should be read cautiously"
+    },
+    {
+      "source_pmid": "22972105",
+      "substance_slug": "black-cohosh",
+      "endpoint": "menopausal symptoms",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "population": "menopausal women (16 studies, 2,027 women; ~40 mg/day for ~23 weeks)",
+      "finding_summary": "This Cochrane review (16 studies, 2,027 women, average 40 mg/day for 23 weeks) concluded there is insufficient evidence to support black cohosh for menopausal symptoms, while judging further research justified.",
+      "limitations": "insufficient-evidence verdict rather than proof of no effect; preparation heterogeneity is substantial"
+    },
+    {
+      "source_pmid": "25844073",
+      "substance_slug": "d-aspartic-acid",
+      "endpoint": "total and free testosterone in resistance-trained men",
+      "direction": "mixed",
+      "study_type": "human_rct",
+      "population": "resistance-trained men (n=24, randomized to placebo, 3 g/day, or 6 g/day)",
+      "duration": "14 days",
+      "finding_summary": "In this randomized controlled trial, 6 g/day D-aspartic acid significantly REDUCED total and free testosterone in resistance-trained men, while 3 g/day had no effect — the opposite of the marketing claim built on earlier untrained-population data.",
+      "limitations": "short trial; the longer 12-week trial in the same population also found no testosterone or training benefit at 6 g/day"
+    },
+    {
+      "source_pmid": "22433977",
+      "substance_slug": "soy-isoflavones",
+      "endpoint": "menopausal hot flash frequency and severity",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "perimenopausal and postmenopausal women in double-blind RCTs",
+      "finding_summary": "This systematic review and meta-analysis found extracted or synthesized soy isoflavone supplements reduced hot flash frequency by 20.6% and severity by 26.2% versus placebo, with supplements providing more than 18.8 mg genistein over twice as potent as lower-genistein products.",
+      "limitations": "effect size is meaningful but smaller than hormone therapy; genistein content — rarely labeled — moderates the effect"
+    }
+  ]
+}
