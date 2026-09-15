@@ -27,7 +27,7 @@
     {
       "title": "Variability in strength of red yeast rice supplements purchased from mainstream retailers",
       "source_type": "other",
-      "pmid": "28622038",
+      "pmid": "28641460",
       "year": 2017,
       "substances": ["red-yeast-rice"]
     },
@@ -79,7 +79,7 @@
       "limitations": "absence of published case reports is not evidence of safety — the mechanistic risk is real, toxicology guidance advises against combining 5-HTP with SSRIs/MAOIs, and no safe combined dose is established"
     },
     {
-      "source_pmid": "28622038",
+      "source_pmid": "28641460",
       "substance_slug": "red-yeast-rice",
       "endpoint": "monacolin K content consistency across commercial products",
       "direction": "mixed",

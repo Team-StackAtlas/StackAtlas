@@ -34,7 +34,7 @@ to visibility — no new melatonin rows staged.
 1. **valerian** — Bent 2006 meta (16 studies, n=1,093; PMID 17145239 ⚠)
    staged `mixed`: subjective improvement claim, 9-of-16-negative reality,
    and the authors' own may-not-be-reliable verdict all in one row.
-2. **lavender** — the Silexan pairing: 2016 updated meta (PMID 27861196)
+2. **lavender** — the Silexan pairing: 2017 updated meta (PMID 27861196)
    plus the 2014 four-arm GAD trial (n=539; HAMA −14.1 on 160 mg vs −11.3
    paroxetine vs −9.5 placebo; PMID 24456909 ⚠). Both rows carry the
    Silexan-specificity caveat — this is not aromatherapy evidence.

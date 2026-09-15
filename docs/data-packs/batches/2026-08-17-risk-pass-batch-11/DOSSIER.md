@@ -33,7 +33,11 @@ efficacy rows deliberately deferred.
    5-HTP, AND the limitation carries the mechanistic risk + guidance
    against combining with SSRIs/MAOIs. Neither half stands without the
    other.
-3. **red-yeast-rice** — the Cohen product analysis (PMID 28622038):
+3. **red-yeast-rice** — the Cohen product analysis (PMID 28641460;
+   originally staged as 28622038 from a search-answer PMID statement,
+   which FAILED the first CI verification run on 2026-09-15 — NCBI
+   resolved it to an unrelated paper — and was corrected from the PubMed
+   record URL):
    monacolin K undetectable in 2 of 28 brands, >120-fold daily-dose range.
    `source_type: other` / `study_type: other` — it's a peer-reviewed
    chemical product analysis, not a human study.

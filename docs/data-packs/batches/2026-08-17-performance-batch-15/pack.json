@@ -20,7 +20,7 @@
     {
       "title": "Acute Effect of Citrulline Malate on Repetition Performance During Strength Training: A Systematic Review and Meta-Analysis",
       "source_type": "review_or_meta_analysis",
-      "pmid": "33714183",
+      "pmid": "34010809",
       "doi": "10.1123/ijsnem.2020-0295",
       "year": 2021,
       "substances": ["citrulline-malate"]
@@ -67,7 +67,7 @@
       "limitations": "the meta covers protein supplementation broadly (whey is the most common supplement in the trials); the fat-free-mass benefit shrinks with increasing age and is larger in resistance-trained individuals"
     },
     {
-      "source_pmid": "33714183",
+      "source_pmid": "34010809",
       "substance_slug": "citrulline-malate",
       "endpoint": "repetitions to failure in strength training",
       "direction": "increased",

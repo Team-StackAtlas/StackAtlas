@@ -32,7 +32,7 @@ Performance triage (creatine was already fixed in batch 13's migration).
    ~1.6 g/kg/day plateau was NOT included — it did not appear in this
    session's search output.
 3. **citrulline-malate** — the Varvik/Bjornsen/Gonzalez 2021 meta (PMID
-   33714183 ⚠, DOI cross-check): +3 reps to failure (6.4%), Hedges g
+   34010809, DOI cross-check): +3 reps to failure (6.4%), Hedges g
    0.196 — staged as increased with the small-effect limitation doing
    the honest work.
 4. **branched-chain-amino-acids** — the chronic/acute split as two rows:
@@ -56,9 +56,10 @@ Performance triage (creatine was already fixed in batch 13's migration).
 ## Uncertainty report
 
 1. Unverified regime; `verify-pack.mjs` gates import.
-2. ⚠ PMID 33714183 (citrulline-malate meta) from memory-of-record matched
-   against the search-confirmed title/journal/DOI; DOI included so the
-   verify script cross-checks.
+2. PMID for the citrulline-malate meta was originally staged from
+   memory-of-record as 33714183 and FAILED the first CI verification run
+   (2026-09-15: NCBI resolved it to an unrelated paper). Corrected to
+   34010809 from the PubMed record URL; DOI cross-check retained.
 3. ⚠ The BCAA single-bout row attributes the soreness-null conclusion to
    PMID 34669012 based on context in search output; the row's own
    limitations flag this for confirmation against the abstract.

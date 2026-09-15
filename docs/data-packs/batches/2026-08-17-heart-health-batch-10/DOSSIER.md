@@ -21,7 +21,7 @@ ashwagandha).
 
 ## Per-substance notes (quotes live in the pack rows)
 
-1. **red-yeast-rice** — the 2022 meta of 15 high-quality RCTs (PMID
+1. **red-yeast-rice** — the 2021 meta of 15 high-quality RCTs (PMID
    35111069): LDL −1.02 mmol/L, statin-comparable; paired with its own
    safety row whose limitation carries the authors' judgment that AE
    reporting was too weak for firm conclusions. The monacolin-K-is-

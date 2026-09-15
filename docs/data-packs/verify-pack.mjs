@@ -67,9 +67,20 @@ const overlap = (a, b) => {
   return hit / Math.min(ta.size, tb.size);
 };
 
+// NCBI rate-limits bursts (HTTP 429); one backoff-and-retry keeps a
+// transient throttle from reading as a data failure.
+async function fetchNcbi(url) {
+  let res = await fetch(url);
+  if (res.status === 429) {
+    await sleep(2000);
+    res = await fetch(url);
+  }
+  return res;
+}
+
 async function esummary(pmid) {
   const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=${pmid}`;
-  const res = await fetch(url);
+  const res = await fetchNcbi(url);
   if (!res.ok) throw new Error(`esummary HTTP ${res.status}`);
   const json = await res.json();
   const rec = json.result?.[pmid];
@@ -79,7 +90,7 @@ async function esummary(pmid) {
 
 async function pmcToPmid(pmcid) {
   const url = `https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=${pmcid}&format=json`;
-  const res = await fetch(url);
+  const res = await fetchNcbi(url);
   if (!res.ok) throw new Error(`idconv HTTP ${res.status}`);
   const json = await res.json();
   return json.records?.[0]?.pmid ?? null;
