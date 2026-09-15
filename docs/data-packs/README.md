@@ -70,6 +70,18 @@ node docs/data-packs/verify-pack.mjs batches/<name>   # one pack
 the copies were replaced by the single parameterized one in August 2026.
 Dossier references to a per-batch `verify-pack.mjs` mean this script.)
 
+**Source of truth for research evidence.** The packs in `batches/` are
+the canonical record of `research_sources` and `research_findings`; the
+database is a projection of them. Because the importer upserts by natural
+key, re-importing a pack is always safe and is the way corrections
+reach the site: edit the pack row → PR → verify → re-import. Do **not**
+edit research sources or findings through the admin UI — a later
+re-import would overwrite the change. (This rule covers only the two
+research tables; the substance catalog and user content remain
+database-first.) The verify script runs weekly in CI
+(`.github/workflows/research-verify.yml`) as a retraction watch; a
+failing run names the source to pull.
+
 Rows inside a pack reference each other by **natural keys** — a substance
 slug, a source's PMID/DOI/URL — never by database UUIDs. That's what makes
 packs safe to hand-author, regenerate, and re-import: the server resolves
