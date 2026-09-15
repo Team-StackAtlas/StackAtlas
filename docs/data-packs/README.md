@@ -54,11 +54,33 @@ as the attached spec plus [`DEEP_RESEARCH_PROMPT.md`](DEEP_RESEARCH_PROMPT.md)
 as the mission-briefing message (fill in its assignment bracket).
 
 Staged batches awaiting or past verification live in
-[`batches/`](batches/) — each batch directory holds its `pack.json`, a
-`DOSSIER.md` tracing every finding to a quoted source sentence, and a
-`verify-pack.mjs` that must pass (it checks PMIDs against NCBI, flags
-retractions, and backfills year/journal) before the pack is uploaded in
-Admin → Research.
+[`batches/`](batches/) — each batch directory holds its `pack.json` and a
+`DOSSIER.md` tracing every finding to a quoted source sentence. Before a
+pack is uploaded in Admin → Research, the shared
+[`verify-pack.mjs`](verify-pack.mjs) must pass — it checks PMIDs against
+NCBI, flags retractions, backfills year/journal (`--write`), and warns on
+cross-pack PMID reuse. Run it from a network-enabled environment:
+
+```sh
+node docs/data-packs/verify-pack.mjs --all            # every pack
+node docs/data-packs/verify-pack.mjs batches/<name>   # one pack
+```
+
+(Batches 1-17 originally each carried an identical copy of this script;
+the copies were replaced by the single parameterized one in August 2026.
+Dossier references to a per-batch `verify-pack.mjs` mean this script.)
+
+**Source of truth for research evidence.** The packs in `batches/` are
+the canonical record of `research_sources` and `research_findings`; the
+database is a projection of them. Because the importer upserts by natural
+key, re-importing a pack is always safe and is the way corrections
+reach the site: edit the pack row → PR → verify → re-import. Do **not**
+edit research sources or findings through the admin UI — a later
+re-import would overwrite the change. (This rule covers only the two
+research tables; the substance catalog and user content remain
+database-first.) The verify script runs weekly in CI
+(`.github/workflows/research-verify.yml`) as a retraction watch; a
+failing run names the source to pull.
 
 Rows inside a pack reference each other by **natural keys** — a substance
 slug, a source's PMID/DOI/URL — never by database UUIDs. That's what makes

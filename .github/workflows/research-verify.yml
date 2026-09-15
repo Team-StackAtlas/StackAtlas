@@ -1,0 +1,28 @@
+name: Research pack verification
+
+# Retraction watch for the research evidence corpus: every staged pack in
+# docs/data-packs/batches is checked against live NCBI/DOI records (title
+# match, retraction signals, year). Runs weekly, on demand, and whenever a
+# pack changes. The script has no dependencies beyond Node 20's global fetch.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'docs/data-packs/**'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify all packs against NCBI
+        run: node docs/data-packs/verify-pack.mjs --all

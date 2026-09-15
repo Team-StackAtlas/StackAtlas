@@ -1,0 +1,232 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Cognition evidence base — batch 8: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Improving effects of the mushroom Yamabushitake (Hericium erinaceus) on mild cognitive impairment: a double-blind placebo-controlled clinical trial",
+      "source_type": "human_study",
+      "pmid": "18844328",
+      "year": 2009,
+      "substances": ["lion-s-mane-mushroom"]
+    },
+    {
+      "title": "Huperzine A for Alzheimer's disease: a systematic review and meta-analysis of randomized clinical trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "24086396",
+      "year": 2013,
+      "substances": ["huperzine-a"]
+    },
+    {
+      "title": "Meta-analysis of double blind randomized controlled clinical trials of acetyl-L-carnitine versus placebo in the treatment of mild cognitive impairment and mild Alzheimer's disease",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12598816",
+      "year": 2003,
+      "substances": ["acetyl-l-carnitine"]
+    },
+    {
+      "title": "Acetyl-L-carnitine for dementia",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12804452",
+      "year": 2003,
+      "substances": ["acetyl-l-carnitine"]
+    },
+    {
+      "title": "Effect of tyrosine supplementation on clinical and healthy populations under stress or cognitive demands--A review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "26424423",
+      "year": 2015,
+      "substances": ["l-tyrosine"]
+    },
+    {
+      "title": "Omega 3 fatty acid for the prevention of cognitive decline and dementia",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "22696350",
+      "year": 2012,
+      "substances": ["omega-3-fatty-acids"]
+    },
+    {
+      "title": "Beneficial effects of docosahexaenoic acid on cognition in age-related cognitive decline",
+      "source_type": "human_study",
+      "pmid": "20434961",
+      "year": 2010,
+      "substances": ["omega-3-fatty-acids"]
+    },
+    {
+      "title": "Docosahexaenoic acid supplementation and cognitive decline in Alzheimer disease: a randomized trial",
+      "source_type": "human_study",
+      "pmid": "21045096",
+      "year": 2010,
+      "substances": ["omega-3-fatty-acids"]
+    },
+    {
+      "title": "Clinical efficacy of piracetam in cognitive impairment: a meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12006732",
+      "year": 2002,
+      "substances": ["piracetam"]
+    },
+    {
+      "title": "Cognitive effects of piracetam in adults with memory impairment: A systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "38878641",
+      "year": 2024,
+      "substances": ["piracetam"]
+    },
+    {
+      "title": "Efficacy and Safety of MMFS-01, a Synapse Density Enhancer, for Treating Cognitive Impairment in Older Adults: A Randomized, Double-Blind, Placebo-Controlled Trial",
+      "source_type": "human_study",
+      "pmid": "26519439",
+      "year": 2016,
+      "substances": ["magnesium-l-threonate"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "18844328",
+      "substance_slug": "lion-s-mane-mushroom",
+      "endpoint": "cognitive function scale in mild cognitive impairment",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "Japanese adults aged 50-80 with mild cognitive impairment (n=30)",
+      "dose_amount": 3,
+      "dose_unit": "g",
+      "frequency": "daily (four 250 mg tablets three times a day)",
+      "duration": "16 weeks",
+      "finding_summary": "In this double-blind placebo-controlled trial, the Hericium erinaceus group showed significantly increased cognitive function scale scores versus placebo at weeks 8, 12, and 16, with laboratory tests showing no adverse effects.",
+      "limitations": "single trial of 30 subjects; dry-powder tablets rather than a standardized extract"
+    },
+    {
+      "source_pmid": "24086396",
+      "substance_slug": "huperzine-a",
+      "endpoint": "cognitive function (MMSE) in Alzheimer's disease",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "participants with Alzheimer's disease (20 RCTs, 1,823 participants)",
+      "finding_summary": "This systematic review and meta-analysis of 20 randomized trials (1,823 participants) reported significant improvement in cognitive function versus placebo on the Mini-Mental State Examination at 8, 12, and 16 weeks.",
+      "limitations": "the methodological quality of most included trials had a high risk of bias; the authors advise cautious interpretation"
+    },
+    {
+      "source_pmid": "24086396",
+      "substance_slug": "huperzine-a",
+      "endpoint": "activities of daily living in Alzheimer's disease",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "participants with Alzheimer's disease (20 RCTs, 1,823 participants)",
+      "finding_summary": "The same meta-analysis reported that activities of daily living favored huperzine A at 6, 12, and 16 weeks, with no severe adverse events reported in the trials.",
+      "limitations": "same high risk-of-bias caveat as the cognitive endpoint"
+    },
+    {
+      "source_pmid": "12598816",
+      "substance_slug": "acetyl-l-carnitine",
+      "endpoint": "cognitive decline in mild cognitive impairment and mild Alzheimer's disease",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with mild cognitive impairment or mild Alzheimer's disease",
+      "finding_summary": "This meta-analysis of double-blind randomized placebo-controlled trials concluded that acetyl-L-carnitine improves mild cognitive impairment, prevents deterioration, and is well tolerated.",
+      "limitations": "DARE appraisal cautioned that pooling across different measurement instruments may not be reliable and the clinical importance of the statistically significant findings was unclear"
+    },
+    {
+      "source_pmid": "12804452",
+      "substance_slug": "acetyl-l-carnitine",
+      "endpoint": "objective cognitive outcomes in dementia",
+      "direction": "mixed",
+      "study_type": "review",
+      "population": "people with dementia (16 trials)",
+      "finding_summary": "This Cochrane review of 16 trials found evidence of benefit on clinical global impression (and MMSE at 24 weeks) but no evidence of benefit on objective assessments in any other outcome area, concluding the evidence was insufficient to recommend routine clinical use.",
+      "limitations": "the authors note the statistically significant global-impression result may be due to chance given the large number of comparisons"
+    },
+    {
+      "source_pmid": "26424423",
+      "substance_slug": "l-tyrosine",
+      "endpoint": "cognitive performance under acute stress or high cognitive demand",
+      "direction": "increased",
+      "study_type": "review",
+      "population": "healthy adults in short-term stressful or cognitively demanding conditions",
+      "finding_summary": "This review concluded that tyrosine supplementation effectively enhances cognitive performance, particularly in short-term stressful and/or cognitively demanding situations when dopamine and/or norepinephrine is temporarily depleted.",
+      "limitations": "narrative review; effectiveness across individual studies varies considerably"
+    },
+    {
+      "source_pmid": "26424423",
+      "substance_slug": "l-tyrosine",
+      "endpoint": "clinical-disorder treatment potential",
+      "direction": "no_clear_change",
+      "study_type": "review",
+      "population": "clinical populations",
+      "finding_summary": "The same review judged the potential of tyrosine supplementation to treat clinical disorders as limited, with benefits likely determined by the presence and extent of impaired neurotransmitter function and synthesis."
+    },
+    {
+      "source_pmid": "22696350",
+      "substance_slug": "omega-3-fatty-acids",
+      "endpoint": "cognitive decline and dementia prevention in cognitively healthy older adults",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "cognitively healthy adults aged 60+ (3 RCTs, 3,536 participants)",
+      "finding_summary": "This Cochrane review of three randomized controlled trials (3,536 people aged 60 and over without cognitive impairment at baseline) found no benefit of omega-3 supplementation over placebo on standard mental state examinations, memory, or verbal fluency.",
+      "limitations": "the authors note the trials cover the short term only; longer-term effects remain unknown"
+    },
+    {
+      "source_pmid": "20434961",
+      "substance_slug": "omega-3-fatty-acids",
+      "endpoint": "episodic memory in age-related cognitive decline (MIDAS trial)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "healthy older adults (mean age 70) with mild memory complaints (n=485)",
+      "dose_amount": 900,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "24 weeks",
+      "finding_summary": "In the MIDAS randomized double-blind placebo-controlled trial, 900 mg/day algal DHA produced significantly fewer Paired Associate Learning errors versus placebo at 24 weeks (p=.03) and improved immediate and delayed verbal recognition memory (p<.02), but not working memory or executive function.",
+      "limitations": "benefits limited to episodic/recognition memory domains; industry-run trial of algal DHA"
+    },
+    {
+      "source_pmid": "21045096",
+      "substance_slug": "omega-3-fatty-acids",
+      "endpoint": "cognitive and functional decline in mild-to-moderate Alzheimer's disease",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "adults with mild-to-moderate Alzheimer's disease (n=402)",
+      "dose_amount": 2,
+      "dose_unit": "g",
+      "frequency": "daily",
+      "duration": "18 months",
+      "finding_summary": "In this multicenter randomized trial, 2 g/day algal DHA did not slow the rate of cognitive decline (ADAS-cog) or functional decline (CDR sum of boxes) versus placebo, with no effect on activities of daily living, neuropsychiatric symptoms, or brain-atrophy rate in the MRI subsample.",
+      "limitations": "contrast with MIDAS suggests any DHA effect may be stage-dependent — absent once Alzheimer's disease is established"
+    },
+    {
+      "source_pmid": "12006732",
+      "substance_slug": "piracetam",
+      "endpoint": "clinical global impression of change in cognitive impairment",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "older adults with dementia or cognitive impairment (19 double-blind placebo-controlled studies)",
+      "finding_summary": "This meta-analysis of 19 double-blind placebo-controlled studies reported a significant odds ratio and favorable number needed to treat for global impression of change with piracetam versus placebo in older subjects with cognitive impairment.",
+      "limitations": "global-impression endpoint rather than objective cognitive measures; older heterogeneous trials with industry authorship"
+    },
+    {
+      "source_pmid": "38878641",
+      "substance_slug": "piracetam",
+      "endpoint": "memory enhancement in adults with memory impairment",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "adults with memory impairment (18 studies, 886 patients)",
+      "finding_summary": "This 2024 systematic review and meta-analysis of 18 studies (886 patients) found no significant difference in memory enhancement between piracetam and control (SMD 0.75, 95% CI -0.19 to 1.69, p=0.12), concluding the impact of piracetam on memory function cannot be definitively ascertained.",
+      "limitations": "very high heterogeneity (I²=96%) across included studies"
+    },
+    {
+      "source_pmid": "26519439",
+      "substance_slug": "magnesium-l-threonate",
+      "endpoint": "overall cognitive ability composite (executive function, working memory, attention, episodic memory)",
+      "direction": "increased",
+      "study_type": "human_rct",
+      "population": "adults aged 50-70 with self-reported cognitive complaints, anxiety, and sleep disorder",
+      "dose_amount": 1.5,
+      "dose_unit": "g",
+      "frequency": "daily (1.5-2 g/day by body weight)",
+      "duration": "12 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, magnesium L-threonate (MMFS-01) significantly improved a four-domain overall cognitive ability composite versus placebo (p=0.003, Cohen's d=0.91), with improvement evident by week 6.",
+      "limitations": "single-site trial run by the compound's developer; the trial's 'brain age' framing is a derived metric, not a standard endpoint — independent replication needed"
+    }
+  ]
+}

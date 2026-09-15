@@ -1,0 +1,109 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Pain & Injury evidence base — batch 17: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Topical capsaicin (high concentration) for chronic neuropathic pain in adults",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "28085183",
+      "year": 2017,
+      "substances": ["capsaicin"]
+    },
+    {
+      "title": "Herbal medicine for low back pain",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "16625605",
+      "year": 2006,
+      "substances": ["devil-s-claw", "white-willow-bark"]
+    },
+    {
+      "title": "Efficacy and Safety of Curcumin and Curcuma longa Extract in the Treatment of Arthritis: A Systematic Review and Meta-Analysis of Randomized Controlled Trial",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "35935936",
+      "year": 2022,
+      "substances": ["turmeric"]
+    },
+    {
+      "title": "Effectiveness of high-dose riboflavin in migraine prophylaxis. A randomized controlled trial",
+      "source_type": "human_study",
+      "pmid": "9484373",
+      "year": 1998,
+      "substances": ["riboflavin"]
+    },
+    {
+      "title": "Effects of Intravenous and Oral Magnesium on Reducing Migraine: A Meta-analysis of Randomized Controlled Trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "26752497",
+      "year": 2016,
+      "substances": ["magnesium"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "28085183",
+      "substance_slug": "capsaicin",
+      "endpoint": "chronic neuropathic pain (high-concentration 8% patch)",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "adults with chronic neuropathic pain (postherpetic neuralgia and other conditions)",
+      "finding_summary": "This Cochrane review found the high-concentration (8%) capsaicin patch produced more participants with meaningful pain relief than low-concentration creams, with a number needed to treat of about 8.8 in postherpetic neuralgia — an effect the reviewers judge similar to other chronic-pain therapies, typically used when others have failed.",
+      "limitations": "evidence is for the clinician-applied 8% patch, not over-the-counter low-concentration creams; NNT of ~9 means most treated patients do not achieve meaningful relief"
+    },
+    {
+      "source_pmid": "16625605",
+      "substance_slug": "devil-s-claw",
+      "endpoint": "short-term low back pain",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "adults with acute, sub-acute, or chronic low back pain (Cochrane review, 10 trials, ~1,600 adults)",
+      "finding_summary": "This Cochrane review found strong evidence from two high-quality trials that Harpagophytum procumbens standardized to 50 or 100 mg harpagoside daily beat placebo for short-term low back pain and rescue-medication use, with another high-quality trial showing rough equivalence to rofecoxib 12.5 mg/day.",
+      "limitations": "short-term evidence only; the review found no evidence on long-term safety or usefulness"
+    },
+    {
+      "source_pmid": "16625605",
+      "substance_slug": "white-willow-bark",
+      "endpoint": "short-term low back pain",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "adults with low back pain (same Cochrane review)",
+      "finding_summary": "The same Cochrane review found moderate evidence from two trials that Salix alba standardized to 120 or 240 mg salicin daily beat placebo for short-term pain and rescue medication, with one trial showing rough equivalence to rofecoxib 12.5 mg/day.",
+      "limitations": "moderate (not strong) evidence grading; no long-term safety data; salicin is an aspirin-family compound with the corresponding cautions"
+    },
+    {
+      "source_pmid": "35935936",
+      "substance_slug": "turmeric",
+      "endpoint": "arthritis pain, function, and stiffness",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with arthritis, mostly osteoarthritis (29 RCTs, 2,396 participants)",
+      "finding_summary": "This systematic review and meta-analysis (29 RCTs, 2,396 participants; doses 120-1,500 mg for 4-36 weeks) found curcumin and Curcuma longa extract significantly decreased pain and improved physical function and stiffness, with efficacy similar to NSAIDs in the trials making that comparison, and no safety signals.",
+      "limitations": "the authors caution that trial quality is low and quantity per arthritis type small; overlaps with the existing curcumin rows — this row anchors the whole-extract (turmeric) evidence"
+    },
+    {
+      "source_pmid": "9484373",
+      "substance_slug": "riboflavin",
+      "endpoint": "migraine attack frequency (prophylaxis)",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with migraine (n=55, 3-month randomized controlled trial)",
+      "dose_amount": 400,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "3 months",
+      "finding_summary": "In this randomized placebo-controlled trial, riboflavin 400 mg/day reduced migraine attack frequency (p=0.005) and headache days (p=0.012), with 59% of riboflavin patients improving at least 50% versus 15% on placebo (number needed to treat 2.3) and only minor adverse events.",
+      "limitations": "single 55-patient trial is the anchor; later systematic reviews judge the overall evidence base supportive but limited"
+    },
+    {
+      "source_pmid": "26752497",
+      "substance_slug": "magnesium",
+      "endpoint": "migraine frequency and intensity (oral prophylaxis)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with migraine (10 oral-magnesium trials, 789 participants, within a 21-study meta-analysis)",
+      "finding_summary": "This meta-analysis found oral magnesium significantly reduced migraine frequency and intensity (odds ratios 0.20 and 0.27 versus control), alongside intravenous magnesium's acute-attack effects.",
+      "limitations": "several included trials lacked adequate randomization methods; complements the modest blood-pressure row staged in batch 10"
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Mood & Stress evidence base — batch 9: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "St John's wort for major depression",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "18843608",
+      "year": 2008,
+      "substances": ["st-john-s-wort"]
+    },
+    {
+      "title": "Kava extract for treating anxiety",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12535473",
+      "year": 2003,
+      "substances": ["kava"]
+    },
+    {
+      "title": "Kava hepatotoxicity--a clinical review",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "20720265",
+      "year": 2010,
+      "substances": ["kava"]
+    },
+    {
+      "title": "Tryptophan and 5-hydroxytryptophan for depression",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "11869656",
+      "year": 2002,
+      "substances": ["5-hydroxy-l-tryptophan"]
+    },
+    {
+      "title": "The effects of lemon balm (Melissa officinalis L.) on depression and anxiety in clinical trials: A systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "34449930",
+      "year": 2021,
+      "substances": ["lemon-balm"]
+    },
+    {
+      "title": "The Clinical Efficacy and Safety of Tulsi in Humans: A Systematic Review of the Literature",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "28400848",
+      "year": 2017,
+      "substances": ["holy-basil"]
+    },
+    {
+      "title": "A randomized, double-blind, placebo-controlled trial investigating the effects of an Ocimum tenuiflorum (Holy Basil) extract (Holixer) on stress, mood, and sleep in adults experiencing stress",
+      "source_type": "human_study",
+      "pmid": "36185698",
+      "year": 2022,
+      "substances": ["holy-basil"]
+    },
+    {
+      "title": "Sceletium tortuosum (Zembrin) ameliorates experimentally induced anxiety in healthy volunteers",
+      "source_type": "human_study",
+      "pmid": "32761980",
+      "year": 2020,
+      "substances": ["kanna"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "18843608",
+      "substance_slug": "st-john-s-wort",
+      "endpoint": "depressive symptoms in major depression",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with major depression (29 trials, 5,489 patients)",
+      "finding_summary": "This Cochrane review of 29 trials (5,489 patients) concluded that the Hypericum extracts tested were superior to placebo in major depression and similarly effective as standard antidepressants (tricyclics, tetracyclics, and SSRIs).",
+      "limitations": "findings were more favorable in trials from German-speaking countries; marketed products vary considerably, so results apply only to the preparations tested"
+    },
+    {
+      "source_pmid": "18843608",
+      "substance_slug": "st-john-s-wort",
+      "endpoint": "side effects versus standard antidepressants",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "patients with major depression (29 trials, 5,489 patients)",
+      "finding_summary": "The same Cochrane review concluded that St John's wort extracts had fewer side effects than standard antidepressants in the included trials.",
+      "limitations": "trial-reported tolerability only — this row does not capture St John's wort's clinically important drug interactions, which need a dedicated risk row"
+    },
+    {
+      "source_pmid": "12535473",
+      "substance_slug": "kava",
+      "endpoint": "anxiety symptoms (Hamilton Anxiety Score)",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "adults with anxiety (7 trials; 3-trial HAM-A meta-analysis)",
+      "finding_summary": "This Cochrane review found all seven included trials suggested superiority of kava extract over placebo, with a meta-analysis of three trials using the Hamilton Anxiety Score showing a significant effect in favor of kava; adverse events in the trials were mild, transient, and infrequent.",
+      "limitations": "trial-level safety does not settle the hepatotoxicity question — see the paired liver-safety row"
+    },
+    {
+      "source_pmid": "20720265",
+      "substance_slug": "kava",
+      "endpoint": "hepatotoxicity risk (case reports and regulatory status)",
+      "direction": "mixed",
+      "study_type": "review",
+      "population": "case reports and regulatory assessments",
+      "finding_summary": "This clinical review covers roughly 78 reported cases of suspected kava hepatotoxicity that led to 2002-2003 bans in Germany, the EU, and Canada and a US FDA advisory; critical causality assessment found most reported cases unassessable or unlikely, with risk factors including overdose, prolonged use, and co-medication, and German courts later overturned the ban as disproportionate.",
+      "limitations": "rare but potentially severe outcomes (liver failure requiring transplant) are documented even though causality is contested; regulatory guidance suggested ≤120 mg kavapyrones/day for ≤3 months"
+    },
+    {
+      "source_pmid": "11869656",
+      "substance_slug": "5-hydroxy-l-tryptophan",
+      "endpoint": "depressive symptoms",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "patients with depression (2 includable trials, 64 patients)",
+      "finding_summary": "This Cochrane review found 108 studies but only two (one of 5-HTP, one of L-tryptophan; 64 patients total) met quality criteria; the available evidence suggested superiority over placebo (Peto odds ratio 4.10, 95% CI 1.28 to 13.15).",
+      "limitations": "the authors judged the evidence of insufficient quality to be conclusive and clinical usefulness limited given proven alternatives — the positive odds ratio rests on 64 patients"
+    },
+    {
+      "source_pmid": "34449930",
+      "substance_slug": "lemon-balm",
+      "endpoint": "anxiety and depression scores",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "patients with anxiety or depression symptoms (6 rigorous trials, 435 patients)",
+      "finding_summary": "This systematic review and meta-analysis reported that lemon balm significantly improved mean anxiety and depression scores versus placebo (standardized mean difference -0.98), particularly in the acute setting.",
+      "limitations": "high heterogeneity between studies; the authors advise cautious interpretation"
+    },
+    {
+      "source_pmid": "28400848",
+      "substance_slug": "holy-basil",
+      "endpoint": "clinical outcomes across human trials (adaptogenic use)",
+      "direction": "increased",
+      "study_type": "review",
+      "population": "24 human studies spanning metabolic, cardiovascular, immune, and neurocognitive outcomes",
+      "finding_summary": "This systematic review of 24 human studies judged the evidence for Ocimum tenuiflorum favorable, particularly as an adaptogen addressing psychological, physiological, immunological, and metabolic stress.",
+      "limitations": "heterogeneous small trials; the authors explicitly call for more robust research on safety and efficacy"
+    },
+    {
+      "source_pmid": "36185698",
+      "substance_slug": "holy-basil",
+      "endpoint": "perceived stress and sleep quality",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "stressed adults aged 18-65 (n=100)",
+      "dose_amount": 250,
+      "dose_unit": "mg",
+      "frequency": "daily (125 mg twice daily)",
+      "duration": "8 weeks",
+      "finding_summary": "In this randomized double-blind placebo-controlled trial, a standardized holy basil extract improved Perceived Stress Scale and Athens Insomnia Scale scores versus placebo over 8 weeks, and was well tolerated with no major adverse effects reported.",
+      "limitations": "single trial of a proprietary extract (Holixer)"
+    },
+    {
+      "source_pmid": "36185698",
+      "substance_slug": "holy-basil",
+      "endpoint": "cortisol and acute stress reactivity",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "stressed adults aged 18-65 (n=100)",
+      "dose_amount": 250,
+      "dose_unit": "mg",
+      "frequency": "daily (125 mg twice daily)",
+      "duration": "8 weeks",
+      "finding_summary": "The same trial reported lower hair cortisol at week 8 and a buffered response to an acute lab stressor (lower salivary cortisol, salivary amylase, blood pressure, and subjective stress ratings) versus placebo.",
+      "limitations": "same single proprietary-extract trial as the perceived-stress row"
+    },
+    {
+      "source_pmid": "32761980",
+      "substance_slug": "kanna",
+      "endpoint": "subjective anxiety under laboratory stress",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "healthy young volunteers (two placebo-controlled studies, n=20 each)",
+      "dose_amount": 25,
+      "dose_unit": "mg",
+      "frequency": "single dose",
+      "finding_summary": "Across two placebo-controlled double-blind studies of a single 25 mg dose of a standardized Sceletium tortuosum extract (Zembrin), the second study found significantly lower subjective anxiety during laboratory stress versus placebo.",
+      "limitations": "small acute single-dose studies in healthy volunteers using one proprietary extract; the first study's outcomes were not reported as significant"
+    }
+  ]
+}
