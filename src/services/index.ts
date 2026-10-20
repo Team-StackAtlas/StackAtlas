@@ -53,6 +53,9 @@ export function createStubServices(): Services {
       async update() {
         return ni('profiles.update');
       },
+      async requestAccountDeletion() {
+        return ni('profiles.requestAccountDeletion');
+      },
     },
     search: {
       async search() {

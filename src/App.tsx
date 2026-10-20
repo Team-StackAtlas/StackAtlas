@@ -5,6 +5,8 @@ import Layout from './components/Layout';
 import RequireAuth from './components/RequireAuth';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { UserScopeProvider } from './context/UserScopeContext';
+import AgeGate from './components/AgeGate';
+import ConsentNotice from './components/ConsentNotice';
 import { FilterProvider } from './context/FilterContext';
 import { MockRoleProvider } from './context/MockRoleContext';
 import { CatalogProvider } from './context/CatalogContext';
@@ -34,6 +36,7 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Glossary = lazy(() => import('./pages/Glossary'));
 const AlbumDetail = lazy(() => import('./pages/AlbumDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Legal = lazy(() => import('./pages/Legal'));
 
 export default function App() {
   return (
@@ -76,10 +79,13 @@ export default function App() {
               <Route path="stack/:id" element={<StackPage />} />
               <Route path="brand/:id" element={<BrandPage />} />
               <Route path="compare" element={<Compare />} />
+              <Route path="legal/:doc" element={<Legal />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
           </Suspense>
+          <AgeGate />
+          <ConsentNotice />
         </BrowserRouter>
         </PostsProvider>
         </GlossaryProvider>

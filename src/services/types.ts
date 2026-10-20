@@ -85,6 +85,8 @@ export interface ProfileSettings {
   showFollowers?: boolean;
   showFollowing?: boolean;
   showBodyStats?: boolean;
+  /** Opt-in to product-update emails. Off by default; nothing is sent unless true. */
+  emailUpdates?: boolean;
 }
 
 export interface SessionUser {

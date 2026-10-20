@@ -30,7 +30,7 @@ const SORT_OPTIONS = [
 export default function Square() {
   usePageMeta('The Square', 'Community Dispatches and Signals from real protocols.');
   const { scope } = useUserScope();
-  const { activeTypes, activeAdmins, activeClassifications } = useFilters();
+  const { activeTypes, activeAdmins, activeClassifications, activeRisks } = useFilters();
   const visibleClassifications = scope.accessLevel
     ? SCOPE_CLASSIFICATIONS[scope.accessLevel]
     : CLASSIFICATIONS;
@@ -112,6 +112,7 @@ export default function Square() {
         if (activeTypes.length > 0 && !supplement.typeTags.some(t => activeTypes.includes(t))) return false;
         if (activeClassifications.length > 0 && !activeClassifications.includes(supplement.classification)) return false;
         if (activeAdmins.length > 0 && !supplement.administration.some(a => activeAdmins.includes(a))) return false;
+        if (activeRisks.length > 0 && (!supplement.riskLevel || !activeRisks.includes(supplement.riskLevel))) return false;
 
       }
     }

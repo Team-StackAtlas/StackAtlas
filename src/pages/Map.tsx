@@ -77,6 +77,7 @@ export default function Map() {
     prioritizedTypes,
     activeAdmins,
     activeClassifications,
+    activeRisks,
     toggleType,
     togglePriority
   } = useFilters();
@@ -119,8 +120,8 @@ export default function Map() {
   // changes, so "Load more" always starts back at the first page. Adjusted
   // during render (React's recommended pattern) rather than in an effect, to
   // avoid an extra post-commit render on every filter change.
-  const advancedFilterCount = activeClassifications.length + activeAdmins.length;
-  const filterKey = [activeTab, feedType, debouncedQuery, activeCategoryGroup, activeBearings.join(','), activeTypes.join(','), activeClassifications.join(','), activeAdmins.join(',')].join('|');
+  const advancedFilterCount = activeClassifications.length + activeAdmins.length + activeRisks.length;
+  const filterKey = [activeTab, feedType, debouncedQuery, activeCategoryGroup, activeBearings.join(','), activeTypes.join(','), activeClassifications.join(','), activeAdmins.join(','), activeRisks.join(',')].join('|');
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
   if (filterKey !== lastFilterKey) {
     setLastFilterKey(filterKey);
@@ -238,6 +239,7 @@ export default function Map() {
     if (activeClassifications.length > 0 && !activeClassifications.includes(s.classification)) return false;
 
     if (activeAdmins.length > 0 && !s.administration.some(a => activeAdmins.includes(a))) return false;
+    if (activeRisks.length > 0 && (!s.riskLevel || !activeRisks.includes(s.riskLevel))) return false;
 
     // Search Query Filtering (debounced)
     if (debouncedQuery && !searchMatches(debouncedQuery, [s.name, ...(s.aliases || []), s.description, s.classification, ...s.paths.flatMap(p => [p.domain, p.category]), ...s.typeTags, ...(s.markers || []), ...s.administration])) return false;

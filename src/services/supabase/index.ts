@@ -188,6 +188,10 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       if (error) throw new Error(readableProfileError(error));
       return mapProfile(data);
     },
+    async requestAccountDeletion(reason?: string) {
+      const { error } = await client.rpc('request_account_deletion', { p_reason: reason ?? null });
+      if (error) throw error;
+    },
   };
 
   async function createProfileForAuthUser(authUser: { id: string; email?: string | null }) {

@@ -32,6 +32,7 @@ export const DEFAULT_PROFILE_SETTINGS: Required<ProfileSettings> = {
   showFollowers: false,
   showFollowing: false,
   showBodyStats: false,
+  emailUpdates: false,
 };
 
 export function withDefaultProfileSettings(settings?: ProfileSettings): Required<ProfileSettings> {

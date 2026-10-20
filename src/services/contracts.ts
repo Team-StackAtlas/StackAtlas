@@ -49,6 +49,8 @@ export interface ProfileService {
   get(userId: ID): Promise<ProfileDTO | null>;
   getByUsername(username: string): Promise<ProfileDTO | null>;
   update(userId: ID, patch: ProfileUpdate): Promise<ProfileDTO>;
+  /** Self-service erasure: scrubs personal fields now and queues permanent deletion (see Privacy Policy §7). */
+  requestAccountDeletion(reason?: string): Promise<void>;
 }
 
 export interface SearchService {

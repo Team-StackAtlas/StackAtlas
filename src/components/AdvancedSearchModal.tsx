@@ -1,7 +1,7 @@
 import { Settings2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useFilters } from '../context/FilterContext';
-import { CLASSIFICATIONS, AdministrationMethod } from '../data/mockData';
+import { CLASSIFICATIONS, RISK_LEVELS, AdministrationMethod } from '../data/mockData';
 import { ADMINISTRATION_META } from '../lib/administrationIcons';
 import { Modal } from './ui/Modal';
 
@@ -19,10 +19,13 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
     setActiveAdmins,
     setActiveClassifications,
     toggleAdmin,
-    toggleClassification
+    toggleClassification,
+    activeRisks,
+    setActiveRisks,
+    toggleRisk
   } = useFilters();
 
-  const hasSelection = activeAdmins.length > 0 || activeClassifications.length > 0;
+  const hasSelection = activeAdmins.length > 0 || activeClassifications.length > 0 || activeRisks.length > 0;
 
   return (
     <Modal
@@ -30,9 +33,9 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
       onClose={onClose}
       title="Advanced Search"
       icon={<Settings2 className="h-5 w-5" />}
-      panelClassName="max-w-2xl"
+      panelClassName="max-w-4xl"
     >
-      <div className="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 p-6 md:grid-cols-3">
           {/* Left Panel: Administration */}
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-4 uppercase tracking-wider">Administration</h3>
@@ -97,11 +100,42 @@ export default function AdvancedSearchModal({ isOpen, onClose }: AdvancedSearchM
               })}
             </div>
           </div>
+
+          {/* Third Panel: Risk level (catalog risk rating of the substance a Dispatch is about) */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 mb-4 uppercase tracking-wider">Risk level</h3>
+            <div className="space-y-2">
+              {RISK_LEVELS.map(risk => {
+                const isActive = activeRisks.includes(risk);
+                return (
+                  <button
+                    key={risk}
+                    onClick={() => toggleRisk(risk)}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all border",
+                      isActive
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 shadow-sm"
+                        : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                    )}
+                  >
+                    <span>{risk}</span>
+                    <div className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
+                      isActive ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-zinc-600"
+                    )}>
+                      {isActive && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
       <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
         <button
-          onClick={() => { setActiveAdmins([]); setActiveClassifications([]); }}
+          onClick={() => { setActiveAdmins([]); setActiveClassifications([]); setActiveRisks([]); }}
           disabled={!hasSelection}
           className="rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-40 dark:text-zinc-400 dark:hover:bg-zinc-800"
         >

@@ -14,19 +14,17 @@ import {
   Shield,
   Bookmark,
   Flag,
-} from 'lucide-react';
+ Palette } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
-import { useState } from 'react';
-import PrivacyModal from './PrivacyModal';
+
 import { useNotifications } from '../hooks/useNotifications';
 import { useMockComms } from '../hooks/useMockComms';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
-  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const { theme, toggleTheme, palette, togglePalette } = useTheme();
   const { unreadCount } = useNotifications();
   const { counts: commsCounts } = useMockComms();
   const { profile } = useAuth();
@@ -119,14 +117,24 @@ export default function Layout() {
           </button>
           <button
             type="button"
-            onClick={() => setIsPrivacyModalOpen(true)}
+            onClick={togglePalette}
+            aria-pressed={palette === 'colorblind'}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
+              <Palette size={16} />
+            </div>
+            <span className="font-medium">{palette === 'colorblind' ? 'Standard Colors' : 'Color-Vision Palette'}</span>
+          </button>
+          <Link
+            to="/legal/privacy"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-zinc-800">
               <Shield size={16} />
             </div>
             <span className="font-medium">Privacy</span>
-          </button>
+          </Link>
           <Link
             to="/profile"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-900 transition-colors text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200"
@@ -136,10 +144,14 @@ export default function Layout() {
             </div>
             <span className="font-medium">Profile</span>
           </Link>
+          <nav aria-label="Legal" className="flex flex-wrap gap-x-3 gap-y-1 px-3 pt-2 text-[11px] text-slate-500 dark:text-zinc-500">
+            <Link to="/legal/terms" className="hover:underline">Terms</Link>
+            <Link to="/legal/privacy" className="hover:underline">Privacy</Link>
+            <Link to="/legal/cookies" className="hover:underline">Cookies</Link>
+            <Link to="/legal/refunds" className="hover:underline">Refunds</Link>
+          </nav>
         </div>
       </aside>
-
-      <PrivacyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
 
       {/* Main Content Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">

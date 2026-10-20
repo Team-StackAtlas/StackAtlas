@@ -68,6 +68,9 @@ export const TYPE_TAGS: { label: string; emoji: string; full: TypeTag }[] = [
 export type Classification = 'Everyday' | 'Clinical' | 'Frontier' | 'Unknown';
 export const CLASSIFICATIONS: Classification[] = ['Everyday', 'Clinical', 'Frontier', 'Unknown'];
 
+export type RiskLevel = 'Low' | 'Moderate' | 'High';
+export const RISK_LEVELS: RiskLevel[] = ['Low', 'Moderate', 'High'];
+
 // Research scope acts as an access ceiling over classifications.
 export type ScopeLevel = 'Citizen' | 'Explorer';
 export const SCOPE_CLASSIFICATIONS: Record<ScopeLevel, Classification[]> = {
