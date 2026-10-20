@@ -80,3 +80,46 @@ update profiles
   where settings is null
      or settings ? 'showFollowers' or settings ? 'showFollowing' or settings ? 'showBodyStats'
      or not (settings ? 'showFollowersCount');
+
+-- The username-rules trigger rebuilds `settings` from a fixed key list on
+-- every write, which silently dropped every key added since (accountPrivacy,
+-- emailUpdates, the count/list split, ageDisplay, unitSystem). Rebuild it
+-- with the full current key set. unitSystem is only kept when the user
+-- actually chose one, so the app's locale guess still applies otherwise.
+create or replace function enforce_profile_username_rules()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  new.username := lower(trim(new.username));
+  if new.username !~ '^[a-z0-9_]{3,24}$' then
+    raise exception 'profiles_username_format';
+  end if;
+  if tg_op = 'UPDATE' and new.username is distinct from old.username then
+    if old.username_last_changed_at is not null and old.username_last_changed_at > now() - interval '30 days' then
+      raise exception 'username_change_cooldown';
+    end if;
+    new.username_last_changed_at := now();
+  end if;
+
+  new.settings := jsonb_build_object(
+    'savedPrivate', true,
+    'accountPrivacy', case when new.settings->>'accountPrivacy' = 'private' then 'private' else 'public' end,
+    'showActivity', coalesce((new.settings->>'showActivity')::boolean, false),
+    'showAvatar', coalesce((new.settings->>'showAvatar')::boolean, false),
+    'showAge', coalesce((new.settings->>'showAge')::boolean, false),
+    'showWeight', coalesce((new.settings->>'showWeight')::boolean, false),
+    'showHeight', coalesce((new.settings->>'showHeight')::boolean, false),
+    'showSex', coalesce((new.settings->>'showSex')::boolean, false),
+    'showBodyFat', coalesce((new.settings->>'showBodyFat')::boolean, false),
+    'showFollowersCount', coalesce((new.settings->>'showFollowersCount')::boolean, (new.settings->>'showFollowers')::boolean, false),
+    'showFollowersList', coalesce((new.settings->>'showFollowersList')::boolean, (new.settings->>'showFollowers')::boolean, false),
+    'showFollowingCount', coalesce((new.settings->>'showFollowingCount')::boolean, (new.settings->>'showFollowing')::boolean, false),
+    'showFollowingList', coalesce((new.settings->>'showFollowingList')::boolean, (new.settings->>'showFollowing')::boolean, false),
+    'ageDisplay', case when new.settings->>'ageDisplay' = 'range' then 'range' else 'exact' end,
+    'emailUpdates', coalesce((new.settings->>'emailUpdates')::boolean, false)
+  ) || case
+    when new.settings->>'unitSystem' in ('imperial', 'metric') then jsonb_build_object('unitSystem', new.settings->>'unitSystem')
+    else '{}'::jsonb
+  end;
+
+  return new;
+end $$;
