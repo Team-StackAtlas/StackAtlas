@@ -145,6 +145,7 @@ export default function Layout() {
             <span className="font-medium">Profile</span>
           </Link>
           <nav aria-label="Legal" className="flex flex-wrap gap-x-3 gap-y-1 px-3 pt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+            <Link to="/about" className="hover:underline">About</Link>
             <Link to="/legal/terms" className="hover:underline">Terms</Link>
             <Link to="/legal/privacy" className="hover:underline">Privacy</Link>
             <Link to="/legal/cookies" className="hover:underline">Cookies</Link>

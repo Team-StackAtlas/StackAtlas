@@ -21,6 +21,7 @@ import type {
   HiddenItem,
   Follow,
   FollowRequest,
+  FollowListEntry,
   ReportInput,
   ReportTargetType,
   SuggestEditInput,
@@ -112,6 +113,10 @@ export interface FollowService {
   unfollow(userId: ID, target: Follow): Promise<void>;
   listRequests(userId: ID): Promise<FollowRequest[]>;
   listOutgoingRequests(userId: ID): Promise<FollowRequest[]>;
+  /** Users following `userId`. Throws 'followers_list_private' / 'account_private' when the owner keeps it hidden. */
+  listFollowers(userId: ID): Promise<FollowListEntry[]>;
+  /** Users `userId` follows. Throws 'following_list_private' / 'account_private' when hidden. */
+  listFollowing(userId: ID): Promise<FollowListEntry[]>;
   approveRequest(userId: ID, requesterId: ID): Promise<void>;
   rejectRequest(userId: ID, requesterId: ID): Promise<void>;
 }

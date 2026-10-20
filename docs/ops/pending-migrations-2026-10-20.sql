@@ -310,15 +310,16 @@ alter table profiles
   drop constraint if exists profiles_sex_check,
   add constraint profiles_sex_check check (sex is null or sex in ('male', 'female', 'intersex'));
 
--- Settings: the single followers/following toggles split into count + list,
--- and the redundant "body-stats section" toggle goes away (the section shows
--- whenever any body field is visible).
+-- Settings: the single followers/following toggles split into count + list
+-- (counts default on, lists default off), and the redundant "body-stats
+-- section" toggle goes away (the section shows whenever any body field is
+-- visible).
 update profiles
   set settings = (coalesce(settings, '{}'::jsonb)
     || jsonb_build_object(
-      'showFollowersCount', coalesce((settings->>'showFollowersCount')::boolean, (settings->>'showFollowers')::boolean, false),
+      'showFollowersCount', coalesce((settings->>'showFollowersCount')::boolean, true),
       'showFollowersList',  coalesce((settings->>'showFollowersList')::boolean,  (settings->>'showFollowers')::boolean, false),
-      'showFollowingCount', coalesce((settings->>'showFollowingCount')::boolean, (settings->>'showFollowing')::boolean, false),
+      'showFollowingCount', coalesce((settings->>'showFollowingCount')::boolean, true),
       'showFollowingList',  coalesce((settings->>'showFollowingList')::boolean,  (settings->>'showFollowing')::boolean, false)
     )) - 'showFollowers' - 'showFollowing' - 'showBodyStats'
   where settings is null
@@ -354,11 +355,12 @@ begin
     'showHeight', coalesce((new.settings->>'showHeight')::boolean, false),
     'showSex', coalesce((new.settings->>'showSex')::boolean, false),
     'showBodyFat', coalesce((new.settings->>'showBodyFat')::boolean, false),
-    'showFollowersCount', coalesce((new.settings->>'showFollowersCount')::boolean, (new.settings->>'showFollowers')::boolean, false),
+    'showFollowersCount', coalesce((new.settings->>'showFollowersCount')::boolean, true),
     'showFollowersList', coalesce((new.settings->>'showFollowersList')::boolean, (new.settings->>'showFollowers')::boolean, false),
-    'showFollowingCount', coalesce((new.settings->>'showFollowingCount')::boolean, (new.settings->>'showFollowing')::boolean, false),
+    'showFollowingCount', coalesce((new.settings->>'showFollowingCount')::boolean, true),
     'showFollowingList', coalesce((new.settings->>'showFollowingList')::boolean, (new.settings->>'showFollowing')::boolean, false),
     'ageDisplay', case when new.settings->>'ageDisplay' = 'range' then 'range' else 'exact' end,
+    'ageRangeSpan', least(10, greatest(3, coalesce((new.settings->>'ageRangeSpan')::int, 5))),
     'emailUpdates', coalesce((new.settings->>'emailUpdates')::boolean, false)
   ) || case
     when new.settings->>'unitSystem' in ('imperial', 'metric') then jsonb_build_object('unitSystem', new.settings->>'unitSystem')

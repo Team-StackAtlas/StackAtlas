@@ -29,11 +29,13 @@ export const DEFAULT_PROFILE_SETTINGS: Required<ProfileSettings> = {
   showSex: false,
   showBodyFat: false,
   accountPrivacy: 'public',
-  showFollowersCount: false,
+  // Counts are public by default; who-follows-whom lists are private by default.
+  showFollowersCount: true,
   showFollowersList: false,
-  showFollowingCount: false,
+  showFollowingCount: true,
   showFollowingList: false,
   ageDisplay: 'exact',
+  ageRangeSpan: 5,
   unitSystem: 'imperial',
   emailUpdates: false,
 };

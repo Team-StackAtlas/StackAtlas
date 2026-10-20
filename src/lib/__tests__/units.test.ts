@@ -16,9 +16,12 @@ describe('units', () => {
 
   it('derives age from birth year so it ticks over on its own', () => {
     const now = new Date('2030-06-01');
-    expect(formatAge(2000, 'exact', now)).toBe('30');
-    expect(formatAge(2000, 'range', now)).toBe('25–34');
-    expect(ageRangeLabel(70)).toBe('65+');
+    expect(formatAge(2000, 'exact', undefined, now)).toBe('30');
+    expect(formatAge(2000, 'range', 5, now)).toBe('28–32');
+    expect(ageRangeLabel(25, 4)).toBe('22–25');
+    expect(ageRangeLabel(25, 10)).toBe('18–27');
+    expect(ageRangeLabel(18, 3)).toBe('18–20');
+    expect(ageRangeLabel(70, 50)).toBe('68–77'); // span clamps to 10
     expect(birthYearBounds(now)).toEqual({ min: 1910, max: 2012 });
   });
 });

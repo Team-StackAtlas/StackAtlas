@@ -17,8 +17,8 @@ import type { FollowRequest, ProfileDTO, ProfileSettings, Sex, UnitSystem } from
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 import { useUnitSystem } from '../hooks/useUnitSystem';
 import {
-  AGE_RANGES, BODY_FAT, HEIGHT_CM, SEX_OPTIONS, WEIGHT_KG,
-  birthYearBounds, cmToFtIn, formatAge, formatHeight, formatWeight, inToCm, kgToLb, lbToKg,
+  AGE_RANGE_SPAN, BODY_FAT, HEIGHT_CM, SEX_OPTIONS, WEIGHT_KG,
+  ageRangeLabel, birthYearBounds, cmToFtIn, formatAge, formatHeight, formatWeight, inToCm, kgToLb, lbToKg,
 } from '../lib/units';
 import AccountSettingsPanel from '../components/AccountSettingsPanel';
 import { downscaleImage } from '../lib/imageUtils';
@@ -37,6 +37,10 @@ const hiddenGroups: { key: HiddenGroup; label: string }[] = [
 function numberOrNull(value: FormDataEntryValue | null) {
   if (value === null || String(value).trim() === '') return null;
   return Number(value);
+}
+
+function shownProfileSettingsAgeDisplay(settings?: ProfileSettings): 'exact' | 'range' {
+  return settings?.ageDisplay === 'range' ? 'range' : 'exact';
 }
 
 const INPUT = 'mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950';
@@ -82,7 +86,15 @@ function readBodyFields(form: FormData, units: UnitSystem): BodyFields | { error
   return { birthYear, weightKg, heightCm, sex, bodyFatPercentage };
 }
 
-function fieldVisible(profile: ProfileDTO, key: keyof Required<ProfileSettings>, isOwnProfile: boolean) {
+/** A follower/following count; it links to the list only when the list is visible to this viewer. */
+function CountLink({ to, linked, count, label }: { to: string; linked: boolean; count: number; label: string }) {
+  const inner = <><strong className="font-semibold text-slate-700 dark:text-zinc-300">{count}</strong> {label}</>;
+  return linked ? <Link to={to} className="hover:underline">{inner}</Link> : <span>{inner}</span>;
+}
+
+type VisibilityKey = { [K in keyof Required<ProfileSettings>]: Required<ProfileSettings>[K] extends boolean ? K : never }[keyof Required<ProfileSettings>];
+
+function fieldVisible(profile: ProfileDTO, key: VisibilityKey, isOwnProfile: boolean): boolean {
   if (isOwnProfile) return true;
   return withDefaultProfileSettings(profile.settings)[key];
 }
@@ -107,12 +119,21 @@ export default function Profile() {
   // Unit system chosen in the edit form; the body-field inputs remount with
   // converted defaults whenever it changes.
   const [unitDraft, setUnitDraft] = useState<UnitSystem>(viewerUnits);
+  const [ageDisplayDraft, setAgeDisplayDraft] = useState<'exact' | 'range'>('exact');
+  const [ageSpanDraft, setAgeSpanDraft] = useState<number>(AGE_RANGE_SPAN.default);
   const [activeTab, setActiveTab] = useState<ProfileTab>(() => (searchParams.get('tab') as ProfileTab) || 'all');
   const [saving, setSaving] = useState(false);
   // undefined = untouched (keep stored avatar), '' = removed, string = new upload.
   const [avatarDraft, setAvatarDraft] = useState<string | undefined>(undefined);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-  useEffect(() => { setAvatarDraft(undefined); setUnitDraft(viewerUnits); }, [isEditing, viewerUnits]);
+  const savedAgeDisplay = shownProfileSettingsAgeDisplay(authProfile?.settings);
+  const savedAgeSpan = authProfile?.settings?.ageRangeSpan ?? AGE_RANGE_SPAN.default;
+  useEffect(() => {
+    setAvatarDraft(undefined);
+    setUnitDraft(viewerUnits);
+    setAgeDisplayDraft(savedAgeDisplay);
+    setAgeSpanDraft(savedAgeSpan);
+  }, [isEditing, viewerUnits, savedAgeDisplay, savedAgeSpan]);
   const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
   const [ownReports, setOwnReports] = useState<{ id: string; targetType: string; targetLabel?: string; status: string; createdAt: string }[]>([]);
 
@@ -245,6 +266,8 @@ export default function Profile() {
         nextSettings[key] = form.get(key) === 'on';
       });
       nextSettings.ageDisplay = form.get('ageDisplay') === 'range' ? 'range' : 'exact';
+      const span = numberOrNull(form.get('ageRangeSpan'));
+      nextSettings.ageRangeSpan = span === null ? AGE_RANGE_SPAN.default : Math.min(AGE_RANGE_SPAN.max, Math.max(AGE_RANGE_SPAN.min, Math.round(span)));
       nextSettings.unitSystem = unitDraft;
       nextSettings.savedPrivate = true;
 
@@ -304,7 +327,7 @@ export default function Profile() {
   // Stats are stored metric and shown in the *viewer's* units, so an American
   // reading a European profile sees lb and ft/in, and vice versa.
   const bodyStats = [
-    fieldVisible(shownProfile, 'showAge', isOwnProfile) && shownProfile.birthYear ? ['Age', formatAge(shownProfile.birthYear, settings.ageDisplay)] : null,
+    fieldVisible(shownProfile, 'showAge', isOwnProfile) && shownProfile.birthYear ? ['Age', formatAge(shownProfile.birthYear, settings.ageDisplay, settings.ageRangeSpan)] : null,
     fieldVisible(shownProfile, 'showWeight', isOwnProfile) && shownProfile.weightKg ? ['Weight', formatWeight(shownProfile.weightKg, viewerUnits)] : null,
     fieldVisible(shownProfile, 'showHeight', isOwnProfile) && shownProfile.heightCm ? ['Height', formatHeight(shownProfile.heightCm, viewerUnits)] : null,
     fieldVisible(shownProfile, 'showSex', isOwnProfile) && shownProfile.sex ? ['Sex', SEX_OPTIONS.find((o) => o.value === shownProfile.sex)?.label ?? shownProfile.sex] : null,
@@ -359,7 +382,10 @@ export default function Profile() {
               <span className="flex items-center gap-1"><Activity size={13} /> <strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.dispatchCount ?? 0}</strong> Dispatches</span>
               <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.signalCount ?? 0}</strong> Signals</span>
               {fieldVisible(shownProfile, 'showFollowersCount', isOwnProfile) && (
-                <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.followersCount ?? 0}</strong> followers</span>
+                <CountLink to={`/profile/${shownProfile.username}/followers`} linked={fieldVisible(shownProfile, 'showFollowersList', isOwnProfile)} count={shownProfile.stats?.followersCount ?? 0} label="followers" />
+              )}
+              {fieldVisible(shownProfile, 'showFollowingCount', isOwnProfile) && (
+                <CountLink to={`/profile/${shownProfile.username}/following`} linked={fieldVisible(shownProfile, 'showFollowingList', isOwnProfile)} count={shownProfile.stats?.followingCount ?? 0} label="following" />
               )}
             </div>
           </div>
@@ -457,8 +483,21 @@ export default function Profile() {
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
               <span className="text-slate-500 dark:text-zinc-400">If age is visible, show</span>
-              <label><input type="radio" name="ageDisplay" value="exact" defaultChecked={settings.ageDisplay !== 'range'} className="mr-1 accent-emerald-500" /> exact age</label>
-              <label><input type="radio" name="ageDisplay" value="range" defaultChecked={settings.ageDisplay === 'range'} className="mr-1 accent-emerald-500" /> age range <span className="text-slate-500 dark:text-zinc-400">({AGE_RANGES.map((r) => r.label).join(', ')})</span></label>
+              <label><input type="radio" name="ageDisplay" value="exact" checked={ageDisplayDraft === 'exact'} onChange={() => setAgeDisplayDraft('exact')} className="mr-1 accent-emerald-500" /> exact age</label>
+              <label><input type="radio" name="ageDisplay" value="range" checked={ageDisplayDraft === 'range'} onChange={() => setAgeDisplayDraft('range')} className="mr-1 accent-emerald-500" /> an age range</label>
+              {ageDisplayDraft === 'range' && (
+                <label className="flex items-center gap-2">
+                  <span className="text-slate-500 dark:text-zinc-400">spanning</span>
+                  <select name="ageRangeSpan" value={ageSpanDraft} onChange={(e) => setAgeSpanDraft(Number(e.target.value))} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 dark:border-zinc-800 dark:bg-zinc-950">
+                    {Array.from({ length: AGE_RANGE_SPAN.max - AGE_RANGE_SPAN.min + 1 }, (_, i) => AGE_RANGE_SPAN.min + i).map((n) => (
+                      <option key={n} value={n}>{n} years</option>
+                    ))}
+                  </select>
+                  {shownProfile.birthYear && (
+                    <span className="text-slate-500 dark:text-zinc-400">→ shows as {ageRangeLabel(new Date().getFullYear() - shownProfile.birthYear, ageSpanDraft)}</span>
+                  )}
+                </label>
+              )}
             </div>
           </div>
           <div className="rounded-xl border border-slate-200 p-4 dark:border-zinc-800">
