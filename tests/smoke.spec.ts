@@ -188,17 +188,23 @@ test('Comms Quarters: open a quarter and post to it', async ({ page }) => {
   await expect(page.getByText('smoke quarter message').first()).toBeVisible();
 });
 
-test('Glossary opens category-first and deep links still resolve', async ({ page }) => {
+test('Glossary opens search-first, filters by kind, and deep links still resolve', async ({ page }) => {
   await page.goto('/glossary');
-  // Landing state: category cards, not the full term list.
-  const categoryCard = page.locator('button:has(svg.lucide-book-open)').first();
-  await expect(categoryCard).toBeVisible();
-  await categoryCard.click();
-  // A term card renders inside the opened category.
+  // Landing state: a search box and filter chips, not the full term list.
+  await expect(page.getByPlaceholder(/Search a term/i)).toBeVisible();
+  await expect(page.locator('[id^="term-"]')).toHaveCount(0);
+  // Picking a kind-of-word chip shows its terms.
+  await page.getByRole('button', { name: /^Pharmacology/ }).click();
   await expect(page.locator('[id^="term-"]').first()).toBeVisible();
-  // Back control returns to the overview.
-  await page.getByRole('button', { name: /All categories/i }).click();
-  await expect(page.locator('button:has(svg.lucide-book-open)').first()).toBeVisible();
+  // Start over returns to the landing state.
+  await page.getByRole('button', { name: /Start over/i }).click();
+  await expect(page.locator('[id^="term-"]')).toHaveCount(0);
+  // Search ranks the exact term first.
+  await page.getByPlaceholder(/Search a term/i).fill('half-life');
+  await expect(page.locator('[id^="term-"]').first()).toContainText(/Half-Life/i);
+  // Deep link opens the entry on its own.
+  await page.goto('/glossary?term=half-life');
+  await expect(page.locator('#term-half-life')).toBeVisible();
 });
 
 test('Compare suggestions rank same-purpose substances first', async ({ page }) => {

@@ -78,9 +78,10 @@ function GlossaryMark({ label, term, depth }: { label: string; term: GlossaryTer
           className="absolute left-0 top-full z-50 block w-72 max-w-[80vw] cursor-default pt-1.5"
         >
         <span className="block rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
-          {term.category && (
-            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+          {(term.category || term.tags.includes('slang')) && (
+            <span className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
               {term.category}
+              {term.tags.includes('slang') && <span className="rounded bg-amber-100 px-1 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">slang</span>}
             </span>
           )}
           <span className="block text-sm font-semibold text-slate-900 dark:text-zinc-100">{term.term}</span>

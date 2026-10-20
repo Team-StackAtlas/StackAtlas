@@ -62,22 +62,21 @@ export function ageFromBirthYear(birthYear: number, now = new Date()) {
   return now.getFullYear() - birthYear;
 }
 
-/** Fixed brackets, so nobody lists themselves as "18–99". */
-export const AGE_RANGES: { min: number; max: number | null; label: string }[] = [
-  { min: 18, max: 24, label: '18–24' },
-  { min: 25, max: 34, label: '25–34' },
-  { min: 35, max: 44, label: '35–44' },
-  { min: 45, max: 54, label: '45–54' },
-  { min: 55, max: 64, label: '55–64' },
-  { min: 65, max: null, label: '65+' },
-];
+export const AGE_RANGE_SPAN = { min: 3, max: 10, default: 5 } as const;
 
-export function ageRangeLabel(age: number) {
-  const hit = AGE_RANGES.find((r) => age >= r.min && (r.max === null || age <= r.max));
-  return hit?.label ?? AGE_RANGES[0].label;
+/**
+ * Brackets are anchored at 18 and stepped by the chosen span, then the one
+ * containing the real age is shown: span 4 at age 25 gives 22–25, span 10
+ * gives 18–27. Nobody can list themselves as "18–99", and the bracket rolls
+ * over on its own as they age.
+ */
+export function ageRangeLabel(age: number, span: number = AGE_RANGE_SPAN.default) {
+  const width = Math.min(AGE_RANGE_SPAN.max, Math.max(AGE_RANGE_SPAN.min, Math.round(span)));
+  const start = MIN_AGE + Math.floor((Math.max(age, MIN_AGE) - MIN_AGE) / width) * width;
+  return `${start}–${start + width - 1}`;
 }
 
-export function formatAge(birthYear: number, display: 'exact' | 'range', now = new Date()) {
+export function formatAge(birthYear: number, display: 'exact' | 'range', span?: number, now = new Date()) {
   const age = ageFromBirthYear(birthYear, now);
-  return display === 'range' ? ageRangeLabel(age) : String(age);
+  return display === 'range' ? ageRangeLabel(age, span) : String(age);
 }

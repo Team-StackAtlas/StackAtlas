@@ -89,8 +89,10 @@ export interface ProfileSettings {
   showFollowersList?: boolean;
   showFollowingCount?: boolean;
   showFollowingList?: boolean;
-  /** How a visible age is shown: the exact number or a bracket like 25–34. */
+  /** How a visible age is shown: the exact number or a bracket. */
   ageDisplay?: 'exact' | 'range';
+  /** Width of the bracket in years (3–10). Brackets are anchored at 18 and computed from the real age, so they cannot be gamed. */
+  ageRangeSpan?: number;
   /** Viewer-side preference; everything is stored metric and converted on display. */
   unitSystem?: UnitSystem;
   /** Opt-in to product-update emails. Off by default; nothing is sent unless true. */
@@ -206,6 +208,14 @@ export type FollowTarget = 'user' | 'substance' | 'brand' | 'stack' | 'album';
 export interface Follow {
   targetType: FollowTarget;
   targetId: ID;
+}
+/** One row of a profile's followers or following list (users only). */
+export interface FollowListEntry {
+  userId: ID;
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+  followedAt: ISODate;
 }
 export interface FollowRequest {
   requesterId: ID;

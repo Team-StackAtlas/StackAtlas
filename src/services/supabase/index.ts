@@ -21,6 +21,7 @@ import type {
   HiddenItem,
   Follow,
   FollowRequest,
+  FollowListEntry,
   NotificationDTO,
   ID,
   ReportInput,
@@ -92,6 +93,10 @@ function mapProfile(row: any, stats?: any, email?: string | null): ProfileDTO {
         }
       : undefined,
   };
+}
+
+function mapFollowListEntry(r: any): FollowListEntry {
+  return { userId: r.user_id, username: r.username, displayName: r.display_name ?? undefined, avatarUrl: r.avatar_url ?? undefined, followedAt: r.followed_at };
 }
 
 function mapSessionUser(profile: ProfileDTO, email: string | null): SessionUser {
@@ -416,6 +421,16 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       const { data, error } = await client.from('follow_requests').select('requester_id,target_user_id,created_at,profiles!follow_requests_target_user_id_fkey(username,avatar_url)').eq('requester_id', userId).eq('status', 'pending').order('created_at', { ascending: false });
       if (error) throw error;
       return (data ?? []).map((r: any) => ({ requesterId: r.requester_id, targetUserId: r.target_user_id, username: r.profiles?.username, avatarUrl: r.profiles?.avatar_url, createdAt: r.created_at }) as FollowRequest);
+    },
+    async listFollowers(userId: ID) {
+      const { data, error } = await client.rpc('list_user_followers', { p_user_id: userId });
+      if (error) throw new Error(error.message);
+      return (data ?? []).map(mapFollowListEntry);
+    },
+    async listFollowing(userId: ID) {
+      const { data, error } = await client.rpc('list_user_following', { p_user_id: userId });
+      if (error) throw new Error(error.message);
+      return (data ?? []).map(mapFollowListEntry);
     },
     async approveRequest(userId: ID, requesterId: ID) {
       const { error } = await client.rpc('approve_follow_request', { p_target_user_id: userId, p_requester_id: requesterId });

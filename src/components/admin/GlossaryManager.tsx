@@ -1,22 +1,33 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { Loader2, RefreshCw, Trash2 } from 'lucide-react';
-import { deleteGlossaryTerm, listGlossaryTerms, upsertGlossaryTerm, type GlossaryTerm } from '../../services/glossary';
+import { deleteGlossaryTerm, listGlossaryTerms, upsertGlossaryTerm, GLOSSARY_TAGS, type GlossaryTerm } from '../../services/glossary';
+import { BEARINGS } from '../../data/mockData';
 
 type Draft = {
   term: string;
   definition: string;
   category: string;
+  detail: string;
+  tags: string[];
+  bearings: string[];
 };
 
-const EMPTY_DRAFT: Draft = { term: '', definition: '', category: '' };
+const EMPTY_DRAFT: Draft = { term: '', definition: '', category: '', detail: '', tags: [], bearings: [] };
 
 function draftFromEntry(entry: GlossaryTerm): Draft {
   return {
     term: entry.term,
     definition: entry.definition,
     category: entry.category ?? '',
+    detail: entry.detail ?? '',
+    tags: entry.tags,
+    bearings: entry.bearings,
   };
+}
+
+function toggle(list: string[], value: string) {
+  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 }
 
 export default function GlossaryManager({
@@ -87,6 +98,9 @@ export default function GlossaryManager({
         term,
         definition,
         category: newDraft.category.trim() || null,
+        detail: newDraft.detail.trim() || null,
+        tags: newDraft.tags,
+        bearings: newDraft.bearings,
       });
       setNewDraft(EMPTY_DRAFT);
       await load();
@@ -114,6 +128,9 @@ export default function GlossaryManager({
         definition,
         category: draft.category.trim() || null,
         slug: entry.slug,
+        detail: draft.detail.trim() || null,
+        tags: draft.tags,
+        bearings: draft.bearings,
       });
       await load();
       cancelEdit();
@@ -183,14 +200,23 @@ export default function GlossaryManager({
             />
           </Field>
         </div>
-        <Field label="Definition">
+        <Field label="Definition (1–2 sentences; this is the tooltip)">
           <textarea
             value={newDraft.definition}
             onChange={(e) => setNewDraft({ ...newDraft, definition: e.target.value })}
+            rows={2}
+            className={fieldInputClass}
+          />
+        </Field>
+        <Field label="Detail (optional longer paragraph, full entry only)">
+          <textarea
+            value={newDraft.detail}
+            onChange={(e) => setNewDraft({ ...newDraft, detail: e.target.value })}
             rows={3}
             className={fieldInputClass}
           />
         </Field>
+        <TagAndBearingPickers draft={newDraft} onChange={setNewDraft} />
         <button
           onClick={() => void addTerm()}
           disabled={adding}
@@ -239,6 +265,11 @@ export default function GlossaryManager({
               )}
             </div>
             <p className="mt-2 text-sm text-slate-600 dark:text-zinc-300">{entry.definition}</p>
+            {(entry.tags.length > 0 || entry.bearings.length > 0) && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
+                {entry.tags.map((t) => `#${t}`).join(' ')}{entry.tags.length && entry.bearings.length ? ' · ' : ''}{entry.bearings.join(', ')}
+              </p>
+            )}
 
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -279,14 +310,23 @@ export default function GlossaryManager({
                     />
                   </Field>
                 </div>
-                <Field label="Definition">
+                <Field label="Definition (1–2 sentences; this is the tooltip)">
                   <textarea
                     value={draft.definition}
                     onChange={(e) => setDraft({ ...draft, definition: e.target.value })}
+                    rows={2}
+                    className={fieldInputClass}
+                  />
+                </Field>
+                <Field label="Detail (optional longer paragraph, full entry only)">
+                  <textarea
+                    value={draft.detail}
+                    onChange={(e) => setDraft({ ...draft, detail: e.target.value })}
                     rows={3}
                     className={fieldInputClass}
                   />
                 </Field>
+                <TagAndBearingPickers draft={draft} onChange={setDraft} />
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => void saveEdit(entry)}
@@ -315,6 +355,39 @@ export default function GlossaryManager({
 
 const fieldInputClass =
   'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900';
+
+function TagAndBearingPickers({ draft, onChange }: { draft: Draft; onChange: (d: Draft) => void }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div>
+        <span className="mb-1 block text-xs font-semibold text-slate-500 dark:text-zinc-400">Tags (how the word is used)</span>
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(GLOSSARY_TAGS).map(([value, label]) => (
+            <button key={value} type="button" onClick={() => onChange({ ...draft, tags: toggle(draft.tags, value) })} aria-pressed={draft.tags.includes(value)}
+              className={`rounded-full border px-2.5 py-1 text-xs font-medium ${draft.tags.includes(value) ? 'border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 'border-slate-200 text-slate-600 dark:border-zinc-700 dark:text-zinc-300'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span className="mb-1 block text-xs font-semibold text-slate-500 dark:text-zinc-400">Bearings ({draft.bearings.length}/5)</span>
+        <div className="flex flex-wrap gap-1.5">
+          {BEARINGS.map((b) => {
+            const on = draft.bearings.includes(b);
+            const full = !on && draft.bearings.length >= 5;
+            return (
+              <button key={b} type="button" disabled={full} onClick={() => onChange({ ...draft, bearings: toggle(draft.bearings, b) })} aria-pressed={on}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium disabled:opacity-40 ${on ? 'border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' : 'border-slate-200 text-slate-600 dark:border-zinc-700 dark:text-zinc-300'}`}>
+                {b}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

@@ -140,6 +140,12 @@ export function createStubServices(): Services {
       async listOutgoingRequests() {
         return ni('follows.listOutgoingRequests');
       },
+      async listFollowers() {
+        return ni('follows.listFollowers');
+      },
+      async listFollowing() {
+        return ni('follows.listFollowing');
+      },
       async approveRequest() {
         return ni('follows.approveRequest');
       },
