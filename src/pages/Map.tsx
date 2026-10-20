@@ -18,6 +18,12 @@ import { EmptyState } from '../components/EmptyState';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
+import { CATEGORY_ICONS } from '../lib/categoryIcons';
+import { CategoryRail } from '../components/CategoryRail';
+import { FeaturedRow } from '../components/FeaturedRow';
+import { pickFeatured } from '../lib/featuredPicks';
+import { ACCENT_CYCLE } from '../components/ui/accents';
+import { Target } from 'lucide-react';
 import { BEARING_CATEGORIES, getCanonicalCategories, getFilterBearings } from '../lib/bearings';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { searchRank, sortByRank } from '../lib/searchRank';
@@ -301,6 +307,42 @@ export default function Map() {
   const visibleBrands = filteredBrands.slice(0, visibleCount);
   const visibleStacks = approvedStacks.slice(0, visibleCount);
 
+  // Discovery sections (featured strip + goal rails) only on the untouched
+  // landing state. The moment anything is typed, filtered, or switched to
+  // Following, the page is a results list and nothing else.
+  const discoveryMode = activeTab === 'Substances' && feedType === 'For You' && !debouncedQuery && !activeCategoryGroup && activeTypes.length === 0 && advancedFilterCount === 0;
+  const featuredPicks = useMemo(
+    () => (discoveryMode ? pickFeatured({ substances: filteredSupplements, stacks: approvedStacks, brands: filteredBrands, substancesById, goals: scope.goals }) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the filtered lists are rebuilt every render; keying on their lengths and the inputs that matter avoids recomputing picks on unrelated state.
+    [discoveryMode, filteredSupplements.length, approvedStacks.length, filteredBrands.length, substancesById, scope.goals],
+  );
+  const rails = useMemo(() => {
+    if (!discoveryMode) return [];
+    const canonicalNames = BEARING_CATEGORIES.map((c) => c.name);
+    const byCategory = new globalThis.Map<string, Substance[]>();
+    for (const s of filteredSupplements) {
+      for (const c of getCanonicalCategories(s.paths.map((p) => p.category))) {
+        if (!byCategory.has(c)) byCategory.set(c, []);
+        byCategory.get(c)!.push(s);
+      }
+    }
+    // The user's goals first, then the biggest categories to fill up to three.
+    const chosen: string[] = scope.goals.filter((g) => canonicalNames.includes(g) && (byCategory.get(g)?.length ?? 0) > 0).slice(0, 3);
+    for (const [name, list] of [...byCategory.entries()].sort((a, b) => b[1].length - a[1].length)) {
+      if (chosen.length >= 3) break;
+      if (!chosen.includes(name) && list.length >= 3) chosen.push(name);
+    }
+    return chosen.map((name) => {
+      const meta = BEARING_CATEGORIES.find((c) => c.name === name)!;
+      const idx = BEARING_CATEGORIES.indexOf(meta);
+      const items = [...(byCategory.get(name) ?? [])]
+        .sort((a, b) => (b.evidenceCount ?? 0) - (a.evidenceCount ?? 0) || a.name.localeCompare(b.name))
+        .slice(0, 8);
+      return { name, description: meta.description, icon: CATEGORY_ICONS[name] ?? Target, accent: ACCENT_CYCLE[idx % ACCENT_CYCLE.length], items };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see featuredPicks.
+  }, [discoveryMode, filteredSupplements.length, scope.goals]);
+
   const hasActiveFilters = Boolean(debouncedQuery) || Boolean(activeCategoryGroup);
   const clearFilters = () => {
     setSearchQuery('');
@@ -521,6 +563,21 @@ export default function Map() {
       <div className="flex-1 px-4 pb-2 space-y-4">
         {activeTab === 'Substances' && (
           <>
+            {discoveryMode && featuredPicks.length > 0 && <FeaturedRow picks={featuredPicks} />}
+            {discoveryMode && rails.map((rail) => (
+              <CategoryRail
+                key={rail.name}
+                name={rail.name}
+                description={rail.description}
+                icon={rail.icon}
+                accent={rail.accent}
+                substances={rail.items}
+                onSeeAll={() => { setActiveCategoryGroup(rail.name); setActiveBearings([]); }}
+              />
+            ))}
+            {discoveryMode && (featuredPicks.length > 0 || rails.length > 0) && (
+              <h2 className="pt-2 text-[15px] font-bold text-slate-900 dark:text-zinc-100">All substances</h2>
+            )}
             <SectionHeading label="substance" count={filteredSupplements.length} action={syncIndicator} />
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
               {visibleSupplements.map(supplement => (
