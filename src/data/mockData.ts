@@ -133,6 +133,8 @@ export interface Substance {
   origin?: string;
   howObtained?: string;
   halfLife?: string;
+  /** Research sources linked to this substance (not rejected); absent when unknown. */
+  evidenceCount?: number;
 }
 
 /** @deprecated Use `Substance`. Kept for back-compat during the rename. */

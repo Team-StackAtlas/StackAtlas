@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { TYPE_TAGS, type Classification, type Substance } from '../data/mockData';
-import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
+import { BookOpen } from 'lucide-react';
+import type { Classification, Substance } from '../data/mockData';
 import { ADMINISTRATION_META } from '../lib/administrationIcons';
 import { displayName } from '../lib/substanceName';
 import { cn } from '../lib/utils';
 import { SecondaryHideMenu } from './SecondaryHideMenu';
+import { SubstanceVisual } from './SubstanceVisual';
 
 /**
  * Soft classification pill. "Unknown" is intentionally absent — a bare "?"
@@ -18,10 +19,12 @@ const CLASSIFICATION_PILL: Record<Exclude<Classification, 'Unknown'>, string> = 
 };
 
 /**
- * Browse-grid card for a substance. Leads with the name (popular acronym first
- * when there is one), keeps the description scannable, and tucks classification
- * and administration into a quiet footer so the card reads as something worth
- * clicking rather than a data row.
+ * Browse card for a substance. Identity tile on the left, name and a
+ * three-line description on the right, and a quiet footer with only the
+ * signals that add information: classification, high risk, verified
+ * evidence count, administration routes. Type labels like "Botanical" are
+ * deliberately gone; the tile already says it, and aliases belong on the
+ * detail page.
  */
 export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onClick }: {
   supplement: Substance;
@@ -29,7 +32,7 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
   isHiddenByUser: boolean;
   onClick?: () => void;
 }) {
-  const { primary, acronym, altNames } = displayName(supplement);
+  const { primary, acronym } = displayName(supplement);
   const classification = supplement.classification;
 
   return (
@@ -37,43 +40,46 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
       to={`/substance/${supplement.id}`}
       onClick={onClick}
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-2xl border p-4 transition-all duration-200",
+        'group relative flex h-full flex-col overflow-hidden rounded-2xl border p-4 transition-all duration-200',
         isPrioritized
-          ? "border-emerald-200/70 bg-emerald-50/40 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-900/5 dark:border-emerald-800/40 dark:bg-emerald-900/10 dark:hover:border-emerald-700/60"
-          : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:shadow-black/30"
+          ? 'border-emerald-200/70 bg-emerald-50/40 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-900/5 dark:border-emerald-800/40 dark:bg-emerald-900/10 dark:hover:border-emerald-700/60'
+          : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:shadow-black/30',
       )}
     >
-      {isPrioritized && (
-        <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-emerald-400 dark:bg-emerald-500/70" />
-      )}
+      {isPrioritized && <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-emerald-400 dark:bg-emerald-500/70" />}
 
-      <div className="mb-1 flex items-start justify-between gap-2">
-        <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">
-          {acronym ? (
-            <>
-              <span>{acronym}</span>
-              <span className="font-medium text-slate-500 dark:text-zinc-400"> · {primary}</span>
-            </>
-          ) : (
-            <span className="line-clamp-2">{primary}</span>
-          )}
-        </h3>
-        <SecondaryHideMenu id={supplement.id} name={supplement.name} type="substance" />
+      <div className="flex items-start gap-3">
+        <SubstanceVisual substance={supplement} size="md" className="transition-transform group-hover:scale-105" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="min-w-0 break-words text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">
+              {acronym ? (
+                <>
+                  <span>{acronym}</span>
+                  <span className="font-medium text-slate-500 dark:text-zinc-400"> · {primary}</span>
+                </>
+              ) : (
+                <span className="line-clamp-2">{primary}</span>
+              )}
+            </h3>
+            <SecondaryHideMenu id={supplement.id} name={supplement.name} type="substance" />
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {classification !== 'Unknown' && (
+              <span className={cn('rounded-full px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-inset', CLASSIFICATION_PILL[classification])}>{classification}</span>
+            )}
+            {supplement.riskLevel === 'High' && (
+              <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10.5px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/25">High risk</span>
+            )}
+          </div>
+        </div>
       </div>
-
-      {altNames.length > 0 && (
-        <p className="mb-2 truncate text-[11px] text-slate-500 dark:text-zinc-400" title={altNames.join(' · ')}>
-          {altNames.slice(0, 3).join(' · ')}
-        </p>
-      )}
 
       {/* flex-1 lives on the wrapper: putting it on the clamped element itself
           stretches the -webkit-box past its clamp height, so text hard-clips
           at the card edge with no ellipsis. */}
-      <div className="flex-1">
-        <p className="line-clamp-3 text-[13px] leading-relaxed text-slate-600 dark:text-zinc-400">
-          {supplement.description}
-        </p>
+      <div className="mt-3 flex-1">
+        <p className="line-clamp-3 text-[13px] leading-relaxed text-slate-600 dark:text-zinc-400">{supplement.description}</p>
       </div>
 
       {isHiddenByUser && (
@@ -81,25 +87,18 @@ export function SubstanceCard({ supplement, isPrioritized, isHiddenByUser, onCli
       )}
 
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-zinc-800/60">
-        <div className="flex min-w-0 items-center gap-1.5">
-          {classification !== 'Unknown' && (
-            <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-inset", CLASSIFICATION_PILL[classification])}>
-              {classification}
-            </span>
+        <span className="inline-flex min-w-0 items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+          {supplement.evidenceCount ? (
+            <>
+              <BookOpen size={12} className="shrink-0" />
+              {supplement.evidenceCount} linked {supplement.evidenceCount === 1 ? 'source' : 'sources'}
+            </>
+          ) : (
+            <span className="text-slate-500 dark:text-zinc-400">No sources linked yet</span>
           )}
-          {supplement.typeTags.slice(0, 1).map(tag => {
-            const typeInfo = TYPE_TAGS.find(t => t.full === tag);
-            const TagIcon = TYPE_TAG_ICONS[tag];
-            return typeInfo ? (
-              <span key={tag} className="inline-flex min-w-0 items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400" title={tag}>
-                {TagIcon && <TagIcon size={12} className="shrink-0 text-slate-500 dark:text-zinc-400" />}
-                <span className="truncate">{typeInfo.label}</span>
-              </span>
-            ) : null;
-          })}
-        </div>
+        </span>
         <div className="flex shrink-0 gap-1">
-          {supplement.administration.map(admin => {
+          {supplement.administration.map((admin) => {
             const meta = ADMINISTRATION_META[admin];
             const Icon = meta?.icon;
             return (

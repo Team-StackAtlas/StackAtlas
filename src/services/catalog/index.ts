@@ -217,10 +217,13 @@ export async function loadSupabaseCatalog(
   client: SupabaseClient,
 ): Promise<{ substances: Substance[]; brands: Brand[]; stacks: Stack[] } | null> {
   try {
-    const [substancesRes, brandsRes, stacksRes] = await Promise.all([
+    const [substancesRes, brandsRes, stacksRes, evidenceRes] = await Promise.all([
       client.from('substances').select(SUBSTANCE_SELECT),
       client.from('brands').select(BRAND_SELECT),
       client.from('stacks').select(STACK_SELECT),
+      // Optional: the view ships in a later migration; a missing view must
+      // not take the whole catalog down.
+      client.from('substance_evidence_counts').select('substance_id, source_count').then((r) => r, () => ({ data: null, error: null })),
     ]);
 
     if (substancesRes.error) throw substancesRes.error;
@@ -235,8 +238,21 @@ export async function loadSupabaseCatalog(
     const substanceIdToName = new Map<string, string>(rawSubstances.map((s: any) => [s.id, s.name]));
     const brandIdToSlug = new Map<string, string>(rawBrands.map((b: any) => [b.id, b.slug]));
 
+    const substances = mapSubstances(rawSubstances, brandIdToSlug, substanceIdToName);
+    if (!evidenceRes.error && Array.isArray(evidenceRes.data)) {
+      const bySlug = new Map<string, number>();
+      for (const row of evidenceRes.data as { substance_id: string; source_count: number }[]) {
+        const slug = substanceIdToSlug.get(row.substance_id);
+        if (slug) bySlug.set(slug, Number(row.source_count) || 0);
+      }
+      for (const s of substances) {
+        const n = bySlug.get(s.id);
+        if (n) s.evidenceCount = n;
+      }
+    }
+
     return {
-      substances: mapSubstances(rawSubstances, brandIdToSlug, substanceIdToName),
+      substances,
       brands: mapBrands(rawBrands, substanceIdToSlug),
       stacks: mapStacks(rawStacks, substanceIdToSlug, substanceIdToName),
     };
