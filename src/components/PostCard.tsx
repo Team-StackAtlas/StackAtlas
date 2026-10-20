@@ -9,6 +9,7 @@ import { getPostCommentCount } from '../lib/comments';
 import { usePostLike } from '../hooks/usePostLike';
 import { ReportAction } from './ReportAction';
 import { cn } from '../lib/utils';
+import { ConvertibleText } from './ConvertibleText';
 
 export const POST_CARD_TITLE_MAX_CHARS = 100;
 export const POST_CARD_BODY_PREVIEW_MAX_CHARS = 280;
@@ -129,7 +130,7 @@ export default function PostCard({ post }: PostCardProps) {
           {truncateText(post.title, POST_CARD_TITLE_MAX_CHARS)}
         </h3>
         <p className="text-[15px] leading-relaxed text-slate-600 dark:text-zinc-400">
-          {truncateText(post.content, POST_CARD_BODY_PREVIEW_MAX_CHARS)}
+          <ConvertibleText>{truncateText(post.content, POST_CARD_BODY_PREVIEW_MAX_CHARS)}</ConvertibleText>
         </p>
         {post.imageUrl && (
           <img src={post.imageUrl} alt="" loading="lazy" className="mt-3 max-h-96 w-full rounded-xl border border-slate-200 object-cover dark:border-zinc-800" />

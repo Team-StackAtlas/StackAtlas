@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { Settings, Shield, LogOut, Lock, Mail, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './ui/ToastProvider';
-import type { ProfileDTO, ProfileSettings } from '../services/types';
+import type { ProfileSettings } from '../services/types';
 
 /**
- * Own-profile account + settings + Privacy & Data panel.
+ * Own-profile account panel, shown under the Edit Profile form: sign-out,
+ * activity/email preferences, and account deletion.
  *
  * - Unconfigured backend: shows a local-preview notice (no production account
  *   data is stored locally).
@@ -17,8 +18,6 @@ import type { ProfileDTO, ProfileSettings } from '../services/types';
 export default function AccountSettingsPanel() {
   const { status, user, isBackendConfigured, services, signOut } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<ProfileDTO | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [settings, setSettings] = useState<ProfileSettings>({ savedPrivate: true });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -31,8 +30,6 @@ export default function AccountSettingsPanel() {
         .get(user.id)
         .then((p) => {
           if (!active || !p) return;
-          setProfile(p);
-          setAvatarUrl(p.avatarUrl ?? '');
           setSettings({ savedPrivate: true, ...p.settings });
         })
         .catch(() => {});
@@ -71,7 +68,7 @@ export default function AccountSettingsPanel() {
     if (!services) return;
     setSaving(true);
     try {
-      await services.profiles.update(user.id, { avatarUrl: avatarUrl || undefined, settings });
+      await services.profiles.update(user.id, { settings });
       toast('Settings saved.', 'success');
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Failed to save settings.', 'error');
@@ -117,16 +114,6 @@ export default function AccountSettingsPanel() {
         >
           <LogOut size={14} /> Sign out
         </button>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-zinc-400">Avatar URL</label>
-        <input
-          value={avatarUrl}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-          placeholder="https://…"
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
-        />
       </div>
 
       <div>
@@ -210,12 +197,6 @@ export default function AccountSettingsPanel() {
         )}
       </div>
 
-      {profile?.stats && (
-        <p className="text-xs text-slate-500 dark:text-zinc-400">
-          {profile.stats.followersCount} followers · {profile.stats.followingCount} following ·{' '}
-          {profile.stats.dispatchCount} dispatches
-        </p>
-      )}
     </div>
   );
 }

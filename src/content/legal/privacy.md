@@ -23,7 +23,7 @@ We collect only what the features you use require. Everything below is tied to y
 
 ### 1.2 Profile (all optional)
 
-You choose whether to add any of these: avatar image URL, bio, website, and self-reported body statistics (age, sex, height, weight, body-fat percentage). Each has its own visibility switch in your profile settings, and all default to hidden. We store them so the features you turned them on for can work (for example, showing your stats on your profile if you chose to).
+You choose whether to add any of these: avatar image URL, bio, website, and self-reported body statistics (birth year, sex, height, weight, body-fat percentage). We ask for a birth year rather than a date of birth, and your profile shows only your age or an age range, never the year. Each has its own visibility switch in your profile settings, and all default to hidden. We store them so the features you turned them on for can work (for example, showing your stats on your profile if you chose to).
 
 ### 1.3 Goals
 

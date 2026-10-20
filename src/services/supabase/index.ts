@@ -66,9 +66,9 @@ function mapProfile(row: any, stats?: any, email?: string | null): ProfileDTO {
     bio: row.bio ?? undefined,
     website: row.website ?? undefined,
     avatarUrl: row.avatar_url ?? undefined,
-    age: row.age ?? null,
-    weight: row.weight ?? null,
-    height: row.height ?? null,
+    birthYear: row.birth_year ?? null,
+    weightKg: row.weight_kg ?? null,
+    heightCm: row.height_cm ?? null,
     sex: row.sex ?? null,
     bodyFatPercentage: row.body_fat_percentage ?? null,
     usernameLastChangedAt: row.username_last_changed_at ?? null,
@@ -171,9 +171,9 @@ export function createSupabaseAccountServices(client: SupabaseClient): {
       if (patch.website !== undefined) payload.website = patch.website;
       if (patch.researchScope !== undefined) payload.research_scope = patch.researchScope;
       if (patch.avatarUrl !== undefined) payload.avatar_url = patch.avatarUrl || null;
-      if (patch.age !== undefined) payload.age = patch.age;
-      if (patch.weight !== undefined) payload.weight = patch.weight;
-      if (patch.height !== undefined) payload.height = patch.height;
+      if (patch.birthYear !== undefined) payload.birth_year = patch.birthYear;
+      if (patch.weightKg !== undefined) payload.weight_kg = patch.weightKg;
+      if (patch.heightCm !== undefined) payload.height_cm = patch.heightCm;
       if (patch.sex !== undefined) payload.sex = patch.sex || null;
       if (patch.bodyFatPercentage !== undefined) payload.body_fat_percentage = patch.bodyFatPercentage;
       if (patch.settings !== undefined) payload.settings = patch.settings;

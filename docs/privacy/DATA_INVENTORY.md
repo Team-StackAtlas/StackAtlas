@@ -40,14 +40,15 @@ embedded content requires (a) a line in this table, (b) a Cookie Policy update
 
 See the Cookie Policy table (`src/content/legal/cookies.md`) — it is the
 authoritative list of localStorage keys. Keys added after this audit:
-`stackatlas_palette`, `stackatlas_consent_notice`, `stackatlas_age_confirmed`.
+`stackatlas_palette`, `stackatlas_consent_notice`, `stackatlas_age_confirmed`,
+`stackatlas_units` (imperial/metric display preference).
 
 ## Database tables holding personal data
 
 | Table | Personal data | Purpose | Linked to person? | Deleted on request? |
 |---|---|---|---|---|
 | `auth.users` (Supabase) | email, password hash, confirmation state, last sign-in | authentication | yes | **manual final step** (service role) |
-| `profiles` | username, display_name, avatar_url, bio, website, age, sex, height, weight, body_fat_percentage, goals, settings, role, account_status | profile + preferences | yes | personal fields scrubbed immediately |
+| `profiles` | username, display_name, avatar_url, bio, website, birth_year (year only, never a date), sex, height_cm, weight_kg, body_fat_percentage, goals, settings, role, account_status | profile + preferences | yes | personal fields scrubbed immediately |
 | `posts`, `post_comments` | authored content | the service | yes (author_id) | soft-deleted now; hard-deleted at purge unless others commented (then anonymized) |
 | `post_votes`, `post_comment_votes`, `brand_star_ratings` | votes/ratings | ranking, integrity (one vote per account) | yes | deleted at purge |
 | `saved_items`, `hidden_items`, `library_albums`, `library_album_items` | what you saved/hid/collected | personal library | yes, private | deleted immediately / at purge |

@@ -18,6 +18,7 @@ Everything below is stored in your browser's local storage (not cookies), stays 
 | `stackatlas_user_scope` | Your access level (Citizen/Explorer) and goal categories. The access level is **never** sent to our servers; goals sync to your profile only if you are signed in. | Goals only, if signed in |
 | `stackatlas_consent_notice` | Remembers that you dismissed the first-visit notice. | No |
 | `stackatlas_age_confirmed` | Remembers that you confirmed you are 18 or older. | No |
+| `stackatlas_units` | Whether you prefer imperial or metric units for displayed body stats. | Only as part of your profile settings, if you save it there |
 | `stackatlas_square_tab`, `stackatlas_posts` | Remembers which feed tab you were on and caches posts you already loaded so the page opens faster. | No |
 | `user_logs`, `user_notes` | Draft intake logs and notes you have not published. | No, unless you publish them |
 

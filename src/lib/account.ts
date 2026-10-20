@@ -29,12 +29,27 @@ export const DEFAULT_PROFILE_SETTINGS: Required<ProfileSettings> = {
   showSex: false,
   showBodyFat: false,
   accountPrivacy: 'public',
-  showFollowers: false,
-  showFollowing: false,
-  showBodyStats: false,
+  showFollowersCount: false,
+  showFollowersList: false,
+  showFollowingCount: false,
+  showFollowingList: false,
+  ageDisplay: 'exact',
+  unitSystem: 'imperial',
   emailUpdates: false,
 };
 
 export function withDefaultProfileSettings(settings?: ProfileSettings): Required<ProfileSettings> {
-  return { ...DEFAULT_PROFILE_SETTINGS, ...(settings ?? {}) };
+  // Rows saved before the count/list split carry a single showFollowers /
+  // showFollowing flag; honour it for both halves until the row is re-saved.
+  const legacy = (settings ?? {}) as ProfileSettings & { showFollowers?: boolean; showFollowing?: boolean };
+  const merged: Required<ProfileSettings> = { ...DEFAULT_PROFILE_SETTINGS, ...(settings ?? {}) };
+  if (legacy.showFollowers !== undefined) {
+    merged.showFollowersCount = settings?.showFollowersCount ?? legacy.showFollowers;
+    merged.showFollowersList = settings?.showFollowersList ?? legacy.showFollowers;
+  }
+  if (legacy.showFollowing !== undefined) {
+    merged.showFollowingCount = settings?.showFollowingCount ?? legacy.showFollowing;
+    merged.showFollowingList = settings?.showFollowingList ?? legacy.showFollowing;
+  }
+  return merged;
 }
