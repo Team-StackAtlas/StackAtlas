@@ -203,7 +203,7 @@ function FilterGroup({ icon: Icon, label, items, render, onPick, chip }: {
       <div className="flex flex-wrap gap-2">
         {items.map(([value, n]) => (
           <button key={value} type="button" onClick={() => onPick(value)} className={chip(false)}>
-            {render(value)} <span className="text-slate-400 dark:text-zinc-500">{n}</span>
+            {render(value)} <span className="text-slate-500 dark:text-zinc-400">{n}</span>
           </button>
         ))}
       </div>
