@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Layers, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { validateUsername } from '../lib/account';
@@ -27,10 +27,15 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!isBackendConfigured || submitting) return;
+    if (mode === 'signup' && !agreed) {
+      toast('Please confirm you are 18 or older and agree to the Terms and Privacy Policy.', 'error');
+      return;
+    }
     if (mode === 'signup' && username) {
       const usernameError = validateUsername(username);
       if (usernameError) {
@@ -116,6 +121,23 @@ export default function Login() {
                       <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" required />
                     </div>
                   </div>
+                  {mode === 'signup' && (
+                    <label className="flex items-start gap-2 text-left text-xs text-slate-600 dark:text-zinc-400">
+                      <input
+                        type="checkbox"
+                        checked={agreed}
+                        onChange={(e) => setAgreed(e.target.checked)}
+                        className="mt-0.5 accent-emerald-500"
+                        required
+                      />
+                      <span>
+                        I am 18 or older and agree to the{' '}
+                        <Link to="/legal/terms" className="font-medium underline">Terms of Service</Link> and{' '}
+                        <Link to="/legal/privacy" className="font-medium underline">Privacy Policy</Link>. I understand
+                        StackAtlas is informational only and endorses no substance or brand.
+                      </span>
+                    </label>
+                  )}
                 </div>
 
                 <div className="space-y-3">

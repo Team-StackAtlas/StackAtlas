@@ -70,6 +70,9 @@ export type UserRole = 'User' | 'Admin' | 'Developer';
 export type SiteRole = 'user' | 'site_admin' | 'site_owner';
 export type AccountStatus = 'active' | 'warned' | 'suspended' | 'banned';
 
+export type UnitSystem = 'imperial' | 'metric';
+export type Sex = 'male' | 'female' | 'intersex';
+
 export interface ProfileSettings {
   /** Saved items are always private; retained for older rows/UI copy. */
   savedPrivate?: boolean;
@@ -82,9 +85,16 @@ export interface ProfileSettings {
   showSex?: boolean;
   showBodyFat?: boolean;
   accountPrivacy?: 'public' | 'private';
-  showFollowers?: boolean;
-  showFollowing?: boolean;
-  showBodyStats?: boolean;
+  showFollowersCount?: boolean;
+  showFollowersList?: boolean;
+  showFollowingCount?: boolean;
+  showFollowingList?: boolean;
+  /** How a visible age is shown: the exact number or a bracket like 25–34. */
+  ageDisplay?: 'exact' | 'range';
+  /** Viewer-side preference; everything is stored metric and converted on display. */
+  unitSystem?: UnitSystem;
+  /** Opt-in to product-update emails. Off by default; nothing is sent unless true. */
+  emailUpdates?: boolean;
 }
 
 export interface SessionUser {
@@ -114,10 +124,11 @@ export interface ProfileDTO {
   bio?: string;
   website?: string;
   avatarUrl?: string;
-  age?: number | null;
-  weight?: number | null;
-  height?: number | null;
-  sex?: string | null;
+  /** Year only, never a full date. Age is derived at read time so it never goes stale. */
+  birthYear?: number | null;
+  weightKg?: number | null;
+  heightCm?: number | null;
+  sex?: Sex | null;
   bodyFatPercentage?: number | null;
   usernameLastChangedAt?: ISODate | null;
   role: UserRole;
@@ -141,9 +152,9 @@ export type ProfileUpdate = Partial<
     | 'website'
     | 'researchScope'
     | 'avatarUrl'
-    | 'age'
-    | 'weight'
-    | 'height'
+    | 'birthYear'
+    | 'weightKg'
+    | 'heightCm'
     | 'sex'
     | 'bodyFatPercentage'
     | 'settings'

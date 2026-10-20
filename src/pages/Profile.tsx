@@ -13,8 +13,14 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
 import { ReportAction } from '../components/ReportAction';
 import { EmptyState } from '../components/EmptyState';
-import type { FollowRequest, ProfileDTO, ProfileSettings } from '../services/types';
+import type { FollowRequest, ProfileDTO, ProfileSettings, Sex, UnitSystem } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
+import { useUnitSystem } from '../hooks/useUnitSystem';
+import {
+  AGE_RANGES, BODY_FAT, HEIGHT_CM, SEX_OPTIONS, WEIGHT_KG,
+  birthYearBounds, cmToFtIn, formatAge, formatHeight, formatWeight, inToCm, kgToLb, lbToKg,
+} from '../lib/units';
+import AccountSettingsPanel from '../components/AccountSettingsPanel';
 import { downscaleImage } from '../lib/imageUtils';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { ACCENTS } from '../components/ui/accents';
@@ -31,6 +37,49 @@ const hiddenGroups: { key: HiddenGroup; label: string }[] = [
 function numberOrNull(value: FormDataEntryValue | null) {
   if (value === null || String(value).trim() === '') return null;
   return Number(value);
+}
+
+const INPUT = 'mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950';
+
+type BodyFields = { birthYear: number | null; weightKg: number | null; heightCm: number | null; sex: Sex | null; bodyFatPercentage: number | null };
+
+/** Parse + bound-check the body-stat inputs, converting to metric for storage. */
+function readBodyFields(form: FormData, units: UnitSystem): BodyFields | { error: string } {
+  const years = birthYearBounds();
+  const birthYear = numberOrNull(form.get('birthYear'));
+  if (birthYear !== null && (!Number.isInteger(birthYear) || birthYear < years.min || birthYear > years.max)) {
+    return { error: `Birth year must be between ${years.min} and ${years.max}.` };
+  }
+
+  let weightKg = numberOrNull(form.get('weight'));
+  if (weightKg !== null && units === 'imperial') weightKg = lbToKg(weightKg);
+  if (weightKg !== null && (weightKg < WEIGHT_KG.min || weightKg > WEIGHT_KG.max)) {
+    return { error: `Weight must be between ${formatWeight(WEIGHT_KG.min, units)} and ${formatWeight(WEIGHT_KG.max, units)}.` };
+  }
+  if (weightKg !== null) weightKg = Math.round(weightKg * 100) / 100;
+
+  let heightCm: number | null;
+  if (units === 'imperial') {
+    const ft = numberOrNull(form.get('heightFt'));
+    const inch = numberOrNull(form.get('heightIn'));
+    heightCm = ft === null && inch === null ? null : inToCm((ft ?? 0) * 12 + (inch ?? 0));
+  } else {
+    heightCm = numberOrNull(form.get('heightCm'));
+  }
+  if (heightCm !== null && (heightCm < HEIGHT_CM.min || heightCm > HEIGHT_CM.max)) {
+    return { error: `Height must be between ${formatHeight(HEIGHT_CM.min, units)} and ${formatHeight(HEIGHT_CM.max, units)}.` };
+  }
+  if (heightCm !== null) heightCm = Math.round(heightCm * 10) / 10;
+
+  const bodyFatPercentage = numberOrNull(form.get('bodyFatPercentage'));
+  if (bodyFatPercentage !== null && (bodyFatPercentage < BODY_FAT.min || bodyFatPercentage > BODY_FAT.max)) {
+    return { error: `Body fat must be between ${BODY_FAT.min}% and ${BODY_FAT.max}%.` };
+  }
+
+  const sexRaw = String(form.get('sex') ?? '');
+  const sex = SEX_OPTIONS.some((o) => o.value === sexRaw) ? (sexRaw as Sex) : null;
+
+  return { birthYear, weightKg, heightCm, sex, bodyFatPercentage };
 }
 
 function fieldVisible(profile: ProfileDTO, key: keyof Required<ProfileSettings>, isOwnProfile: boolean) {
@@ -54,12 +103,16 @@ export default function Profile() {
   const [loadingProfile, setLoadingProfile] = useState(isBackendConfigured);
   const [profileError, setProfileError] = useState('');
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
+  const [viewerUnits, setViewerUnits] = useUnitSystem();
+  // Unit system chosen in the edit form; the body-field inputs remount with
+  // converted defaults whenever it changes.
+  const [unitDraft, setUnitDraft] = useState<UnitSystem>(viewerUnits);
   const [activeTab, setActiveTab] = useState<ProfileTab>(() => (searchParams.get('tab') as ProfileTab) || 'all');
   const [saving, setSaving] = useState(false);
   // undefined = untouched (keep stored avatar), '' = removed, string = new upload.
   const [avatarDraft, setAvatarDraft] = useState<string | undefined>(undefined);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-  useEffect(() => { setAvatarDraft(undefined); }, [isEditing]);
+  useEffect(() => { setAvatarDraft(undefined); setUnitDraft(viewerUnits); }, [isEditing, viewerUnits]);
   const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
   const [ownReports, setOwnReports] = useState<{ id: string; targetType: string; targetLabel?: string; status: string; createdAt: string }[]>([]);
 
@@ -188,23 +241,29 @@ export default function Profile() {
     try {
       const nextSettings = withDefaultProfileSettings(shownProfile.settings);
       nextSettings.accountPrivacy = form.get('accountPrivacy') === 'private' ? 'private' : 'public';
-      (['showActivity', 'showAvatar', 'showAge', 'showWeight', 'showHeight', 'showSex', 'showBodyFat', 'showFollowers', 'showFollowing', 'showBodyStats'] as const).forEach((key) => {
+      (['showAvatar', 'showAge', 'showWeight', 'showHeight', 'showSex', 'showBodyFat', 'showFollowersCount', 'showFollowersList', 'showFollowingCount', 'showFollowingList'] as const).forEach((key) => {
         nextSettings[key] = form.get(key) === 'on';
       });
+      nextSettings.ageDisplay = form.get('ageDisplay') === 'range' ? 'range' : 'exact';
+      nextSettings.unitSystem = unitDraft;
       nextSettings.savedPrivate = true;
+
+      const body = readBodyFields(form, unitDraft);
+      if ('error' in body) {
+        toast(body.error, 'error');
+        setSaving(false);
+        return;
+      }
 
       await services.profiles.update(user.id, {
         username: nextUsername,
         displayName,
         bio: String(form.get('bio') ?? '').trim() || undefined,
         avatarUrl: avatarDraft,
-        age: numberOrNull(form.get('age')),
-        weight: numberOrNull(form.get('weight')),
-        height: numberOrNull(form.get('height')),
-        sex: String(form.get('sex') ?? '').trim() || null,
-        bodyFatPercentage: numberOrNull(form.get('bodyFatPercentage')),
+        ...body,
         settings: nextSettings,
       });
+      setViewerUnits(unitDraft);
       await refresh();
       setIsEditing(false);
       const returnTo = searchParams.get('returnTo');
@@ -242,12 +301,13 @@ export default function Profile() {
   }
 
   const showAvatar = fieldVisible(shownProfile, 'showAvatar', isOwnProfile);
-  const showBodyStats = fieldVisible(shownProfile, 'showBodyStats', isOwnProfile);
+  // Stats are stored metric and shown in the *viewer's* units, so an American
+  // reading a European profile sees lb and ft/in, and vice versa.
   const bodyStats = [
-    fieldVisible(shownProfile, 'showAge', isOwnProfile) && shownProfile.age ? ['Age', String(shownProfile.age)] : null,
-    fieldVisible(shownProfile, 'showWeight', isOwnProfile) && shownProfile.weight ? ['Weight', `${shownProfile.weight} lb`] : null,
-    fieldVisible(shownProfile, 'showHeight', isOwnProfile) && shownProfile.height ? ['Height', `${shownProfile.height} in`] : null,
-    fieldVisible(shownProfile, 'showSex', isOwnProfile) && shownProfile.sex ? ['Sex', shownProfile.sex] : null,
+    fieldVisible(shownProfile, 'showAge', isOwnProfile) && shownProfile.birthYear ? ['Age', formatAge(shownProfile.birthYear, settings.ageDisplay)] : null,
+    fieldVisible(shownProfile, 'showWeight', isOwnProfile) && shownProfile.weightKg ? ['Weight', formatWeight(shownProfile.weightKg, viewerUnits)] : null,
+    fieldVisible(shownProfile, 'showHeight', isOwnProfile) && shownProfile.heightCm ? ['Height', formatHeight(shownProfile.heightCm, viewerUnits)] : null,
+    fieldVisible(shownProfile, 'showSex', isOwnProfile) && shownProfile.sex ? ['Sex', SEX_OPTIONS.find((o) => o.value === shownProfile.sex)?.label ?? shownProfile.sex] : null,
     fieldVisible(shownProfile, 'showBodyFat', isOwnProfile) && shownProfile.bodyFatPercentage ? ['Body fat', `${shownProfile.bodyFatPercentage}%`] : null,
   ].filter(Boolean) as string[][];
 
@@ -298,12 +358,14 @@ export default function Profile() {
               <span className="flex items-center gap-1"><Calendar size={13} /> Joined {new Date(shownProfile.joinDate).toLocaleDateString()}</span>
               <span className="flex items-center gap-1"><Activity size={13} /> <strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.dispatchCount ?? 0}</strong> Dispatches</span>
               <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.signalCount ?? 0}</strong> Signals</span>
-              <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.followersCount ?? 0}</strong> followers</span>
+              {fieldVisible(shownProfile, 'showFollowersCount', isOwnProfile) && (
+                <span><strong className="font-semibold text-slate-700 dark:text-zinc-300">{shownProfile.stats?.followersCount ?? 0}</strong> followers</span>
+              )}
             </div>
           </div>
         </div>
 
-        {showBodyStats && bodyStats.length > 0 && (
+        {bodyStats.length > 0 && (
           <div className="mx-5 mb-5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-zinc-950/50 sm:grid-cols-5">
             {bodyStats.map(([label, value]) => (
               <div key={label}><div className="text-xs text-slate-500 dark:text-zinc-400">{label}</div><div className="font-semibold">{value}</div></div>
@@ -358,32 +420,68 @@ export default function Profile() {
               )}
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-5">
-            <label className="text-sm font-medium">Age<input name="age" type="number" defaultValue={shownProfile.age ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
-            <label className="text-sm font-medium">Weight<input name="weight" type="number" step="0.1" defaultValue={shownProfile.weight ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
-            <label className="text-sm font-medium">Height<input name="height" type="number" step="0.1" defaultValue={shownProfile.height ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
-            <label className="text-sm font-medium">Sex<input name="sex" defaultValue={shownProfile.sex ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
-            <label className="text-sm font-medium">Body fat %<input name="bodyFatPercentage" type="number" step="0.1" defaultValue={shownProfile.bodyFatPercentage ?? ''} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950" /></label>
+          <div>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-bold">Body stats <span className="font-normal text-slate-500 dark:text-zinc-400">(all optional)</span></span>
+              <span className="flex items-center gap-3 text-sm">
+                <span className="text-slate-500 dark:text-zinc-400">Units</span>
+                {(['imperial', 'metric'] as const).map((u) => (
+                  <label key={u} className="capitalize">
+                    <input type="radio" name="unitSystem" value={u} checked={unitDraft === u} onChange={() => setUnitDraft(u)} className="mr-1 accent-emerald-500" />
+                    {u === 'imperial' ? 'Imperial (lb, ft)' : 'Metric (kg, cm)'}
+                  </label>
+                ))}
+              </span>
+            </div>
+            <div key={unitDraft} className="grid gap-3 sm:grid-cols-6">
+              <label className="text-sm font-medium">Birth year<input name="birthYear" type="number" inputMode="numeric" min={birthYearBounds().min} max={birthYearBounds().max} placeholder="e.g. 1994" defaultValue={shownProfile.birthYear ?? ''} className={INPUT} /></label>
+              <label className="text-sm font-medium">Weight ({unitDraft === 'imperial' ? 'lb' : 'kg'})<input name="weight" type="number" step="0.1" min={unitDraft === 'imperial' ? Math.round(kgToLb(WEIGHT_KG.min)) : WEIGHT_KG.min} max={unitDraft === 'imperial' ? Math.round(kgToLb(WEIGHT_KG.max)) : WEIGHT_KG.max} defaultValue={shownProfile.weightKg ? (unitDraft === 'imperial' ? Math.round(kgToLb(shownProfile.weightKg)) : shownProfile.weightKg) : ''} className={INPUT} /></label>
+              {unitDraft === 'imperial' ? (
+                <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+                  <label className="text-sm font-medium">Height (ft)<input name="heightFt" type="number" min={2} max={8} defaultValue={shownProfile.heightCm ? cmToFtIn(shownProfile.heightCm).feet : ''} className={INPUT} /></label>
+                  <label className="text-sm font-medium">(in)<input name="heightIn" type="number" min={0} max={11} defaultValue={shownProfile.heightCm ? cmToFtIn(shownProfile.heightCm).inches : ''} className={INPUT} /></label>
+                </div>
+              ) : (
+                <label className="text-sm font-medium sm:col-span-2">Height (cm)<input name="heightCm" type="number" min={HEIGHT_CM.min} max={HEIGHT_CM.max} defaultValue={shownProfile.heightCm ?? ''} className={INPUT} /></label>
+              )}
+              <label className="text-sm font-medium">Sex
+                <select name="sex" defaultValue={shownProfile.sex ?? ''} className={INPUT}>
+                  <option value="">Prefer not to say</option>
+                  {SEX_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </label>
+              <label className="text-sm font-medium">Body fat %<input name="bodyFatPercentage" type="number" step="0.1" min={BODY_FAT.min} max={BODY_FAT.max} defaultValue={shownProfile.bodyFatPercentage ?? ''} className={INPUT} /></label>
+            </div>
+            <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">
+              Birth year is shown as your age or an age range, never the year itself. Sharing it helps people find others at a similar stage and helps the community see who its experiences come from.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+              <span className="text-slate-500 dark:text-zinc-400">If age is visible, show</span>
+              <label><input type="radio" name="ageDisplay" value="exact" defaultChecked={settings.ageDisplay !== 'range'} className="mr-1 accent-emerald-500" /> exact age</label>
+              <label><input type="radio" name="ageDisplay" value="range" defaultChecked={settings.ageDisplay === 'range'} className="mr-1 accent-emerald-500" /> age range <span className="text-slate-500 dark:text-zinc-400">({AGE_RANGES.map((r) => r.label).join(', ')})</span></label>
+            </div>
           </div>
           <div className="rounded-xl border border-slate-200 p-4 dark:border-zinc-800">
             <h3 className="mb-3 text-sm font-bold">Account privacy</h3><div className="mb-4 flex gap-3 text-sm"><label><input type="radio" name="accountPrivacy" value="public" defaultChecked={settings.accountPrivacy !== 'private'} className="mr-1 accent-emerald-500" /> Public</label><label><input type="radio" name="accountPrivacy" value="private" defaultChecked={settings.accountPrivacy === 'private'} className="mr-1 accent-emerald-500" /> Private</label></div><h3 className="mb-3 text-sm font-bold">Public visibility toggles</h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              {[
-                ['showAvatar', 'Avatar/profile image'], ['showAge', 'Age'], ['showWeight', 'Weight'], ['showHeight', 'Height'], ['showSex', 'Sex'], ['showBodyFat', 'Body fat percentage'], ['showFollowers', 'Followers list/count'], ['showFollowing', 'Following list/count'], ['showBodyStats', 'Public body-stats section'],
-              ].map(([key, label]) => (
+              {([
+                ['showAvatar', 'Avatar/profile image'], ['showAge', 'Age'], ['showWeight', 'Weight'], ['showHeight', 'Height'], ['showSex', 'Sex'], ['showBodyFat', 'Body fat percentage'], ['showFollowersCount', 'Follower count'], ['showFollowersList', 'Who follows me'], ['showFollowingCount', 'Following count'], ['showFollowingList', 'Who I follow'],
+              ] as const).map(([key, label]) => (
                 <label key={key} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-zinc-950/50">
-                  <span>{label}</span><input name={key} type="checkbox" defaultChecked={!!settings[key as keyof Pick<Required<ProfileSettings>, 'showAvatar' | 'showAge' | 'showWeight' | 'showHeight' | 'showSex' | 'showBodyFat' | 'showFollowers' | 'showFollowing' | 'showBodyStats'>]} className="accent-emerald-500" />
+                  <span>{label}</span><input name={key} type="checkbox" defaultChecked={!!settings[key]} className="accent-emerald-500" />
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-xs text-slate-500 dark:text-zinc-400">Saved items, hidden items, drafts, private notes, email, internal IDs, and body fields with toggles off stay private.</p>
+            <p className="mt-3 text-xs text-slate-500 dark:text-zinc-400">Everything above is off by default. Saved items, hidden items, drafts, private notes, email, and internal IDs are never public.</p>
           </div>
           <button disabled={saving} className="rounded-xl bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">{saving ? 'Saving…' : 'Save profile'}</button>
           </div>
         </form>
       )}
 
-      {isOwnProfile && (
+      {isEditing && isOwnProfile && isBackendConfigured && <AccountSettingsPanel />}
+
+      {isEditing && isOwnProfile && (
         <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
           <div className={ACCENTS.emerald.topBar} />
           <div className="p-5">

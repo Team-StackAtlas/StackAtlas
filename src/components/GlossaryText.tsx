@@ -56,12 +56,17 @@ function GlossaryMark({ label, term, depth }: { label: string; term: GlossaryTer
       className="relative inline-block"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
+      // Close only when focus leaves the whole mark (trigger + popover), so
+      // tabbing or clicking into the "Full entry" link does not unmount it
+      // mid-click — which is what made that link dead.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
     >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
         aria-expanded={open}
         className="cursor-help border-b border-dotted border-emerald-400/70 font-medium text-emerald-700 decoration-dotted hover:border-emerald-500 dark:border-emerald-500/50 dark:text-emerald-400"
       >
@@ -70,8 +75,9 @@ function GlossaryMark({ label, term, depth }: { label: string; term: GlossaryTer
       {open && (
         <span
           role="tooltip"
-          className="absolute left-0 top-full z-50 mt-1.5 block w-72 max-w-[80vw] cursor-default rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+          className="absolute left-0 top-full z-50 block w-72 max-w-[80vw] cursor-default pt-1.5"
         >
+        <span className="block rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
           {term.category && (
             <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
               {term.category}
@@ -89,6 +95,7 @@ function GlossaryMark({ label, term, depth }: { label: string; term: GlossaryTer
           >
             Full entry →
           </Link>
+        </span>
         </span>
       )}
     </span>

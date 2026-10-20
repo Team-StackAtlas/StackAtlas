@@ -1,0 +1,124 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Metabolic Health evidence base — batch 14: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Cinnamon use in type 2 diabetes: an updated systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "24019277",
+      "year": 2013,
+      "substances": ["cinnamon"]
+    },
+    {
+      "title": "Inositol for Polycystic Ovary Syndrome: A Systematic Review and Meta-analysis to Inform the 2023 Update of the International Evidence-based PCOS Guidelines",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "38163998",
+      "substances": ["inositol", "d-chiro-inositol"]
+    },
+    {
+      "title": "Effect of chromium supplementation on glycated hemoglobin and fasting plasma glucose in patients with diabetes mellitus",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "25971249",
+      "year": 2015,
+      "substances": ["chromium"]
+    },
+    {
+      "title": "Effect of beta-hydroxy-beta-methylbutyrate supplementation on muscle loss in older adults: a systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "26169182",
+      "year": 2015,
+      "substances": ["beta-hydroxy-beta-methylbutyrate"]
+    },
+    {
+      "title": "A meta-analysis of the effects of conjugated linoleic acid on fat-free mass in humans",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "19935864",
+      "year": 2009,
+      "substances": ["conjugated-linoleic-acid"]
+    },
+    {
+      "title": "Alpha lipoic acid for symptomatic peripheral neuropathy in patients with diabetes: a meta-analysis of randomized controlled trials",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "22331979",
+      "year": 2012,
+      "substances": ["alpha-lipoic-acid"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "24019277",
+      "substance_slug": "cinnamon",
+      "endpoint": "fasting glucose and lipids versus HbA1c in type 2 diabetes",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "adults with type 2 diabetes (10 RCTs, 543 patients)",
+      "finding_summary": "This updated meta-analysis (10 RCTs, 543 patients; doses 120 mg to 6 g/day for 4-18 weeks) found cinnamon reduced fasting plasma glucose (-24.6 mg/dL), total cholesterol, LDL, and triglycerides and raised HDL — but had no significant effect on HbA1c (-0.16%, 95% CI -0.39 to 0.02).",
+      "limitations": "high heterogeneity across analyses (I-squared 66.5% to 94.7%); the fasting-glucose benefit without an HbA1c effect tempers the clinical meaning"
+    },
+    {
+      "source_pmid": "38163998",
+      "substance_slug": "inositol",
+      "endpoint": "metabolic measures in polycystic ovary syndrome",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "women with PCOS (30 trials, 2,230 participants)",
+      "finding_summary": "This systematic review and meta-analysis informing the 2023 international PCOS guidelines (30 trials, n=2,230) found evidence of benefit for myo-inositol or D-chiro-inositol on some metabolic measures, no effect on other outcomes, and fewer gastrointestinal adverse events with myo-inositol than metformin.",
+      "limitations": "the guideline authors judge the overall evidence limited and inconclusive"
+    },
+    {
+      "source_pmid": "38163998",
+      "substance_slug": "d-chiro-inositol",
+      "endpoint": "ovulation in polycystic ovary syndrome",
+      "direction": "unclear",
+      "study_type": "meta_analysis",
+      "population": "women with PCOS (subset of the same 30-trial review)",
+      "finding_summary": "The same guideline review found potential benefits from D-chiro-inositol for ovulation, within an evidence base it grades as limited and inconclusive.",
+      "limitations": "signal-level evidence only; the guideline stops short of a recommendation"
+    },
+    {
+      "source_pmid": "25971249",
+      "substance_slug": "chromium",
+      "endpoint": "HbA1c and fasting glucose in diabetes (by chromium formulation)",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "adults with diabetes (14 RCTs, 875 participants; chloride, picolinate, brewer's yeast, and chromium-yeast forms)",
+      "finding_summary": "This meta-analysis (14 RCTs, 875 participants) analyzed each chromium formulation separately and found no statistically significant HbA1c effect for chromium yeast, brewer's yeast, or chromium picolinate, with at most a marginal fasting-glucose benefit from brewer's yeast.",
+      "limitations": "formulation-stratified analysis is the strength here — the null holds across the commonly sold forms"
+    },
+    {
+      "source_pmid": "26169182",
+      "substance_slug": "beta-hydroxy-beta-methylbutyrate",
+      "endpoint": "muscle mass preservation in older adults",
+      "direction": "increased",
+      "study_type": "meta_analysis",
+      "population": "older adults (7 RCTs; 147 HMB, 140 control)",
+      "finding_summary": "This systematic review and meta-analysis (7 RCTs) found greater muscle mass gain with HMB supplementation versus control (standardized mean difference 0.352, 95% CI 0.11 to 0.594, p=0.004), with no significant change in fat mass, concluding HMB can prevent lean-mass loss in older adults.",
+      "limitations": "small pooled population (287 total); strength and physical-function effects vary across later meta-analyses"
+    },
+    {
+      "source_pmid": "19935864",
+      "substance_slug": "conjugated-linoleic-acid",
+      "endpoint": "body composition (fat-free mass and fat mass)",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "adults in 18 randomized double-blind placebo-controlled trials",
+      "finding_summary": "This meta-analysis of 18 trials found fat-free mass increased during CLA treatment by a borderline 0.3 kg (p=0.05) with no dose or duration effect, and the same authors' prior meta-analysis found only modest fat loss — humans respond far less than the animal data suggested.",
+      "limitations": "effects are small enough to be of questionable practical relevance"
+    },
+    {
+      "source_pmid": "22331979",
+      "substance_slug": "alpha-lipoic-acid",
+      "endpoint": "symptomatic diabetic peripheral neuropathy (IV versus oral)",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "patients with diabetic peripheral neuropathy (randomized controlled trials)",
+      "dose_amount": 600,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "finding_summary": "This meta-analysis found intravenous alpha-lipoic acid 600 mg/day for 3 weeks produced a significant, clinically relevant reduction in neuropathic symptoms (SMD -2.8, 95% CI -4.2 to -1.5), while oral dosing above 600 mg/day for 3-5 weeks improved symptoms statistically (SMD -1.8) without meeting the threshold for clinical significance.",
+      "limitations": "the clinically-relevant result is intravenous — the oral supplement form most users take carries the weaker, clinically uncertain result"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import {
   toggleSupabaseCommentVote,
 } from '../services/posts';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { ConvertibleText } from '../components/ConvertibleText';
 
 /** Full-screen viewer for an attached post photo; click anywhere or Esc closes. */
 function ImageLightbox({ url, onClose }: { url: string; onClose: () => void }) {
@@ -292,7 +293,7 @@ export default function PostDetail() {
           </div>
         )}
 
-        <div className="whitespace-pre-wrap text-lg leading-relaxed text-slate-700 dark:text-zinc-300">{post.content}</div>
+        <div className="whitespace-pre-wrap text-lg leading-relaxed text-slate-700 dark:text-zinc-300"><ConvertibleText>{post.content}</ConvertibleText></div>
         {post.imageUrl && (
           <button type="button" onClick={() => setLightboxOpen(true)} aria-label="View image full screen" className="mt-4 block w-full cursor-zoom-in">
             <img src={post.imageUrl} alt="" className="max-h-[32rem] w-full rounded-2xl border border-slate-200 object-contain dark:border-zinc-800" />

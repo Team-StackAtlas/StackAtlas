@@ -1,0 +1,193 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Joint & Mobility evidence base — batch 12: category headliners (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Glucosamine, chondroitin sulfate, and the two in combination for painful knee osteoarthritis",
+      "source_type": "human_study",
+      "pmid": "16495392",
+      "year": 2006,
+      "substances": ["glucosamine-hydrochloride", "chondroitin-sulfate"]
+    },
+    {
+      "title": "Glucosamine therapy for treating osteoarthritis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "15846645",
+      "year": 2005,
+      "substances": ["glucosamine-sulfate"]
+    },
+    {
+      "title": "Chondroitin for osteoarthritis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "25629804",
+      "year": 2015,
+      "substances": ["chondroitin-sulfate"]
+    },
+    {
+      "title": "Efficacy of methylsulfonylmethane (MSM) in osteoarthritis pain of the knee: a pilot clinical trial",
+      "source_type": "human_study",
+      "pmid": "16309928",
+      "substances": ["methylsulfonylmethane"]
+    },
+    {
+      "title": "A randomized controlled trial evaluating methylsulfonylmethane versus placebo to prevent knee pain in military initial entry trainees",
+      "source_type": "human_study",
+      "pmid": "29214616",
+      "substances": ["methylsulfonylmethane"]
+    },
+    {
+      "title": "Effectiveness of Boswellia and Boswellia extract for osteoarthritis patients: a systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "32680575",
+      "doi": "10.1186/s12906-020-02985-6",
+      "year": 2020,
+      "substances": ["boswellia"]
+    },
+    {
+      "title": "Efficacy and tolerability of an undenatured type II collagen supplement in modulating knee osteoarthritis symptoms: a multicenter randomized, double-blind, placebo-controlled study",
+      "source_type": "human_study",
+      "pmid": "26822714",
+      "doi": "10.1186/s12937-016-0130-8",
+      "year": 2016,
+      "substances": ["undenatured-type-ii-collagen"]
+    },
+    {
+      "title": "Safety and efficacy of undenatured type II collagen in the treatment of osteoarthritis of the knee: a clinical trial",
+      "source_type": "human_study",
+      "pmid": "19847319",
+      "year": 2009,
+      "substances": ["undenatured-type-ii-collagen"]
+    },
+    {
+      "title": "Safety and efficacy of S-adenosylmethionine (SAMe) for osteoarthritis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12019049",
+      "year": 2002,
+      "substances": ["s-adenosyl-l-methionine"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "16495392",
+      "substance_slug": "glucosamine-hydrochloride",
+      "endpoint": "knee osteoarthritis pain (GAIT primary outcome)",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "adults with symptomatic knee osteoarthritis (n=1,583, multicenter)",
+      "dose_amount": 1500,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "24 weeks",
+      "finding_summary": "In the NIH GAIT trial (1,583 patients, placebo- and celecoxib-controlled), glucosamine hydrochloride alone or with chondroitin sulfate was not effective for the study population as a whole on the primary knee-pain outcome.",
+      "limitations": "an exploratory analysis suggested the glucosamine + chondroitin combination might help the moderate-to-severe pain subgroup; GAIT used the hydrochloride salt, so this null does not automatically transfer to glucosamine sulfate"
+    },
+    {
+      "source_pmid": "16495392",
+      "substance_slug": "chondroitin-sulfate",
+      "endpoint": "knee osteoarthritis pain (GAIT primary outcome)",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "adults with symptomatic knee osteoarthritis (n=1,583, multicenter)",
+      "dose_amount": 1200,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "24 weeks",
+      "finding_summary": "In the same GAIT trial, chondroitin sulfate alone was not effective versus placebo on the primary knee-pain outcome for the study population as a whole.",
+      "limitations": "same moderate-to-severe-subgroup caveat as the glucosamine row"
+    },
+    {
+      "source_pmid": "15846645",
+      "substance_slug": "glucosamine-sulfate",
+      "endpoint": "osteoarthritis pain and function",
+      "direction": "mixed",
+      "study_type": "review",
+      "population": "adults with osteoarthritis (25 studies, 4,963 patients)",
+      "finding_summary": "This Cochrane review (25 studies, 4,963 patients) found the Rotta-preparation glucosamine sulfate improved function (about 2 points versus no glucosamine) with no excess side effects, while analysis restricted to studies with adequate allocation concealment failed to show any benefit for pain.",
+      "limitations": "the benefit signal is preparation-specific (Rotta glucosamine sulfate) and weakens in the best-concealed trials"
+    },
+    {
+      "source_pmid": "25629804",
+      "substance_slug": "chondroitin-sulfate",
+      "endpoint": "osteoarthritis pain (short-term) and joint-space narrowing",
+      "direction": "decreased",
+      "study_type": "review",
+      "population": "adults with osteoarthritis (Cochrane review to November 2013)",
+      "finding_summary": "This Cochrane review found chondroitin may slightly improve pain in the short term (20% pain improvement in slightly more people), probably slightly improves quality of life (Lequesne index), slightly slows radiographic joint-space narrowing, and shows little or no difference in adverse events versus comparators.",
+      "limitations": "the authors grade the benefit as slight and the underlying evidence quality as low; contrast with GAIT's overall null is preserved in the paired row"
+    },
+    {
+      "source_pmid": "16309928",
+      "substance_slug": "methylsulfonylmethane",
+      "endpoint": "knee osteoarthritis pain and physical function",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with knee osteoarthritis (pilot trial)",
+      "dose_amount": 6,
+      "dose_unit": "g",
+      "frequency": "daily (3 g twice daily)",
+      "duration": "12 weeks",
+      "finding_summary": "In this pilot randomized trial, MSM 3 g twice daily produced significant decreases in WOMAC pain and physical-function impairment versus placebo without major adverse events.",
+      "limitations": "pilot-scale trial; the authors note effects were modest and long-term benefit unstudied"
+    },
+    {
+      "source_pmid": "29214616",
+      "substance_slug": "methylsulfonylmethane",
+      "endpoint": "knee-pain prevention in military initial entry trainees",
+      "direction": "no_clear_change",
+      "study_type": "human_rct",
+      "population": "young, active military initial entry trainees",
+      "dose_amount": 3,
+      "dose_unit": "g",
+      "frequency": "daily",
+      "finding_summary": "In this randomized controlled prevention trial, 3 g/day MSM did not significantly improve knee outcomes versus placebo in young, active trainees.",
+      "limitations": "prevention in healthy young adults is a different question from treatment of established osteoarthritis — staged beside the treatment row so the boundary is visible"
+    },
+    {
+      "source_pmid": "32680575",
+      "substance_slug": "boswellia",
+      "endpoint": "osteoarthritis pain, stiffness, and function",
+      "direction": "decreased",
+      "study_type": "meta_analysis",
+      "population": "osteoarthritis patients (7 trials, 545 patients)",
+      "finding_summary": "This systematic review and meta-analysis of seven trials (545 patients) found Boswellia and its extracts relieved pain and stiffness with significant improvements in visual analogue scale and WOMAC pain versus control.",
+      "limitations": "small trial pool with heterogeneous standardized extracts and doses"
+    },
+    {
+      "source_pmid": "26822714",
+      "substance_slug": "undenatured-type-ii-collagen",
+      "endpoint": "knee osteoarthritis symptoms (WOMAC) versus placebo and glucosamine+chondroitin",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with knee osteoarthritis (n=191, three-arm multicenter trial)",
+      "dose_amount": 40,
+      "dose_unit": "mg",
+      "frequency": "daily",
+      "duration": "180 days",
+      "finding_summary": "In this multicenter randomized double-blind trial, UC-II 40 mg/day significantly reduced total WOMAC score at day 180 versus both placebo (p=0.002) and glucosamine 1,500 mg + chondroitin 1,200 mg (p=0.04).",
+      "limitations": "proprietary-ingredient trial (UC-II); replication outside sponsor-affiliated groups is limited"
+    },
+    {
+      "source_pmid": "19847319",
+      "substance_slug": "undenatured-type-ii-collagen",
+      "endpoint": "knee osteoarthritis symptoms (WOMAC) versus glucosamine+chondroitin",
+      "direction": "decreased",
+      "study_type": "human_rct",
+      "population": "adults with knee osteoarthritis (two-site randomized double-blind trial)",
+      "duration": "90 days",
+      "finding_summary": "In this earlier two-site randomized double-blind trial, UC-II reduced WOMAC score by 33% at 90 days versus 14% with glucosamine plus chondroitin.",
+      "limitations": "small trial of the same proprietary ingredient; no placebo arm in this comparison"
+    },
+    {
+      "source_pmid": "12019049",
+      "substance_slug": "s-adenosyl-l-methionine",
+      "endpoint": "osteoarthritis pain and functional limitation",
+      "direction": "mixed",
+      "study_type": "meta_analysis",
+      "population": "adults with osteoarthritis (11 studies)",
+      "finding_summary": "This meta-analysis of 11 studies found SAMe better than placebo for functional limitation (effect size 0.31, 95% CI 0.099 to 0.520) but not significantly for pain (effect size 0.22, 95% CI -0.247 to 0.693), and comparable to NSAIDs for both outcomes with tolerability similar to placebo and better than NSAIDs.",
+      "limitations": "a later Cochrane review judged the evidence inconclusive, hampered by mainly small trials of questionable quality"
+    }
+  ]
+}

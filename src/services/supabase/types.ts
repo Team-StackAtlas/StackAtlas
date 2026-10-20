@@ -1545,7 +1545,7 @@ export type Database = {
       profiles: {
         Row: {
           account_status: string
-          age: number | null
+          birth_year: number | null
           avatar_url: string | null
           bio: string | null
           body_fat_percentage: number | null
@@ -1555,7 +1555,7 @@ export type Database = {
           deletion_reason: string | null
           display_name: string | null
           goals: string[]
-          height: number | null
+          height_cm: number | null
           id: string
           is_verified: boolean
           research_scope: Database["public"]["Enums"]["research_scope"]
@@ -1570,11 +1570,11 @@ export type Database = {
           username_last_changed_at: string | null
           verification_type: string | null
           website: string | null
-          weight: number | null
+          weight_kg: number | null
         }
         Insert: {
           account_status?: string
-          age?: number | null
+          birth_year?: number | null
           avatar_url?: string | null
           bio?: string | null
           body_fat_percentage?: number | null
@@ -1584,7 +1584,7 @@ export type Database = {
           deletion_reason?: string | null
           display_name?: string | null
           goals?: string[]
-          height?: number | null
+          height_cm?: number | null
           id: string
           is_verified?: boolean
           research_scope?: Database["public"]["Enums"]["research_scope"]
@@ -1599,11 +1599,11 @@ export type Database = {
           username_last_changed_at?: string | null
           verification_type?: string | null
           website?: string | null
-          weight?: number | null
+          weight_kg?: number | null
         }
         Update: {
           account_status?: string
-          age?: number | null
+          birth_year?: number | null
           avatar_url?: string | null
           bio?: string | null
           body_fat_percentage?: number | null
@@ -1613,7 +1613,7 @@ export type Database = {
           deletion_reason?: string | null
           display_name?: string | null
           goals?: string[]
-          height?: number | null
+          height_cm?: number | null
           id?: string
           is_verified?: boolean
           research_scope?: Database["public"]["Enums"]["research_scope"]
@@ -1628,7 +1628,7 @@ export type Database = {
           username_last_changed_at?: string | null
           verification_type?: string | null
           website?: string | null
-          weight?: number | null
+          weight_kg?: number | null
         }
         Relationships: [
           {

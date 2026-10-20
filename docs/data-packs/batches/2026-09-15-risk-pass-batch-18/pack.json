@@ -1,0 +1,78 @@
+{
+  "kind": "stackatlas-data-pack",
+  "schema_version": 1,
+  "label": "Interaction & risk evidence — batch 18: second risk pass (UNVERIFIED until verify-pack.mjs passes)",
+  "generated_by": "Claude Code session (search-derived; see DOSSIER.md provenance statement)",
+  "sources": [
+    {
+      "title": "Is there a risk of bleeding associated with standardized Ginkgo biloba extract therapy? A systematic review and meta-analysis",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "21923430",
+      "year": 2011,
+      "substances": ["ginkgo-biloba"]
+    },
+    {
+      "title": "St John's wort: a systematic review of adverse effects and drug interactions for the consultation psychiatrist",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "12832592",
+      "year": 2003,
+      "substances": ["st-john-s-wort"]
+    },
+    {
+      "title": "Mini-review: medication safety of red yeast rice products",
+      "source_type": "review_or_meta_analysis",
+      "pmid": "31118742",
+      "year": 2019,
+      "substances": ["red-yeast-rice"]
+    },
+    {
+      "title": "Interference of hawthorn on serum digoxin measurements by immunoassays and pharmacodynamic interaction with digoxin",
+      "source_type": "in_vitro_or_mechanistic",
+      "pmid": "20670141",
+      "year": 2010,
+      "substances": ["hawthorn"]
+    }
+  ],
+  "findings": [
+    {
+      "source_pmid": "21923430",
+      "substance_slug": "ginkgo-biloba",
+      "endpoint": "hemostasis parameters and bleeding risk (standardized extract)",
+      "direction": "no_clear_change",
+      "study_type": "meta_analysis",
+      "population": "adults in 18 randomized controlled trials (1,985 participants; 87% with dementia, peripheral artery disease, or diabetes)",
+      "finding_summary": "This systematic review and meta-analysis of 18 randomized controlled trials (1,985 adults) found no evidence that standardized Ginkgo biloba extract increases bleeding risk on the hemostasis parameters studied.",
+      "limitations": "trial populations and durations may not capture rare events; the conventional caution about combining ginkgo with anticoagulants or antiplatelets rests on case reports rather than on this trial evidence"
+    },
+    {
+      "source_pmid": "12832592",
+      "substance_slug": "st-john-s-wort",
+      "endpoint": "serotonin syndrome risk in combination with SSRIs (pharmacodynamic interaction)",
+      "direction": "increased",
+      "study_type": "review",
+      "population": "patients combining St John's wort with serotonergic antidepressants (case-report literature)",
+      "finding_summary": "This systematic review of adverse effects and drug interactions documents that St John's wort inhibits serotonin reuptake and that combining it with SSRIs carries a case-report-documented risk of serotonin syndrome (mental status changes, tremor, autonomic instability, gastrointestinal upset, myalgias, restlessness) — a pharmacodynamic interaction distinct from its CYP3A4/P-glycoprotein effects staged in batch 11.",
+      "limitations": "case-report evidence, not incidence data; later case series most often involve sertraline and paroxetine, but the sample is too small to rank SSRIs by risk"
+    },
+    {
+      "source_pmid": "31118742",
+      "substance_slug": "red-yeast-rice",
+      "endpoint": "use in pregnancy and lactation (statin-class contraindication)",
+      "direction": "increased",
+      "study_type": "review",
+      "population": "pregnant and lactating women (safety review of red yeast rice products)",
+      "finding_summary": "This medication-safety review states that statins — and therefore red yeast rice products, whose monacolin K is chemically identical to lovastatin — are generally contraindicated in pregnancy and lactation on the basis of teratogenicity in animal studies, with CNS and limb defects reported in newborns exposed to statins in utero; it also notes severe musculoskeletal and hepatic adverse reactions reported at monacolin intakes as low as 3 mg/day.",
+      "limitations": "the pregnancy contraindication is inherited from the statin class rather than from red-yeast-rice-specific human data; EFSA judged monacolins from red yeast rice a significant safety concern at 10 mg/day"
+    },
+    {
+      "source_pmid": "20670141",
+      "substance_slug": "hawthorn",
+      "endpoint": "serum digoxin immunoassay interference and shared cardiac target",
+      "direction": "mixed",
+      "study_type": "in_vitro",
+      "population": "laboratory study (two commercial digoxin immunoassays; isolated adult rat cardiomyocytes)",
+      "finding_summary": "In this laboratory study, hawthorn extract interfered with the Abbott Digoxin III immunoassay but not the Roche Tina-Quant assay, and in rat cardiomyocytes both hawthorn extracts raised intracellular calcium without an additive effect alongside digoxin — suggesting binding at the same Na/K-ATPase site; the authors conclude patients receiving digoxin should avoid hawthorn.",
+      "limitations": "assay interference is platform-specific (falsely altered digoxin readings on one common immunoassay); the pharmacodynamic finding is from isolated rat cells, while the small human PK study staged in batch 11 found no change in digoxin levels — together they argue for clinician awareness rather than a demonstrated clinical harm"
+    }
+  ]
+}

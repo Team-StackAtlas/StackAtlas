@@ -7,6 +7,7 @@ import { Modal } from './ui/Modal';
 import AccessBadge from './AccessBadge';
 import StarRating from './StarRating';
 import { cn } from '../lib/utils';
+import { normalizeText as normalize, rankCandidates } from '../lib/compareSimilarity';
 
 interface CompareModalProps {
   isOpen: boolean;
@@ -17,82 +18,8 @@ interface CompareModalProps {
 
 type CompareItem = Supplement | Brand | Stack;
 
-function normalize(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-}
-
-function tokenSet(values: string[]) {
-  return new Set(values.flatMap(value => normalize(value).split(' ').filter(Boolean)));
-}
-
-function overlapScore(a: string[], b: string[], weight: number) {
-  const aTokens = tokenSet(a);
-  const bTokens = tokenSet(b);
-  let score = 0;
-  aTokens.forEach(token => {
-    if (bTokens.has(token)) score += weight;
-  });
-  return score;
-}
-
-/** Count of values present in both lists, compared as whole normalized phrases. */
-function phraseOverlap(a: string[], b: string[]) {
-  const bSet = new Set(b.map(normalize));
-  return a.map(normalize).filter(value => bSet.has(value)).length;
-}
-
-// Verbs and filler that appear in effect prose across wholly unrelated
-// substances. Left in, raw token overlap made Ashwagandha the top suggestion
-// for Modafinil because both "reduced" and "improved" things.
-const GENERIC_TOKENS = new Set([
-  'improved', 'improves', 'improve', 'improvement', 'increased', 'increases', 'increase',
-  'reduced', 'reduces', 'reduce', 'reduction', 'decreased', 'decreases', 'decrease',
-  'enhanced', 'enhances', 'enhance', 'supports', 'support', 'supported', 'boosted',
-  'boosts', 'boost', 'better', 'greater', 'higher', 'lower', 'mild', 'mildly',
-  'overall', 'general', 'levels', 'level', 'sense', 'feeling', 'feelings', 'more',
-  'less', 'during', 'from', 'with', 'without', 'and', 'the', 'for', 'may', 'can',
-]);
-
-function meaningfulTokens(values: string[]) {
-  const out = new Set<string>();
-  for (const value of values) {
-    for (const token of normalize(value).split(' ')) {
-      if (token.length > 2 && !GENERIC_TOKENS.has(token)) out.add(token);
-    }
-  }
-  return out;
-}
-
-/**
- * Ranks compare suggestions by "same job" first: shared bearing categories,
- * type tags, and classification dominate, so Modafinil surfaces other
- * wakefulness pharmaceuticals before botanicals that merely share effect
- * verbs. Free-text effect/marker tokens (generic verbs stripped) and pairing
- * overlap only break ties.
- */
-function substanceSimilarity(base: Supplement, candidate: Supplement) {
-  let score = 0;
-
-  score += 25 * phraseOverlap(base.paths.map(path => path.category), candidate.paths.map(path => path.category));
-  score += 12 * phraseOverlap(base.typeTags, candidate.typeTags);
-  if (base.classification === candidate.classification) score += 8;
-  score += 2 * phraseOverlap(base.administration, candidate.administration);
-
-  // Substances that pair with the same partners tend to fill similar roles.
-  score += 6 * phraseOverlap(base.possiblePairings, candidate.possiblePairings);
-  if (base.possiblePairings.some(pairing => normalize(pairing) === normalize(candidate.name))) score += 6;
-  if (candidate.possiblePairings.some(pairing => normalize(pairing) === normalize(base.name))) score += 6;
-
-  const baseTokens = meaningfulTokens([...base.subjectiveEffects, ...(base.markers || [])]);
-  const candidateTokens = meaningfulTokens([...candidate.subjectiveEffects, ...(candidate.markers || [])]);
-  let shared = 0;
-  baseTokens.forEach(token => {
-    if (candidateTokens.has(token)) shared += 1;
-  });
-  score += 2 * Math.min(shared, 10);
-
-  return score;
-}
+/** How many relevance-ranked rows sit under the "Suggested" header before the full list. */
+const SUGGESTED_COUNT = 5;
 
 /** First-letter avatar initial. */
 function initials(name: string) {
@@ -204,34 +131,14 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
   const filteredItems = useMemo(() => {
     const query = normalize(searchQuery);
 
-    return items
+    const filtered = items
       .filter(item => item.id !== baseItemId)
       .filter(item => {
         if (!query) return true;
         const aliases = type === 'substance' ? (item as Supplement).aliases ?? [] : [];
         return normalize(`${item.name} ${aliases.join(' ')} ${'description' in item ? item.description || '' : ''}`).includes(query);
-      })
-      .sort((a, b) => {
-        if (type === 'substance' && baseItem) {
-          return substanceSimilarity(baseItem as Supplement, b as Supplement) - substanceSimilarity(baseItem as Supplement, a as Supplement);
-        }
-
-        if (type === 'stack' && baseItem && 'substances' in baseItem) {
-          const baseSubstances = new Set(baseItem.substances.map(substance => substance.id));
-          const aOverlap = 'substances' in a ? a.substances.filter(substance => baseSubstances.has(substance.id)).length : 0;
-          const bOverlap = 'substances' in b ? b.substances.filter(substance => baseSubstances.has(substance.id)).length : 0;
-          return bOverlap - aOverlap;
-        }
-
-        if (type === 'brand' && baseItem && 'markers' in baseItem) {
-          const baseMarkers = baseItem.markers || [];
-          const aScore = 'markers' in a ? overlapScore(baseMarkers, a.markers || [], 4) : 0;
-          const bScore = 'markers' in b ? overlapScore(baseMarkers, b.markers || [], 4) : 0;
-          return bScore - aScore;
-        }
-
-        return a.name.localeCompare(b.name);
       });
+    return baseItem ? rankCandidates(type, [baseItem], filtered) : [...filtered].sort((a, b) => a.name.localeCompare(b.name));
   }, [baseItem, baseItemId, items, searchQuery, type]);
 
   const handleSelect = (id: string) => {
@@ -243,21 +150,22 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={<span className="capitalize">Compare {type}</span>}
+      title={baseItem ? <span>Compare <span className="text-emerald-700 dark:text-emerald-400">{baseItem.name}</span> with…</span> : <span className="capitalize">Compare {type}</span>}
       panelClassName="flex w-full max-w-lg max-h-[80vh] flex-col"
     >
-      {type === 'substance' && (
-        <p className="border-b border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
-          Suggestions rank substances that do the same job first — shared categories and type, then effects.
-        </p>
-      )}
+      <p className="border-b border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-zinc-800 dark:text-zinc-400">
+        {type === 'substance' && 'Suggested first: substances that do the same job — shared categories and type, then effects.'}
+        {type === 'brand' && 'Suggested first: brands that carry the same substances.'}
+        {type === 'stack' && 'Suggested first: stacks that share components with this one.'}
+        {' '}Or search for anything.
+      </p>
 
       <div className="border-b border-slate-200 p-4 dark:border-zinc-800">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-zinc-400" size={17} />
           <input
             type="text"
-            placeholder={`Search ${type}s to compare...`}
+            placeholder={`Search ${type}s…`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:bg-zinc-900"
@@ -268,9 +176,24 @@ export function CompareModal({ isOpen, onClose, type, baseItemId }: CompareModal
       <div className="overflow-y-auto">
         {filteredItems.length > 0 ? (
           <div className="divide-y divide-slate-100 dark:divide-zinc-800/70">
-            {filteredItems.map((item) => (
+            {!searchQuery && (
+              <p className="bg-slate-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-900/60 dark:text-zinc-400">
+                Suggested
+              </p>
+            )}
+            {filteredItems.slice(0, searchQuery ? filteredItems.length : SUGGESTED_COUNT).map((item) => (
               <CompareRow key={item.id} item={item} type={type} onSelect={handleSelect} />
             ))}
+            {!searchQuery && filteredItems.length > SUGGESTED_COUNT && (
+              <>
+                <p className="bg-slate-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-900/60 dark:text-zinc-400">
+                  All {type}s
+                </p>
+                {filteredItems.slice(SUGGESTED_COUNT).map((item) => (
+                  <CompareRow key={item.id} item={item} type={type} onSelect={handleSelect} />
+                ))}
+              </>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">

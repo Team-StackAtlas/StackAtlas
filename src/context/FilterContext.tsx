@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { TypeTag, Classification, AdministrationMethod } from '../data/mockData';
+import { TypeTag, Classification, AdministrationMethod, RiskLevel } from '../data/mockData';
 
 interface FilterContextType {
   activeTypes: TypeTag[];
@@ -14,6 +14,9 @@ interface FilterContextType {
   togglePriority: (e: React.MouseEvent, type: TypeTag) => void;
   toggleAdmin: (admin: AdministrationMethod) => void;
   toggleClassification: (classification: Classification) => void;
+  activeRisks: RiskLevel[];
+  setActiveRisks: React.Dispatch<React.SetStateAction<RiskLevel[]>>;
+  toggleRisk: (risk: RiskLevel) => void;
 }
 
 const FilterContext = createContext<FilterContextType | undefined>(undefined);
@@ -26,6 +29,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const [prioritizedTypes, setPrioritizedTypes] = useState<TypeTag[]>([]);
   const [activeAdmins, setActiveAdmins] = useState<AdministrationMethod[]>([]);
   const [activeClassifications, setActiveClassifications] = useState<Classification[]>([]);
+  const [activeRisks, setActiveRisks] = useState<RiskLevel[]>([]);
 
   const toggleType = (type: TypeTag) => {
     setActiveTypes(prev =>
@@ -52,13 +56,20 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const toggleRisk = (risk: RiskLevel) => {
+    setActiveRisks(prev =>
+      prev.includes(risk) ? prev.filter(r => r !== risk) : [...prev, risk]
+    );
+  };
+
   return (
     <FilterContext.Provider value={{
       activeTypes, setActiveTypes,
       prioritizedTypes, setPrioritizedTypes,
       activeAdmins, setActiveAdmins,
       activeClassifications, setActiveClassifications,
-      toggleType, togglePriority, toggleAdmin, toggleClassification
+      activeRisks, setActiveRisks,
+      toggleType, togglePriority, toggleAdmin, toggleClassification, toggleRisk
     }}>
       {children}
     </FilterContext.Provider>
