@@ -37,7 +37,6 @@ const Glossary = lazy(() => import('./pages/Glossary'));
 const AlbumDetail = lazy(() => import('./pages/AlbumDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Legal = lazy(() => import('./pages/Legal'));
-const About = lazy(() => import('./pages/About'));
 const FollowList = lazy(() => import('./pages/FollowList'));
 
 export default function App() {
@@ -73,7 +72,7 @@ export default function App() {
               <Route path="profile/:username" element={<Profile />} />
               <Route path="profile/:username/followers" element={<FollowList />} />
               <Route path="profile/:username/following" element={<FollowList />} />
-              <Route path="about" element={<About />} />
+              <Route path="about" element={<Legal doc="about" />} />
               <Route path="library" element={<Library />} />
               <Route path="admin" element={<Admin />} />
               <Route path="glossary" element={<Glossary />} />

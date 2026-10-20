@@ -63,8 +63,10 @@ export function useNotifications() {
 
   const refresh = useCallback(async () => {
     if (backed && services && user) {
+      // Real accounts see only real notifications; the demo rows below are
+      // for the no-backend preview and were leaking into signed-in lists.
       const remoteNotifications = await services.notifications.list(user.id);
-      await Promise.resolve().then(() => setNotifications(mergeMockNotifications(remoteNotifications)));
+      await Promise.resolve().then(() => setNotifications([...remoteNotifications].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))));
       const remoteSettings = await services.notifications.getSettings?.(user.id);
       if (remoteSettings) {
         await Promise.resolve().then(() => setSettingsState({ ...DEFAULT_NOTIFICATION_SETTINGS, ...remoteSettings }));
@@ -92,15 +94,15 @@ export function useNotifications() {
 
   const markRead = async (id: string) => {
     setNotifications((rows) => rows.map((n) => n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n));
-    if (backed && services && user) await services.notifications.markRead(user.id, id);
+    if (backed && services && user) { await services.notifications.markRead(user.id, id); return; }
     writeLocal(mergeMockNotifications(readLocal(user?.id)).map((n) => n.id === id ? { ...n, readAt: n.readAt ?? new Date().toISOString() } : n));
   };
 
   const markAllRead = async () => {
     const now = new Date().toISOString();
     setNotifications((rows) => rows.map((n) => ({ ...n, readAt: n.readAt ?? now })));
-    if (backed && services && user) await services.notifications.markAllRead(user.id);
-    writeLocal(mergeMockNotifications(readLocal(user?.id)).map((n) => ({ ...n, readAt: n.readAt ?? now }))); 
+    if (backed && services && user) { await services.notifications.markAllRead(user.id); return; }
+    writeLocal(mergeMockNotifications(readLocal(user?.id)).map((n) => ({ ...n, readAt: n.readAt ?? now })));
   };
 
   const openNotification = async (notification: NotificationDTO) => {
