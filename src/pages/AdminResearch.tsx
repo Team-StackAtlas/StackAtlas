@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { supabase } from '../services/supabase/client';
 import ImportWizard from '../components/admin/ImportWizard';
+import ResearchSubmissions from '../components/admin/ResearchSubmissions';
 import SourceLibrary from '../components/admin/SourceLibrary';
 import FindingsList from '../components/admin/FindingsList';
 import ImportHistory from '../components/admin/ImportHistory';
@@ -9,13 +10,14 @@ import GlossaryManager from '../components/admin/GlossaryManager';
 import SectionErrorBoundary from '../components/admin/SectionErrorBoundary';
 import type { ProfileDTO, SessionUser } from '../services/types';
 
-type Tab = 'import' | 'library' | 'findings' | 'history' | 'glossary';
+type Tab = 'submissions' | 'library' | 'findings' | 'history' | 'glossary' | 'import';
 const TABS: [Tab, string][] = [
-  ['import', 'Import'],
+  ['submissions', 'Submissions'],
   ['library', 'Source Library'],
   ['findings', 'Findings'],
   ['history', 'Import History'],
   ['glossary', 'Glossary'],
+  ['import', 'Advanced: manual import'],
 ];
 
 function isAdmin(profile: ProfileDTO | null) {
@@ -31,7 +33,7 @@ export default function AdminResearch({
   profile: ProfileDTO | null;
   user: SessionUser | null;
 }) {
-  const [tab, setTab] = useState<Tab>('import');
+  const [tab, setTab] = useState<Tab>('submissions');
   const allowed = isAdmin(profile);
   const owner = isOwner(profile);
 
@@ -48,7 +50,7 @@ export default function AdminResearch({
       <div>
         <h1 className="text-3xl font-black">Research</h1>
         <p className="text-sm text-slate-500">
-          Import data packs and source records, and review what has landed in StackAtlas.
+          Review what the research connector has submitted, approve or reject it, and inspect what has landed in StackAtlas. Manual file import lives under Advanced.
         </p>
       </div>
 
@@ -79,8 +81,16 @@ export default function AdminResearch({
       </div>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        {tab === 'submissions' && (
+          <SectionErrorBoundary>
+            <ResearchSubmissions client={supabase} isOwner={owner} />
+          </SectionErrorBoundary>
+        )}
         {tab === 'import' && (
           <SectionErrorBoundary>
+            <p className="mb-3 rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-zinc-950">
+              Manual ZIP / JSON / CSV import. Day to day, research arrives through the connector and appears under Submissions; use this only for one-off packs.
+            </p>
             <ImportWizard client={supabase} isOwner={owner} />
           </SectionErrorBoundary>
         )}
