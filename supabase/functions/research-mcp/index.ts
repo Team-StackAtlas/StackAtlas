@@ -15,11 +15,11 @@
 // the paper supports any claim. Everything submitted waits for a human.
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { McpServer } from 'npm:@modelcontextprotocol/sdk@1.25.3/server/mcp.js';
+import { WebStandardStreamableHTTPServerTransport } from 'npm:@modelcontextprotocol/sdk@1.25.3/server/webStandardStreamableHttp.js';
+import { Hono } from 'npm:hono@4.9.7';
+import { z } from 'npm:zod@4.1.13';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import {
   BATCH_KIND, BATCH_SCHEMA_VERSION, LIMITS, sourceKeys, validateResearchBatch,
   type ResearchBatch, type SourceRow, type FindingRow, type ValidationContext, type Issue,

@@ -32,17 +32,15 @@ Nothing it submits is public until you approve it in Admin → Research → Subm
 3. **Check the Site URL.** Supabase → Authentication → URL Configuration →
    Site URL must be your production site (e.g. `https://stackatlas.app`), because
    the consent page is Site URL + `/oauth/consent`.
-4. **Deploy the function** (one of):
-   - Supabase → Edge Functions → Deploy a new function → via Editor → name it
-     `research-mcp`, paste `supabase/functions/research-mcp/index.ts` as `index.ts`,
-     add a second file `deno.json` with the contents of
-     `supabase/functions/research-mcp/deno.json`, and a third file
-     `_shared/researchBatch.ts`... (if the editor cannot take folders, inline
-     the validator: copy the body of `supabase/functions/_shared/researchBatch.ts`
-     to the top of `index.ts` and delete the `import ... from '../_shared/researchBatch.ts'` line).
-     **Turn off "Verify JWT with legacy secret"** for this function: it verifies
-     tokens itself so that the OAuth discovery endpoint can be reached first.
-   - Or ask a Claude Code session to deploy it with the Supabase connector.
+4. **The function is already deployed** (`research-mcp`, version 1, verify-JWT
+   off, deployed 2026-10-24 from this repo's source). You do not need to paste
+   anything. If it ever needs redeploying from the dashboard: Supabase → Edge
+   Functions → Deploy a new function → via Editor → name it `research-mcp`,
+   paste `supabase/functions/research-mcp/index.ts` with the body of
+   `supabase/functions/_shared/researchBatch.ts` inlined in place of its
+   `../_shared/researchBatch.ts` import, and **turn off "Verify JWT with legacy
+   secret"** (the function verifies tokens itself so the OAuth discovery
+   endpoint can be reached first).
 5. **Confirm the health endpoint.** Open
    `https://gjqzwqftdnagctpfkdpf.supabase.co/functions/v1/research-mcp/health`
    in a browser; it should return `{"ok":true,...}`.
