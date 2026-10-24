@@ -16,6 +16,7 @@ import { EmptyState } from '../components/EmptyState';
 import type { FollowRequest, ProfileDTO, ProfileSettings, Sex, UnitSystem } from '../services/types';
 import { isProfileComplete, normalizeUsername, validateUsername, withDefaultProfileSettings } from '../lib/account';
 import { useUnitSystem } from '../hooks/useUnitSystem';
+import { useTheme } from '../context/ThemeContext';
 import {
   AGE_RANGE_SPAN, BODY_FAT, HEIGHT_CM, SEX_OPTIONS, WEIGHT_KG,
   ageRangeLabel, birthYearBounds, cmToFtIn, formatAge, formatHeight, formatWeight, inToCm, kgToLb, lbToKg,
@@ -116,6 +117,7 @@ export default function Profile() {
   const [profileError, setProfileError] = useState('');
   const [isEditing, setIsEditing] = useState(searchParams.get('complete') === '1');
   const [viewerUnits, setViewerUnits] = useUnitSystem();
+  const { palette, togglePalette } = useTheme();
   // Unit system chosen in the edit form; the body-field inputs remount with
   // converted defaults whenever it changes.
   const [unitDraft, setUnitDraft] = useState<UnitSystem>(viewerUnits);
@@ -445,6 +447,13 @@ export default function Profile() {
                 </button>
               )}
             </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-4 dark:border-zinc-800">
+            <h3 className="mb-2 text-sm font-bold">Appearance</h3>
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span>Color-vision-friendly palette <span className="text-slate-500 dark:text-zinc-400">(swaps green/red cues for blue/orange)</span></span>
+              <input type="checkbox" checked={palette === 'colorblind'} onChange={togglePalette} className="accent-emerald-500" />
+            </label>
           </div>
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

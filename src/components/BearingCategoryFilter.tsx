@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Bandage, Bone, ChevronLeft, ChevronRight, Flame, HeartPulse, Hourglass, Moon, Sparkles, Stethoscope, Smile, Tag, X, type LucideIcon, Brain, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Tag, X } from 'lucide-react';
+import { CATEGORY_ICONS } from '../lib/categoryIcons';
 import { BEARING_CATEGORIES } from '../lib/bearings';
 import { useGoals } from '../hooks/useGoals';
 import { cn } from '../lib/utils';
@@ -61,20 +62,6 @@ function accentFor(name: string): Accent {
   return ACCENT_CYCLE[(index < 0 ? 0 : index) % ACCENT_CYCLE.length];
 }
 
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  'Cognition': Brain,
-  'Recovery': Moon,
-  'Performance': Zap,
-  'Longevity': Hourglass,
-  'Mood & Stress': Smile,
-  'Metabolic Health': Flame,
-  'Hormonal Health': Activity,
-  'Digestive Health': Stethoscope,
-  'Heart Health': HeartPulse,
-  'Pain & Injury': Bandage,
-  'Joint & Mobility': Bone,
-  'Beauty & Skin': Sparkles,
-};
 
 export function BearingCategoryFilter({ selectedCategory, selectedBearings, onCategoryChange, onBearingToggle, onReset }: {
   selectedCategory: string | null;

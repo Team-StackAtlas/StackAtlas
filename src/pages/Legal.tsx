@@ -4,8 +4,10 @@ import privacy from '../content/legal/privacy.md?raw';
 import terms from '../content/legal/terms.md?raw';
 import cookies from '../content/legal/cookies.md?raw';
 import refunds from '../content/legal/refunds.md?raw';
+import about from '../content/about.md?raw';
 
 const LEGAL_DOCS = {
+  about: { title: 'About', body: about, path: '/about' },
   privacy: { title: 'Privacy Policy', body: privacy },
   terms: { title: 'Terms of Service', body: terms },
   cookies: { title: 'Cookie & Local Storage Policy', body: cookies },
@@ -14,20 +16,27 @@ const LEGAL_DOCS = {
 
 type LegalDocKey = keyof typeof LEGAL_DOCS;
 
-// Legal text lives as Markdown in src/content/legal so it can be reviewed and
-// diffed like any other document; this page just renders it.
-export default function Legal() {
-  const { doc } = useParams<{ doc: string }>();
-  if (!doc || !(doc in LEGAL_DOCS)) return <Navigate to="/legal/privacy" replace />;
+function pathFor(k: LegalDocKey) {
+  const entry = LEGAL_DOCS[k] as { path?: string };
+  return entry.path ?? `/legal/${k}`;
+}
+
+// The About & Privacy hub. Text lives as Markdown in src/content so it can be
+// reviewed and diffed like any other document; this page just renders it.
+// `/about` mounts it with a fixed doc; `/legal/:doc` reads the route param.
+export default function Legal({ doc: fixedDoc }: { doc?: LegalDocKey } = {}) {
+  const params = useParams<{ doc: string }>();
+  const doc = fixedDoc ?? params.doc;
+  if (!doc || !(doc in LEGAL_DOCS)) return <Navigate to="/about" replace />;
   const key = doc as LegalDocKey;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <nav aria-label="Legal documents" className="mb-6 flex flex-wrap gap-2 text-sm">
+      <nav aria-label="About and legal documents" className="mb-6 flex flex-wrap gap-2 text-sm">
         {(Object.keys(LEGAL_DOCS) as LegalDocKey[]).map((k) => (
           <Link
             key={k}
-            to={`/legal/${k}`}
+            to={pathFor(k)}
             aria-current={k === key ? 'page' : undefined}
             className={
               k === key

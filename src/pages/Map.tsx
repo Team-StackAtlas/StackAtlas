@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Truck, ShieldAlert, ShieldCheck, Star, Settings2, Plus, Loader2 } from 'lucide-react';
-import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS } from '../data/mockData';
+import { Search, Star, Settings2, Plus, Loader2 } from 'lucide-react';
+import { USERS, SCOPE_CLASSIFICATIONS, CLASSIFICATIONS, TYPE_TAGS, type Substance } from '../data/mockData';
 import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useUserScope } from '../context/UserScopeContext';
@@ -9,14 +9,21 @@ import { useFollowing } from '../hooks/useFollowing';
 import { useCatalog } from '../context/CatalogContext';
 import AdvancedSearchModal from '../components/AdvancedSearchModal';
 import CreateStackModal from '../components/CreateStackModal';
-import { SecondaryHideMenu } from '../components/SecondaryHideMenu';
 import { SectionHeading } from '../components/SectionHeading';
 import { SubstanceCard } from '../components/SubstanceCard';
+import { BrandCard } from '../components/BrandCard';
+import { StackCard } from '../components/StackCard';
 import { TYPE_TAG_ICONS } from '../lib/typeTagIcons';
 import { EmptyState } from '../components/EmptyState';
 import { useHiddenItems } from '../hooks/useHiddenItems';
 import { useAuth } from '../context/AuthContext';
 import { BearingCategoryFilter } from '../components/BearingCategoryFilter';
+import { CATEGORY_ICONS } from '../lib/categoryIcons';
+import { CategoryRail } from '../components/CategoryRail';
+import { FeaturedRow } from '../components/FeaturedRow';
+import { pickFeatured } from '../lib/featuredPicks';
+import { ACCENT_CYCLE } from '../components/ui/accents';
+import { Target } from 'lucide-react';
 import { BEARING_CATEGORIES, getCanonicalCategories, getFilterBearings } from '../lib/bearings';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { searchRank, sortByRank } from '../lib/searchRank';
@@ -71,6 +78,8 @@ function LoadMoreButton({ remaining, onClick }: { remaining: number; onClick: ()
 export default function Map() {
   usePageMeta('The Map', 'Browse substances, brands, and stacks by goal category.');
   const { substances: SUPPLEMENTS, brands: BRANDS, stacks: STACKS, loading: catalogLoading } = useCatalog();
+  // `Map` is this component's name, so reach for the global constructor explicitly.
+  const substancesById = useMemo(() => new globalThis.Map<string, Substance>(SUPPLEMENTS.map((s) => [s.id, s])), [SUPPLEMENTS]);
   const { scope } = useUserScope();
   const {
     activeTypes,
@@ -298,6 +307,42 @@ export default function Map() {
   const visibleBrands = filteredBrands.slice(0, visibleCount);
   const visibleStacks = approvedStacks.slice(0, visibleCount);
 
+  // Discovery sections (featured strip + goal rails) only on the untouched
+  // landing state. The moment anything is typed, filtered, or switched to
+  // Following, the page is a results list and nothing else.
+  const discoveryMode = activeTab === 'Substances' && feedType === 'For You' && !debouncedQuery && !activeCategoryGroup && activeTypes.length === 0 && advancedFilterCount === 0;
+  const featuredPicks = useMemo(
+    () => (discoveryMode ? pickFeatured({ substances: filteredSupplements, stacks: approvedStacks, brands: filteredBrands, substancesById, goals: scope.goals }) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the filtered lists are rebuilt every render; keying on their lengths and the inputs that matter avoids recomputing picks on unrelated state.
+    [discoveryMode, filteredSupplements.length, approvedStacks.length, filteredBrands.length, substancesById, scope.goals],
+  );
+  const rails = useMemo(() => {
+    if (!discoveryMode) return [];
+    const canonicalNames = BEARING_CATEGORIES.map((c) => c.name);
+    const byCategory = new globalThis.Map<string, Substance[]>();
+    for (const s of filteredSupplements) {
+      for (const c of getCanonicalCategories(s.paths.map((p) => p.category))) {
+        if (!byCategory.has(c)) byCategory.set(c, []);
+        byCategory.get(c)!.push(s);
+      }
+    }
+    // The user's goals first, then the biggest categories to fill up to three.
+    const chosen: string[] = scope.goals.filter((g) => canonicalNames.includes(g) && (byCategory.get(g)?.length ?? 0) > 0).slice(0, 3);
+    for (const [name, list] of [...byCategory.entries()].sort((a, b) => b[1].length - a[1].length)) {
+      if (chosen.length >= 3) break;
+      if (!chosen.includes(name) && list.length >= 3) chosen.push(name);
+    }
+    return chosen.map((name) => {
+      const meta = BEARING_CATEGORIES.find((c) => c.name === name)!;
+      const idx = BEARING_CATEGORIES.indexOf(meta);
+      const items = [...(byCategory.get(name) ?? [])]
+        .sort((a, b) => (b.evidenceCount ?? 0) - (a.evidenceCount ?? 0) || a.name.localeCompare(b.name))
+        .slice(0, 8);
+      return { name, description: meta.description, icon: CATEGORY_ICONS[name] ?? Target, accent: ACCENT_CYCLE[idx % ACCENT_CYCLE.length], items };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see featuredPicks.
+  }, [discoveryMode, filteredSupplements.length, scope.goals]);
+
   const hasActiveFilters = Boolean(debouncedQuery) || Boolean(activeCategoryGroup);
   const clearFilters = () => {
     setSearchQuery('');
@@ -518,8 +563,23 @@ export default function Map() {
       <div className="flex-1 px-4 pb-2 space-y-4">
         {activeTab === 'Substances' && (
           <>
+            {discoveryMode && featuredPicks.length > 0 && <FeaturedRow picks={featuredPicks} />}
+            {discoveryMode && rails.map((rail) => (
+              <CategoryRail
+                key={rail.name}
+                name={rail.name}
+                description={rail.description}
+                icon={rail.icon}
+                accent={rail.accent}
+                substances={rail.items}
+                onSeeAll={() => { setActiveCategoryGroup(rail.name); setActiveBearings([]); }}
+              />
+            ))}
+            {discoveryMode && (featuredPicks.length > 0 || rails.length > 0) && (
+              <h2 className="pt-2 text-[15px] font-bold text-slate-900 dark:text-zinc-100">All substances</h2>
+            )}
             <SectionHeading label="substance" count={filteredSupplements.length} action={syncIndicator} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
               {visibleSupplements.map(supplement => (
                 <SubstanceCard
                   key={supplement.id}
@@ -540,50 +600,14 @@ export default function Map() {
         {activeTab === 'Brands' && (
           <>
             <SectionHeading label="brand" count={filteredBrands.length} action={syncIndicator} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
               {visibleBrands.map(brand => (
-                <Link
+                <BrandCard
                   key={brand.id}
-                  to={`/brand/${brand.id}`}
+                  brand={brand}
+                  isHiddenByUser={isAdminLike && isHidden('brand', brand.id)}
                   onClick={() => handleSearchClick({ id: brand.id, name: brand.name, type: 'brand' })}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:shadow-black/30"
-                >
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="min-w-0 text-[17px] font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-emerald-700 dark:text-zinc-50 dark:group-hover:text-emerald-400">{brand.name}</h3>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-600 ring-1 ring-inset ring-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-400/25">
-                        <Star size={12} className="fill-amber-600 dark:fill-amber-400" />
-                        {brand.userRating}
-                      </span>
-                      <SecondaryHideMenu id={brand.id} name={brand.name} type="brand" />
-                    </div>
-                  </div>
-                  {isAdminLike && isHidden('brand', brand.id) && (
-                    <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
-                  )}
-                  <div className="flex-1">
-                    {brand.description && (
-                      <p className="line-clamp-2 text-[13px] leading-relaxed text-slate-600 dark:text-zinc-400">{brand.description}</p>
-                    )}
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs dark:border-zinc-800/60">
-                    {brand.contaminationReports > 0 ? (
-                      <span className="inline-flex items-center gap-1 font-semibold text-red-500 dark:text-red-400">
-                        <ShieldAlert size={14} />
-                        {brand.contaminationReports} contamination {brand.contaminationReports === 1 ? 'report' : 'reports'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
-                        <ShieldCheck size={14} />
-                        No contamination reports
-                      </span>
-                    )}
-                    <span className="inline-flex shrink-0 items-center gap-1 text-slate-500 dark:text-zinc-400" title={`Shipping reliability ${brand.shippingReliability}/5`}>
-                      <Truck size={13} />
-                      {brand.shippingReliability}/5
-                    </span>
-                  </div>
-                </Link>
+                />
               ))}
               {filteredBrands.length === 0 && emptyStateFor('brands')}
             </div>
@@ -611,50 +635,17 @@ export default function Map() {
                 </div>
               }
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-              {visibleStacks.map(stack => {
-                const creator = USERS.find(u => u.id === stack.creatorId);
-                return (
-                  <Link
-                    key={stack.id}
-                    to={`/stack/${stack.id}`}
-                    onClick={() => handleSearchClick({ id: stack.id, name: stack.name, type: 'stack' })}
-                    className="block p-4 rounded-2xl bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 transition-all group shadow-sm flex flex-col h-full"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-900 dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-                        {stack.name}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        {stack.status === 'pending' && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                            Pending Review
-                          </span>
-                        )}
-                        <SecondaryHideMenu id={stack.id} name={stack.name} type="stack" />
-                      </div>
-                    </div>
-                    <div className="mb-3 flex-1">
-                      <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2">
-                        {stack.description}
-                      </p>
-                    </div>
-                    {isAdminLike && isHidden('stack', stack.id) && (
-                      <span className="mb-2 inline-flex w-fit rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Hidden by current user</span>
-                    )}
-                    <div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-slate-100 dark:border-zinc-800/50">
-                      <div className="whitespace-nowrap text-xs text-slate-500 dark:text-zinc-400">
-                        {stack.substances.length} substances
-                      </div>
-                      {creator && (
-                        <div className="min-w-0 truncate text-xs text-slate-500 dark:text-zinc-400">
-                          by <span className="font-medium text-slate-700 dark:text-zinc-300">@{creator.username}</span>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleStacks.map(stack => (
+                <StackCard
+                  key={stack.id}
+                  stack={stack}
+                  substancesById={substancesById}
+                  creatorUsername={USERS.find(u => u.id === stack.creatorId)?.username}
+                  isHiddenByUser={isAdminLike && isHidden('stack', stack.id)}
+                  onClick={() => handleSearchClick({ id: stack.id, name: stack.name, type: 'stack' })}
+                />
+              ))}
               {approvedStacks.length === 0 && emptyStateFor('stacks')}
             </div>
             {visibleStacks.length < approvedStacks.length && (

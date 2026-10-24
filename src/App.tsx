@@ -37,7 +37,7 @@ const Glossary = lazy(() => import('./pages/Glossary'));
 const AlbumDetail = lazy(() => import('./pages/AlbumDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Legal = lazy(() => import('./pages/Legal'));
-const About = lazy(() => import('./pages/About'));
+const OAuthConsent = lazy(() => import('./pages/OAuthConsent'));
 const FollowList = lazy(() => import('./pages/FollowList'));
 
 export default function App() {
@@ -58,6 +58,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/oauth/consent" element={<OAuthConsent />} />
             <Route path="/log/intake" element={<LogIntake />} />
             <Route path="/log/entry" element={<LogEntry />} />
             <Route path="/log/notes" element={<LogNotes />} />
@@ -73,7 +74,7 @@ export default function App() {
               <Route path="profile/:username" element={<Profile />} />
               <Route path="profile/:username/followers" element={<FollowList />} />
               <Route path="profile/:username/following" element={<FollowList />} />
-              <Route path="about" element={<About />} />
+              <Route path="about" element={<Legal doc="about" />} />
               <Route path="library" element={<Library />} />
               <Route path="admin" element={<Admin />} />
               <Route path="glossary" element={<Glossary />} />
