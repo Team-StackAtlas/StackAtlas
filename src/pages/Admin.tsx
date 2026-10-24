@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import AdminResearch from './AdminResearch';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase/client';
@@ -8,16 +8,47 @@ import SectionErrorBoundary from '../components/admin/SectionErrorBoundary';
 import type { ModerationQueueItem, ProfileDTO } from '../services/types';
 import { usePageMeta } from '../hooks/usePageMeta';
 
-type Tab = 'review' | 'suggest' | 'users' | 'deleted' | 'quarters' | 'research' | 'log';
-const tabs: [Tab, string][] = [
-  ['research', 'Research'],
-  ['review', 'Review'],
-  ['suggest', 'Suggest Edits'],
-  ['users', 'Users'],
-  ['deleted', 'Deleted'],
-  ['quarters', 'Quarters'],
-  ['log', 'Log'],
+type Area = 'queue' | 'research' | 'people';
+type Tab = 'review' | 'suggest' | 'deleted' | 'research' | 'users' | 'quarters' | 'log';
+
+// Three areas, each with a one-line purpose, instead of eight flat tabs.
+const AREAS: { id: Area; label: string; purpose: string; sections: [Tab, string][] }[] = [
+  {
+    id: 'queue',
+    label: 'Queue',
+    purpose: 'Things members reported or suggested, waiting on a decision.',
+    sections: [
+      ['review', 'Reports'],
+      ['suggest', 'Suggested edits'],
+      ['deleted', 'Deleted content'],
+    ],
+  },
+  {
+    id: 'research',
+    label: 'Research',
+    purpose: 'What the research connector submitted, what has landed, and the glossary.',
+    sections: [['research', 'Research']],
+  },
+  {
+    id: 'people',
+    label: 'People',
+    purpose: 'Accounts and roles, Quarters governance, and the audit log of admin actions.',
+    sections: [
+      ['users', 'Users'],
+      ['quarters', 'Quarters'],
+      ['log', 'Audit log'],
+    ],
+  },
 ];
+const DEFAULT_AREA: Area = 'research';
+
+function areaOf(tab: Tab): Area {
+  return AREAS.find((a) => a.sections.some(([t]) => t === tab))?.id ?? DEFAULT_AREA;
+}
+function parseTab(value: string | null): Tab {
+  const all = AREAS.flatMap((a) => a.sections.map(([t]) => t));
+  return all.includes(value as Tab) ? (value as Tab) : 'research';
+}
 
 function isAdmin(profile: ProfileDTO | null) {
   return profile?.siteRole === 'site_admin' || profile?.siteRole === 'site_owner';
@@ -26,7 +57,10 @@ function isAdmin(profile: ProfileDTO | null) {
 export default function Admin() {
   usePageMeta('Admin');
   const { profile, user, services, isBackendConfigured } = useAuth();
-  const [tab, setTab] = useState<Tab>('research');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = parseTab(searchParams.get('tab'));
+  const area = areaOf(tab);
+  const setTab = (next: Tab) => setSearchParams(next === 'research' ? {} : { tab: next }, { replace: true });
   const [items, setItems] = useState<ModerationQueueItem[]>([]);
   const [users, setUsers] = useState<ProfileDTO[]>([]);
   const [query, setQuery] = useState('');
@@ -68,10 +102,21 @@ export default function Admin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `load` is redefined every render; including it would refetch on every render instead of only when services/tab change.
   }, [services, tab]);
 
+  // The Queue badge needs the open count whichever area is showing.
+  useEffect(() => {
+    if (!services) return;
+    services.moderation
+      .listQueue()
+      .then(setItems)
+      .catch((err) => console.error('Queue count load failed', err));
+  }, [services]);
+
   if (isBackendConfigured && !allowed) return <Navigate to="/map" replace />;
 
   const reports = items.filter((item) => item.submissionType === 'report');
   const suggestions = items.filter((item) => item.submissionType === 'suggest_edit');
+  const currentArea = AREAS.find((a) => a.id === area) ?? AREAS[0];
+  const openQueueCount = items.filter((item) => item.status === 'pending').length;
 
   const act = async (
     item: ModerationQueueItem,
@@ -105,21 +150,50 @@ export default function Admin() {
       <div>
         <h1 className="text-3xl font-black">Admin</h1>
         <p className="text-sm text-slate-500">
-          Research, site-wide reports, suggest edits, users, deleted content, Quarters, and
-          moderation log.
+          Three areas: the Queue of member reports and suggestions, Research review, and People.
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {tabs.map(([value, label]) => (
-          <button
-            key={value}
-            onClick={() => setTab(value)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === value ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <nav aria-label="Admin areas" className="grid gap-2 sm:grid-cols-3">
+        {AREAS.map((a) => {
+          const active = a.id === area;
+          const count = a.id === 'queue' ? openQueueCount : 0;
+          return (
+            <button
+              key={a.id}
+              onClick={() => setTab(a.sections[0][0])}
+              aria-current={active ? 'page' : undefined}
+              className={`rounded-2xl border p-3 text-left transition ${
+                active
+                  ? 'border-emerald-600 bg-emerald-50 dark:border-emerald-500/60 dark:bg-emerald-500/10'
+                  : 'border-slate-200 bg-white hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-bold">{a.label}</span>
+                {count > 0 && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+                    {count} open
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">{a.purpose}</p>
+            </button>
+          );
+        })}
+      </nav>
+      {currentArea.sections.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {currentArea.sections.map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setTab(value)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === value ? 'bg-emerald-700 text-white' : 'bg-slate-100 dark:bg-zinc-800'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {message && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
           {message}
