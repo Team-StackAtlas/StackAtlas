@@ -48,7 +48,7 @@ export default function AdminResearch({
   return (
     <section className="space-y-5">
       <div>
-        <h1 className="text-3xl font-black">Research</h1>
+        <h2 className="text-xl font-bold">Research</h2>
         <p className="text-sm text-slate-500">
           Review what the research connector has submitted, approve or reject it, and inspect what has landed in StackAtlas. Manual file import lives under Advanced.
         </p>
