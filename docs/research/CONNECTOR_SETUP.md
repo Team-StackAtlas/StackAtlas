@@ -22,9 +22,9 @@ Nothing it submits is public until you approve it in Admin → Research → Subm
 
 ## One-time setup (owner, dashboards only)
 
-1. **Apply the pending SQL.** Supabase → SQL Editor → paste all of
-   `docs/ops/pending-migrations-2026-10-20.sql` → Run. It now includes
-   `20261024120000_research_submissions.sql`. Safe to run twice.
+1. **Database: done.** All pending migrations through `20261118150000` were
+   applied to production on 2026-11-18 (the paste file in `docs/ops/` is kept
+   for the record only).
 2. **Enable the OAuth server.** Supabase → Authentication → OAuth Server →
    turn it on. Set **Authorization Path** to `/oauth/consent`.
    Turn on **Dynamic client registration** (Claude registers itself; you still
@@ -51,6 +51,24 @@ Nothing it submits is public until you approve it in Admin → Research → Subm
    sent to StackAtlas to sign in and approve.
 7. **Create the research Project in Claude** and paste
    `docs/research/CLAUDE_RESEARCH_DIRECTOR.md` as its instructions.
+
+## Verified so far (2026-11-18)
+
+- Database: all migrations applied to production. The full submission
+  pipeline (`admin_record_research_submission` → `admin_publish_research_submission`
+  → `admin_revert_research_submission`) was exercised against production inside
+  a rolled-back transaction as the owner: description applied with a history
+  row, one finding approved, one glossary term upserted, then everything
+  restored and the batch's sources and findings removed, with three
+  `moderation_log` rows. Nothing persisted.
+- `research_queue` returns ranked rows for the owner.
+- Edge Function `research-mcp` is deployed (version 1, verify-JWT off).
+- Validator: 10 unit tests pass.
+
+**Not yet verified:** OAuth sign-in from the Claude app, an authenticated
+`submit_research_batch` call through the connector, and the PubMed check in
+the deployed function. Those need steps 2–6 above, which only the owner can do.
+Until they pass, do not treat the connector as working.
 
 ## End-to-end test (deployment-dependent)
 

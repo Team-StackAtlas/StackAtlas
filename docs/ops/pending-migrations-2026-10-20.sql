@@ -1,3 +1,4 @@
+-- APPLIED to production on 2026-11-18 via the Supabase migration tool; kept for the record. Nothing here is pending.
 -- StackAtlas: pending migrations as of 2026-10-24, in order. Paste the whole file into Supabase → SQL Editor → Run.
 -- Every block is idempotent, so running it twice (or after a partial run) is safe.
 

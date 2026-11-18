@@ -58,6 +58,9 @@ Sources and findings:
 
 ## Batch format
 
+Full field list, limits, checks, and the publication policy are in
+`docs/research/RESEARCH_DATA_SPEC.md`. Short version:
+
 ```json
 {
   "kind": "stackatlas-research-batch",
