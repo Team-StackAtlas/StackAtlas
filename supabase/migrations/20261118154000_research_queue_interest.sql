@@ -5,17 +5,15 @@
 -- would start with 1,3-butanediol. Usage signals are still too thin to rank
 -- on (3 saved items, 1 post), so interest is a catalog proxy: products sold
 -- that contain the substance, stacks that use it, a popular brand on record,
--- and any effects on record. Returned as `interest` so the caller can see why.
--- Return type changes, so drop and recreate.
+-- and any effects on record. Same signature as before, so this is an in-place
+-- replace; the connector's callers see the same columns in a better order.
 
-drop function if exists research_queue(integer, text);
-
-create function research_queue(p_limit integer default 20, p_classification text default null)
+create or replace function research_queue(p_limit integer default 20, p_classification text default null)
 returns table (
   slug text, name text, classification text, risk_level text,
   description_length integer, description_circular boolean,
   source_count integer, finding_count integer, routes text[],
-  reasons text[], score integer, interest integer
+  reasons text[], score integer
 )
 language sql stable security definer set search_path = public as $$
   with base as (
@@ -47,11 +45,9 @@ language sql stable security definer set search_path = public as $$
        + case when sources = 0 then 2 else 0 end + case when findings = 0 then 1 else 0 end) as score
     from base
   )
-  select slug, name, classification, risk_level, dlen, circular, sources, findings, routes, reasons, score, interest
+  select slug, name, classification, risk_level, dlen, circular, sources, findings, routes, reasons, score
   from scored
   where score > 0
   order by score desc, interest desc, (classification = 'Everyday') desc, name asc
   limit greatest(1, least(coalesce(p_limit, 20), 50));
 $$;
-revoke all on function research_queue(integer, text) from public, anon;
-grant execute on function research_queue(integer, text) to authenticated;
