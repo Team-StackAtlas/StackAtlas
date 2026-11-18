@@ -355,7 +355,7 @@ const protectedResourceMetadata = () => ({
   resource: RESOURCE_URL,
   authorization_servers: [AUTH_SERVER],
   bearer_methods_supported: ['header'],
-  scopes_supported: ['openid', 'email', 'profile'],
+  scopes_supported: ['email', 'profile'],
   resource_name: 'StackAtlas research connector',
 });
 app.get('/.well-known/oauth-protected-resource', (c) => c.json(protectedResourceMetadata()));
