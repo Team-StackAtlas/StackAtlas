@@ -54,21 +54,32 @@ Nothing it submits is public until you approve it in Admin → Research → Subm
 
 ## Verified so far (2026-11-18)
 
-- Database: all migrations applied to production. The full submission
-  pipeline (`admin_record_research_submission` → `admin_publish_research_submission`
-  → `admin_revert_research_submission`) was exercised against production inside
-  a rolled-back transaction as the owner: description applied with a history
-  row, one finding approved, one glossary term upserted, then everything
-  restored and the batch's sources and findings removed, with three
-  `moderation_log` rows. Nothing persisted.
-- `research_queue` returns ranked rows for the owner.
-- Edge Function `research-mcp` is deployed (version 1, verify-JWT off).
-- Validator: 10 unit tests pass.
+Connector, end to end, against production:
 
-**Not yet verified:** OAuth sign-in from the Claude app, an authenticated
-`submit_research_batch` call through the connector, and the PubMed check in
-the deployed function. Those need steps 2–6 above, which only the owner can do.
-Until they pass, do not treat the connector as working.
+- OAuth: the Claude app discovered the server, registered itself through
+  dynamic client registration, sent the owner to `/oauth/consent` on the live
+  site, the owner approved, Supabase issued a token, and Claude listed the
+  three tools. (The manually created `Claude` OAuth app in the dashboard was
+  not used and can be deleted.)
+- `get_research_queue` and `get_substance_context` return live data through
+  the connector.
+- `submit_research_batch` with one real trial (PMID 23853635, magnesium
+  oxide): PubMed check matched, one source and three findings staged, the
+  description proposal held, submission `needs_review`, audit log written,
+  live description unchanged.
+- Resubmitting the same `idempotency_key` returned the original report and
+  staged nothing.
+- A malformed batch (unknown slug, claim language, circular text, missing
+  identifier, bad enum, too-short summary) was rejected row by row and
+  nothing was recorded. A batch citing a non-existent PMID was rejected by
+  the PubMed check and nothing was recorded.
+- Database side: the full record → publish → revert chain was exercised in a
+  rolled-back transaction with history, approvals, and audit rows correct.
+
+Still to confirm by hand in the Admin UI: the submission appears under
+Admin → Research → Submissions; Approve applies the description and the
+findings show on the magnesium oxide page; Revert restores the previous text.
+Not tested: a non-admin account being refused (needs a second account).
 
 ## End-to-end test (deployment-dependent)
 
