@@ -186,7 +186,6 @@ export default function Notifications() {
       active ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700',
     );
 
-  let lastBucket = '';
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 p-4">
@@ -268,12 +267,11 @@ export default function Notifications() {
         />
       ) : (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
-          {rows.map((g) => {
+          {rows.map((g, i) => {
             const n = g.latest;
             const meta = CATEGORY_META[g.category];
             const bucket = bucketLabel(n.createdAt);
-            const header = bucket !== lastBucket ? bucket : null;
-            lastBucket = bucket;
+            const header = i === 0 || bucketLabel(rows[i - 1].latest.createdAt) !== bucket ? bucket : null;
             const { rest } = splitTitle(n.title);
             const sentence = actorsSentence(g.actors);
             const post = postTitle(n);
