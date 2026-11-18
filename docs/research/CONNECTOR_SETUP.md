@@ -22,9 +22,9 @@ Nothing it submits is public until you approve it in Admin → Research → Subm
 
 ## One-time setup (owner, dashboards only)
 
-1. **Apply the pending SQL.** Supabase → SQL Editor → paste all of
-   `docs/ops/pending-migrations-2026-10-20.sql` → Run. It now includes
-   `20261024120000_research_submissions.sql`. Safe to run twice.
+1. **Database: done.** All pending migrations through `20261118150000` were
+   applied to production on 2026-11-18 (the paste file in `docs/ops/` is kept
+   for the record only).
 2. **Enable the OAuth server.** Supabase → Authentication → OAuth Server →
    turn it on. Set **Authorization Path** to `/oauth/consent`.
    Turn on **Dynamic client registration** (Claude registers itself; you still
